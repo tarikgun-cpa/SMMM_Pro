@@ -650,8 +650,7 @@
                             <label>E-Fatura Mükellefiyeti:</label>
                             <select id="eFaturaDurum" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
                                 <option value="Hayır">Hayır</option>
-                                <option value="Evet - Aylık">Evet (Aylık)</option>
-                                <option value="Evet - Üç Aylık">Evet (Üç Aylık)</option>
+                                <option value="Evet - Aylık">Evet</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1465,47 +1464,50 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- BULUT SENKRONİZASYON MOTORU ---
+        // --- BULUT SENKRONİZASYON MOTORU (GÜVENLİ VE HATA KORUMALI) ---
         let veriIndiMi = sessionStorage.getItem("veriIndi");
-        let isSyncing = false; // İndirme anında sonsuz döngüye girmemesi için kilit
+        let isSyncing = false; 
         let syncTimeout = null;
 
-        // LOCALSTORAGE OVERRIDE (Gizli Yedekleme Yakalayıcısı)
-        // Mevcut kodunuzdaki 100 farklı yeri değiştirmemek için kaydetme motorunu hackliyoruz
+        // LOCALSTORAGE OVERRIDE (Güvenli Yakalayıcı)
         const originalSetItem = localStorage.setItem;
         localStorage.setItem = function(key, value) {
-            originalSetItem.apply(this, arguments); // Normal yerel kaydetmeyi her zamanki gibi yap
+            originalSetItem.call(localStorage, key, value); // Güvenli çağrı
             
-            // Eğer veri inme işlemi bittiyse ve kullanıcı giriş yaptıysa her şeyi paketleyip buluta yazdır
-            if(!isSyncing && auth.currentUser) {
-                clearTimeout(syncTimeout);
-                syncTimeout = setTimeout(() => {
-                    db.collection("smmm_veriler").doc("ortak_veritabani").set({
-                        mukellefler: JSON.parse(localStorage.getItem('mukellefler') || "[]"),
-                        giderIslemler: JSON.parse(localStorage.getItem('giderIslemler') || "[]"),
-                        giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
-                        sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
-                        takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
-                        teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
-                        sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
-                        sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
-                    }).then(() => console.log("✅ Buluta Yedeklendi.")).catch(e => console.error("Bulut Hatası:", e));
-                }, 1500); // Sistemin yorulmaması için peş peşe işlemlerde 1.5 saniye bekleyip tek paket yazar
-            }
+            try {
+                if(!isSyncing && auth && auth.currentUser) {
+                    clearTimeout(syncTimeout);
+                    syncTimeout = setTimeout(() => {
+                        if(db) {
+                            db.collection("smmm_veriler").doc("ortak_veritabani").set({
+                                mukellefler: JSON.parse(localStorage.getItem('mukellefler') || "[]"),
+                                giderIslemler: JSON.parse(localStorage.getItem('giderIslemler') || "[]"),
+                                giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
+                                sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
+                                takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
+                                teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
+                                sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
+                                sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
+                            }).catch(e => console.warn("Yedekleme Hatası: ", e.message));
+                        }
+                    }, 1500); 
+                }
+            } catch(err) { console.warn("Yedekleyici hatası:", err); }
         };
 
         // Kullanıcı Giriş Kontrolü ve Buluttan Veri Çekme/Yükleme İşlemi
         auth.onAuthStateChanged(user => {
             if (user) {
                 if(!veriIndiMi) {
-                    // İlk girişte ekranı indirme/senkronize moduna sok
-                    document.querySelector('.login-box').innerHTML = '<h3 style="color:#2980b9;">Bulut Verileri Senkronize Ediliyor...</h3><p>Lütfen bekleyin, ofis verileriniz aktarılıyor.</p>';
+                    let loginKutu = document.querySelector('.login-box');
+                    if(loginKutu) {
+                        loginKutu.innerHTML = '<h3 style="color:#2980b9;">Bulut Verileri Senkronize Ediliyor...</h3><p>Lütfen bekleyin, ofis verileriniz aktarılıyor.</p><br><button onclick="hataliGecisYap()" style="background:#e74c3c; padding:10px 15px; border:none; color:white; border-radius:5px; cursor:pointer; width:100%; margin-top:15px;"><i class="fas fa-exclamation-triangle"></i> Takılı Kaldıysa Tıklayın ve Atlayın</button>';
+                    }
                     
                     db.collection("smmm_veriler").doc("ortak_veritabani").get().then((doc) => {
                         if (doc.exists) {
-                            // Bulutta veri var, indir ve yerel hafızaya yaz (Başka bilgisayardan girilmişse)
                             let data = doc.data();
-                            isSyncing = true; // Buluta geri yazmasını engellemek için kilitle
+                            isSyncing = true; 
                             if(data.mukellefler) localStorage.setItem('mukellefler', JSON.stringify(data.mukellefler));
                             if(data.giderIslemler) localStorage.setItem('giderIslemler', JSON.stringify(data.giderIslemler));
                             if(data.giderKategorileri) localStorage.setItem('giderKategorileri', JSON.stringify(data.giderKategorileri));
@@ -1517,9 +1519,8 @@
                             isSyncing = false; 
                             
                             sessionStorage.setItem("veriIndi", "evet");
-                            window.location.reload(); // Değişkenlerin güncel verilerle dolması için sayfayı yenile
+                            window.location.reload(); 
                         } else {
-                            // Bulut BOŞ (Projeyi yeni kurdunuz). Bilgisayardaki mevcut verileri buluta toptan kopyala
                             db.collection("smmm_veriler").doc("ortak_veritabani").set({
                                 mukellefler: JSON.parse(localStorage.getItem('mukellefler') || "[]"),
                                 giderIslemler: JSON.parse(localStorage.getItem('giderIslemler') || "[]"),
@@ -1532,20 +1533,44 @@
                             }).then(() => {
                                 sessionStorage.setItem("veriIndi", "evet");
                                 window.location.reload();
+                            }).catch(err => {
+                                alert("Buluta yazma izniniz yok. Verileriniz şimdilik sadece bilgisayarınıza kaydedilecek.\n\nLütfen Firebase Kurallarınızı kontrol edin.");
+                                sessionStorage.setItem("veriIndi", "evet");
+                                window.location.reload();
                             });
                         }
                     }).catch(error => {
-                        alert("Buluttan veri çekilemedi/yazılamadı! " + error);
+                        alert("Veritabanı bağlantı hatası veya izin reddedildi!\nSistem çevrimdışı (sadece bu bilgisayarda) çalışmaya devam edecek.");
+                        sessionStorage.setItem("veriIndi", "evet");
+                        window.location.reload();
                     });
                 } else {
-                    // Veriler indiyse normal sistemi aç
-                    document.getElementById('loginEkran').style.display = 'none';
+                    let ekran = document.getElementById('loginEkran');
+                    if(ekran) ekran.style.display = 'none';
                 }
             } else {
-                sessionStorage.removeItem("veriIndi"); // Çıkış yapılınca indirme hafızasını sil
-                document.getElementById('loginEkran').style.display = 'flex';
+                sessionStorage.removeItem("veriIndi"); 
+                let ekran = document.getElementById('loginEkran');
+                if(ekran) {
+                    ekran.style.display = 'flex';
+                    document.querySelector('.login-box').innerHTML = `
+                        <img src="SMMM Logo.png" alt="Logo">
+                        <h2 style="color:#2c3e50; margin-bottom: 5px;">SMMM Pro Yönetim</h2>
+                        <p style="color:#7f8c8d; margin-bottom: 25px; font-size: 13px;">Bulut Sisteme Giriş Yapın</p>
+                        <input type="email" id="loginEmail" placeholder="E-Posta Adresiniz">
+                        <input type="password" id="loginSifre" placeholder="Şifreniz">
+                        <button onclick="sistemeGirisYap()">Giriş Yap</button>
+                        <p id="loginHata" style="color:#e74c3c; font-size:13px; margin-top:15px; display:none;"></p>
+                    `;
+                }
             }
         });
+
+        // Manuel Atlatma Fonksiyonu (Takılı Kalmalara Karşı)
+        function hataliGecisYap() {
+            sessionStorage.setItem("veriIndi", "evet");
+            window.location.reload();
+        }
 
         // Giriş Yap Butonu Fonksiyonu
         function sistemeGirisYap() {
@@ -1577,7 +1602,6 @@
                 });
             }
         }
-
 
         // Sekme (Tab) Değiştirme Fonksiyonu
         function openTab(evt, tabName) {
