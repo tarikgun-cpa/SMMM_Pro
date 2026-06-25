@@ -481,6 +481,42 @@
         @media (max-width: 480px) {
             #cariPaneli .summary-cards, #takvimPaneli .summary-cards { grid-template-columns: 1fr; }
         }
+
+        /* ========================================= */
+        /* --- COMPACT (SIKILAŞTIRILMIŞ) ARAYÜZ --- */
+        /* ========================================= */
+        body { font-size: 13px; }
+        h1 { font-size: 20px; margin-bottom: 15px; }
+        
+        /* Sol Menüyü İnceltme */
+        .sidebar { width: 220px; padding: 15px; }
+        .sidebar-logo { max-width: 110px; margin-bottom: 10px; padding: 5px; }
+        .sidebar ul li { margin-bottom: 5px; }
+        .sidebar ul li a { padding: 8px 10px; font-size: 13.5px; }
+        
+        /* İçerik ve Form Daraltmaları */
+        .main-content { padding: 20px; }
+        .form-container, .wizard-form { padding: 15px 20px; }
+        .form-group input, .form-group textarea, .search-bar, select { padding: 7px 10px !important; font-size: 13px !important; }
+        .action-btn, .submit-btn, .tab-btn { padding: 7px 14px !important; font-size: 13px !important; }
+        
+        /* Pano (Dashboard) Kartlarını Küçültme */
+        .summary-cards { margin-bottom: 15px; gap: 10px; }
+        .summary-card { padding: 12px; }
+        .summary-card h4 { font-size: 11px; margin-bottom: 4px; }
+        .summary-card .amount { font-size: 18px; }
+        
+        /* Mali Takvim Mükellef Rozetlerini Küçültme */
+        .company-badge { padding: 10px 12px !important; }
+        .company-badge > div:first-child { font-size: 13px !important; margin-bottom: 3px !important; }
+        
+        /* Tablo Düzeltmeleri (Kaydırma Çubuğunu Yok Eder) */
+        .mukellef-table th, .mukellef-table td { padding: 8px 10px !important; font-size: 12.5px !important; }
+        .mukellef-table { white-space: normal !important; } 
+        
+        /* Ücret Sihirbazı Fişini Daraltma */
+        .receipt-card { width: 320px !important; padding: 15px 20px; }
+        .receipt-item { font-size: 13px; margin-bottom: 6px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
