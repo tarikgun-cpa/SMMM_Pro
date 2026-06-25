@@ -368,12 +368,28 @@
         
         /* --- YAZDIRMA (PRINT) AYARLARI --- */
         .print-header { display: none; } /* Normal ekranda logolu başlığı gizle */
+        .print-footer { display: none; } /* Normal ekranda alt bilgiyi gizle */
 
         @media print {
             @page { margin: 1cm; size: A4; } /* A4 kağıt ve kenar boşluğu */
 
-            /* Ana iskeleti ve menüleri gizle */
-            .sidebar, .main-content > *:not(.modal-overlay) { display: none !important; }
+            /* Ana iskeleti, mobil menüyü ve arka planları tamamen gizle */
+            .sidebar, .mobile-header, #loginEkran, .main-content > *:not(.modal-overlay) { display: none !important; }
+
+            /* Raporların her sayfasının en altına eklenecek profesyonel alt bilgi */
+            .print-footer {
+                display: block !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 11px;
+                color: #7f8c8d;
+                border-top: 1px solid #ddd;
+                padding-top: 5px;
+                background: white;
+            }
 
             /* Modalleri kağıt düzenine sok (Kaydırma sorunlarını çözer) */
             .modal-overlay { position: absolute !important; top: 0 !important; left: 0 !important; background: transparent !important; align-items: flex-start !important; padding: 0 !important; }
@@ -1461,6 +1477,7 @@
                             <thead><tr><th>Tarih</th><th>İşlem Tipi</th><th>Açıklama</th><th style="color:#e74c3c; text-align:right;">Borç (Makbuz)</th><th style="color:#2ecc71; text-align:right;">Alacak (Tahsilat)</th><th style="text-align:right;">Bakiye</th><th class="no-print">Sil</th></tr></thead>
                             <tbody id="eksTablo"></tbody>
                         </table>
+                        <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1551,6 +1568,7 @@
                             <thead><tr><th>Tarih</th><th>İşlem Tipi</th><th>Açıklama / Belge</th><th style="color:#c0392b; text-align:right;">Gider (Borç)</th><th style="color:#2ecc71; text-align:right;">Ödeme (Alacak)</th><th style="text-align:right;">Bakiye</th><th class="no-print">Sil</th></tr></thead>
                             <tbody id="giderEkstreTablo"></tbody>
                         </table>
+                        <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2033,6 +2051,7 @@
                     <tr><th>Geçmiş Dönem Notları:</th><td>${m.gecmisDonemNot || '-'}</td></tr>
                     <tr><th>Vekaletname:</th><td>${m.vekaletDurum || '-'} (Tarih: ${m.vekaletTarih ? parseTR(m.vekaletTarih) : '-'})</td></tr>
                 </table>
+                <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
             `;
             
             modalAc('profilModal');
