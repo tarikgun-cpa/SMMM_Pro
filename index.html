@@ -417,7 +417,7 @@
             /* Tabloların sayfa ortasında bölünmesini engelle */
             table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; margin-bottom: 20px !important;}
             tr { page-break-inside: avoid !important; page-break-after: auto; }
-            th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; color: #000 !important; }
+            th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; white-space: nowrap !important; }
             
             /* Üstteki özet bilgi kutularını yazdırırken flex düzenine sok */
             #printEkstreAlan > div:first-child, #printGiderEkstreAlan > div:first-child { display: flex !important; }
@@ -630,6 +630,13 @@
                         <div class="form-group">
                             <label>Vergi Dairesi:</label>
                             <input type="text" id="vergiDairesi">
+                        </div>
+                        <div class="form-group">
+                            <label style="color:#c0392b;">Sözleşme Durumu (Aktif/Pasif):</label>
+                            <select id="durum" style="padding:10px; border:1px solid #c0392b; border-radius:4px; font-weight:bold;">
+                                <option value="Aktif" selected>Aktif (Devam Ediyor)</option>
+                                <option value="Pasif">Pasif (Fesih / Kapandı)</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Mükellef Türü:</label>
@@ -1477,7 +1484,7 @@
                             <thead><tr><th>Tarih</th><th>İşlem Tipi</th><th>Açıklama</th><th style="color:#e74c3c; text-align:right;">Borç (Makbuz)</th><th style="color:#2ecc71; text-align:right;">Alacak (Tahsilat)</th><th style="text-align:right;">Bakiye</th><th class="no-print">Sil</th></tr></thead>
                             <tbody id="eksTablo"></tbody>
                         </table>
-                        <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
+                        <div class="print-footer">Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli &nbsp; | &nbsp; 📞 0542 323 74 77 &nbsp; | &nbsp; 📧 tarikgun@cpa-ftc.com</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2455,16 +2462,13 @@
             let netCariBorc = brut + kdvTutar - stopajTutar;
 
             let aciklama = document.getElementById("makAciklama").value || "SMMM Hizmet Bedeli";
-            let rozetler = "";
-            if(isKdv) rozetler += ` [KDV: +${kdvTutar.toFixed(2)}]`;
-            if(isStopaj) rozetler += ` [Stp: -${stopajTutar.toFixed(2)}]`;
 
             let p = tarihRaw.split("-"); let tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
             let m = mukellefler.find(x => x.vkn === vkn);
             
             m.hareketler.push({
                 id: "HRK_" + Date.now(), tur: "Makbuz", tarih: tarihTR, tarihDüzz: tarihRaw,
-                aciklama: aciklama + rozetler, brut: brut, kdv: kdvTutar, stopaj: stopajTutar, netTutar: netCariBorc, tutar: netCariBorc
+                aciklama: aciklama, brut: brut, kdv: kdvTutar, stopaj: stopajTutar, netTutar: netCariBorc, tutar: netCariBorc
             });
             m.makbuzToplami += netCariBorc;
 
@@ -2826,6 +2830,9 @@
             let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
 
             mukellefler.forEach(m => {
+                // Pasif mükellefleri takvimde gösterme (Cari hesapta kalmaya devam ederler)
+                if(m.durum === "Pasif") return;
+
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
                 filtrelenmisFirmaSayisi++;
 
@@ -2839,13 +2846,12 @@
                 
                 let fToplam = 0; let fTamam = 0; let kartKirmiziMi = false;
 
-                // Dinamik Rozet Çizici (İşlem Yok/Muaf mantığıyla birlikte)
                 function rozetEkle(isim, isDone, targetDate, isYok) {
                     if(isYok) {
-                        return `<span style="background:#f4f6f9; color:#7f8c8d; border:1px solid #bdc3c7; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block; margin-bottom:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${isim} ⚪(Yok)</span>`;
+                        return `<span style="background:#f8f9fa; color:#95a5a6; border:1px solid #e1e8ed; padding:4px 8px; border-radius:4px; font-size:10.5px; font-weight:600; display:inline-block; margin-bottom:5px;">${isim} ⚪</span>`;
                     }
                     if(isDone) {
-                        return `<span style="background:#eafaf1; color:#27ae60; border:1px solid #2ecc71; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block; margin-bottom:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${isim} ✅</span>`;
+                        return `<span style="background:#eafaf1; color:#27ae60; border:1px solid #2ecc71; padding:4px 8px; border-radius:4px; font-size:10.5px; font-weight:600; display:inline-block; margin-bottom:5px;">${isim} ✅</span>`;
                     } else {
                         let gun = gunFarkiHesapla(targetDate);
                         let text = gun !== null ? (gun < 0 ? `Gecikti` : (gun === 0 ? `Bugün` : `${gun} gün`)) : "-";
@@ -2853,15 +2859,13 @@
                         let bg = (gun !== null && gun <= 3) ? "#fdf2f2" : "#fef9e7";
                         let bColor = (gun !== null && gun <= 3) ? "#e74c3c" : "#f1c40f";
                         if(gun !== null && gun <= 3) kartKirmiziMi = true; 
-                        return `<span style="background:${bg}; color:${color}; border:1px solid ${bColor}; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block; margin-bottom:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${isim} ⌛(${text})</span>`;
+                        return `<span style="background:${bg}; color:${color}; border:1px solid ${bColor}; padding:4px 8px; border-radius:4px; font-size:10.5px; font-weight:600; display:inline-block; margin-bottom:5px;">${isim} ⌛(${text})</span>`;
                     }
                 }
 
-                let rozetlerHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; margin-bottom:10px;">`;
+                let rozetlerHTML = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; margin-bottom:12px;">`;
                 
                 if(tTarih.kdv1) { fToplam++; if(f.KDV1) fTamam++; rozetlerHTML += rozetEkle("1 Nolu KDV", f.KDV1, tTarih.kdv1, false); }
-                
-                // Mükellefe bu ay 2 Nolu KDV / Muhtasar Yok dendiyse
                 if(tTarih.kdv2) { 
                     if(!f.KDV2_Yok) { fToplam++; if(f.KDV2) fTamam++; rozetlerHTML += rozetEkle("2 Nolu KDV", f.KDV2, tTarih.kdv2, false); }
                     else { rozetlerHTML += rozetEkle("2 Nolu KDV", false, tTarih.kdv2, true); }
@@ -2870,7 +2874,6 @@
                     if(!f.MUHSGK_Yok) { fToplam++; if(f.MUHSGK) fTamam++; rozetlerHTML += rozetEkle("Muhtasar", f.MUHSGK, tTarih.muhsgk, false); }
                     else { rozetlerHTML += rozetEkle("Muhtasar", false, tTarih.muhsgk, true); }
                 }
-
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) { fToplam++; if(f.BABS) fTamam++; rozetlerHTML += rozetEkle("Ba/Bs", f.BABS, tTarih.babs, false); }
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet") && (isDefterUc ? tTarih.defterUc : tTarih.defterAylik)) { 
                     fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("Defter", f.DEFTER, isDefterUc ? tTarih.defterUc : tTarih.defterAylik, false); 
@@ -2890,19 +2893,27 @@
                 tamamlananGorevSayisi += fTamam;
                 let fYuzde = fToplam === 0 ? 100 : Math.round((fTamam / fToplam) * 100);
                 
-                let barRenk = fYuzde === 100 ? "#2ecc71" : (kartKirmiziMi ? "#e74c3c" : "#3498db");
-                let borderKalinligi = kartKirmiziMi && fYuzde < 100 ? "8px" : "4px";
-                let shadow = kartKirmiziMi && fYuzde < 100 ? "0 5px 15px rgba(231, 76, 60, 0.3)" : "0 2px 5px rgba(0,0,0,0.05)";
+                // PREMIUM CLEAN UI TASARIMI (Göz Yormayan)
+                let barRenk = fYuzde === 100 ? "#27ae60" : (kartKirmiziMi ? "#e74c3c" : "#3498db");
+                let shadow = kartKirmiziMi && fYuzde < 100 ? "0 4px 15px rgba(231, 76, 60, 0.15)" : "0 2px 8px rgba(0,0,0,0.04)";
 
                 kartlarAlani.innerHTML += `
-                <div class="company-badge" onclick="takvimGorevPaneliAc('${m.vkn}', '${m.unvan}', '${m.muhasebeSistemi}', '${m.eDefterDurum}')" style="border-left: ${borderKalinligi} solid ${barRenk}; box-shadow: ${shadow}; padding: 15px; height: auto;">
-                    <div style="font-weight:bold; color:#2c3e50; font-size:14px; margin-bottom:5px;">${m.unvan}</div>
-                    <div style="font-size:11px; color:#7f8c8d; border-bottom:1px solid #eee; padding-bottom:6px;">VKN: ${m.vkn} | ${m.muhasebeSistemi || 'Belirtilmedi'}</div>
+                <div class="company-badge" onclick="takvimGorevPaneliAc('${m.vkn}', '${m.unvan}', '${m.muhasebeSistemi}', '${m.eDefterDurum}')" 
+                     style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; box-shadow: ${shadow}; padding: 15px; background: #fff; border-radius: 8px; height: auto;">
+                    
+                    <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
+                    <div style="font-size:11px; color:#95a5a6; border-bottom:1px solid #f4f6f9; padding-bottom:8px; margin-bottom:8px;">VKN: ${m.vkn} | ${m.muhasebeSistemi || 'Belirtilmedi'}</div>
                     
                     ${rozetlerHTML}
                     
-                    <div style="text-align:right; font-size:11px; font-weight:bold; color:${kartKirmiziMi && fYuzde < 100 ? '#e74c3c' : '#7f8c8d'}; margin-top:5px; padding-top:5px; border-top:1px dashed #ddd;">
-                        ${kartKirmiziMi && fYuzde < 100 ? '<i class="fas fa-bell"></i> DİKKAT EKSİK VAR! ' : ''} %${fYuzde} Tamamlandı
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed #f4f6f9;">
+                        <span style="font-size:10px; color:${kartKirmiziMi && fYuzde < 100 ? '#e74c3c' : '#95a5a6'}; font-weight:bold;">
+                            ${kartKirmiziMi && fYuzde < 100 ? '<i class="fas fa-exclamation-circle"></i> YAKLAŞAN GÖREV!' : 'Durum'}
+                        </span>
+                        <span style="font-size:11px; font-weight:bold; color:${barRenk};">%${fYuzde} Tamam</span>
+                    </div>
+                    <div style="width:100%; background:#f0f3f5; height:4px; border-radius:2px; margin-top:6px; overflow:hidden;">
+                        <div style="width:${fYuzde}%; background:${barRenk}; height:100%; transition: 0.4s;"></div>
                     </div>
                 </div>`;
             });
