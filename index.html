@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         * {
             box-sizing: border-box;
@@ -417,7 +419,7 @@
             /* Tabloların sayfa ortasında bölünmesini engelle */
             table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; margin-bottom: 20px !important;}
             tr { page-break-inside: avoid !important; page-break-after: auto; }
-            th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; white-space: nowrap !important; }
+            th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; white-space: normal !important; }
             
             /* Üstteki özet bilgi kutularını yazdırırken flex düzenine sok */
             #printEkstreAlan > div:first-child, #printGiderEkstreAlan > div:first-child { display: flex !important; }
@@ -581,6 +583,8 @@
             <h1>Mükellef Takip Paneli</h1>
             <div class="list-header-actions">
                 <input type="text" id="aramaCubugu" class="search-bar" placeholder="Mükellef adı, unvanı veya VKN/TCKN ile ara..." oninput="mukellefAra()">
+                <button type="button" class="action-btn btn-success" style="background:#27ae60; color:white;" onclick="triggerExcelYukle()"><i class="fas fa-file-excel"></i> Excel'den Aktar</button>
+                <input type="file" id="excelDosyaInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="excelDosyaOku(event)">
                 <button type="button" class="action-btn btn-primary" onclick="yeniMukellefFormuAc()">+ Yeni Mükellef Ekle</button>
             </div>
             
@@ -633,10 +637,14 @@
                         </div>
                         <div class="form-group">
                             <label style="color:#c0392b;">Sözleşme Durumu (Aktif/Pasif):</label>
-                            <select id="durum" style="padding:10px; border:1px solid #c0392b; border-radius:4px; font-weight:bold;">
+                            <select id="durum" onchange="durumDegisti()" style="padding:10px; border:1px solid #c0392b; border-radius:4px; font-weight:bold;">
                                 <option value="Aktif" selected>Aktif (Devam Ediyor)</option>
                                 <option value="Pasif">Pasif (Fesih / Kapandı)</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="fesihTarihiGrup" style="display:none;">
+                            <label style="color:#c0392b;">Fesih / Kapanış Tarihi:</label>
+                            <input type="date" id="fesihTarihi">
                         </div>
                         <div class="form-group">
                             <label>Mükellef Türü:</label>
@@ -1575,7 +1583,7 @@
                             <thead><tr><th>Tarih</th><th>İşlem Tipi</th><th>Açıklama / Belge</th><th style="color:#c0392b; text-align:right;">Gider (Borç)</th><th style="color:#2ecc71; text-align:right;">Ödeme (Alacak)</th><th style="text-align:right;">Bakiye</th><th class="no-print">Sil</th></tr></thead>
                             <tbody id="giderEkstreTablo"></tbody>
                         </table>
-                        <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
+                        <div class="print-footer">Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli &nbsp; | &nbsp; 📞 0542 323 74 77 &nbsp; | &nbsp; 📧 tarikgun@cpa-ftc.com</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1908,6 +1916,14 @@
                     input.value = veri[input.id];
                 }
             });
+            durumDegisti(); // Fesih tarihini forma göre gizle/göster
+        }
+
+        // Mükellef Pasif/Aktif Durum Değişimi
+        function durumDegisti() {
+            let drm = document.getElementById("durum").value;
+            let fesihGrup = document.getElementById("fesihTarihiGrup");
+            if(fesihGrup) fesihGrup.style.display = (drm === "Pasif") ? "flex" : "none";
         }
 
         // Form Gönderildiğinde (Kaydet Butonu)
@@ -2038,7 +2054,7 @@
                     <tr><th>Geçmiş Dönem Notları:</th><td>${m.gecmisDonemNot || '-'}</td></tr>
                     <tr><th>Vekaletname:</th><td>${m.vekaletDurum || '-'} (Tarih: ${m.vekaletTarih ? parseTR(m.vekaletTarih) : '-'})</td></tr>
                 </table>
-                <div class="print-footer"><strong>SMMM Pro Yönetim Sistemi</strong> | Otomatik Üretilmiş Mali Rapordur</div>
+                <div class="print-footer">Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli &nbsp; | &nbsp; 📞 0542 323 74 77 &nbsp; | &nbsp; 📧 tarikgun@cpa-ftc.com</div>
             `;
             
             modalAc('profilModal');
@@ -2075,6 +2091,96 @@
                 (m.vkn && m.vkn.includes(aranacakKelime))
             );
             listeyiYenile(sonuclar);
+        }
+
+        // --- EXCEL'DEN TOPLU MÜKELLEF AKTARMA MOTORU ---
+        function triggerExcelYukle() {
+            document.getElementById('excelDosyaInput').click();
+        }
+
+        function excelDosyaOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let ilkSayfaAdi = workbook.SheetNames[0];
+                    let sayfa = workbook.Sheets[ilkSayfaAdi];
+                    let jsonSatirlar = XLSX.utils.sheet_to_json(sayfa);
+
+                    let eklenenSayac = 0;
+                    let atlananSayac = 0;
+
+                    jsonSatirlar.forEach(satir => {
+                        // Excel sütun başlıklarında esneklik sağlıyoruz (Büyük/küçük harf veya alternatif isimler)
+                        let unvan = satir["Mükellef Unvanı"] || satir["Unvan"] || satir["Mükellef Adı"] || satir["Adı Soyadı"] || satir["unvan"];
+                        let vkn = satir["VKN"] || satir["TCKN"] || satir["VKN / TCKN"] || satir["Vergi No"] || satir["vkn"];
+                        
+                        if (vkn) vkn = String(vkn).trim();
+                        if (unvan) unvan = String(unvan).trim();
+
+                        if (!unvan || !vkn) {
+                            atlananSayac++;
+                            return; // Temel bilgiler yoksa bu satırı geç
+                        }
+
+                        // Sistemde bu VKN ile zaten kayıtlı biri var mı kontrol et (Mükerrer önleme)
+                        let varMi = mukellefler.some(m => m.vkn === vkn);
+                        if (varMi) {
+                            atlananSayac++;
+                            return; 
+                        }
+
+                        // Yeni mükellef şablonu oluştur (Excel'de olanları doldur, olmayanlara varsayılan yaz)
+                        let yeniMusteri = {
+                            unvan: unvan,
+                            vkn: vkn,
+                            vergiDairesi: satir["Vergi Dairesi"] || satir["VD"] || "",
+                            durum: "Aktif",
+                            fesihTarihi: "",
+                            mukellefTuru: satir["Mükellef Türü"] || satir["Türü"] || "Gerçek Kişi",
+                            naceKodu: satir["Nace Kodu"] || satir["Nace"] || "",
+                            iseBaslama: satir["İşe Başlama Tarihi"] || "",
+                            muhasebeSistemi: satir["Muhasebe Sistemi"] || "Bilanço Esası",
+                            telefon: satir["Telefon"] || satir["Tel"] || "",
+                            eposta: satir["E-Posta"] || satir["Eposta"] || "",
+                            adres: satir["Adres"] || "",
+                            gibKullaniciKodu: satir["GİB Kullanıcı Kodu"] || satir["GİB Kodu"] || "",
+                            gibParola: satir["GİB Parola"] || "",
+                            gibSifre: satir["GİB Şifre"] || "",
+                            sgkSicil: satir["SGK Sicil"] || "",
+                            hareketler: [],
+                            makbuzToplami: 0,
+                            tahsilatToplami: 0,
+                            mutabakatlar: []
+                        };
+
+                        mukellefler.push(yeniMusteri);
+                        eklenenSayac++;
+                    });
+
+                    if (eklenenSayac > 0) {
+                        // Lokale kaydet (Bu komut otomatik olarak Firebase bulut senkronizasyonunu tetikler!)
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        listeyiYenile();
+                        cariPanoCiz();
+                        if(typeof takvimCiz === "function") takvimCiz();
+                        
+                        alert(`İşlem Tamamlandı!\n🎉 ${eklenenSayac} yeni mükellef başarıyla içeri aktarıldı.\n⚠️ ${atlananSayac} kayıt (eksik bilgi veya mükerrer VKN nedeniyle) atlandı.`);
+                    } else {
+                        alert("Excel dosyasından yeni veya geçerli bir mükellef kaydı okunamadı. Lütfen sütun başlıklarını kontrol edin (Unvan, VKN, Telefon vb.).");
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Excel dosyası okunurken bir hata oluştu. Dosyanın bozuk olmadığından emin olun.");
+                }
+                event.target.value = ""; // Inputu sıfırla ki aynı dosya tekrar seçilebilsin
+            };
+            reader.readAsArrayBuffer(dosya);
         }
 
         // --- SİSTEM AYARLARI VE DÖNEMSEL TARİHLER ---
@@ -2577,8 +2683,8 @@
                     totalOdeme += alacak;
 
                     let islemTipi = isOdeme ? "Ödeme" : "Gider Fişi";
-                    let borcGosterim = borc > 0 ? formatMoney(borc) + ' ₺' : '-';
-                    let alacakGosterim = alacak > 0 ? formatMoney(alacak) + ' ₺' : '-';
+                    let borcGosterim = borc > 0 ? '<span style="white-space:nowrap;">' + formatMoney(borc) + ' ₺</span>' : '-';
+                    let alacakGosterim = alacak > 0 ? '<span style="white-space:nowrap;">' + formatMoney(alacak) + ' ₺</span>' : '-';
 
                     tbody.innerHTML += `<tr>
                         <td>${g.tarih}</td>
@@ -2586,7 +2692,7 @@
                         <td><small>${g.aciklama}</small></td>
                         <td style="color:#c0392b; font-weight:bold; text-align:right;">${borcGosterim}</td>
                         <td style="color:#2ecc71; font-weight:bold; text-align:right;">${alacakGosterim}</td>
-                        <td style="text-align:right; font-weight:bold; background:#f4f6f9;">${formatMoney(anlikBakiye)} ₺</td>
+                        <td style="text-align:right; font-weight:bold; background:#f4f6f9;"><span style="white-space:nowrap;">${formatMoney(anlikBakiye)} ₺</span></td>
                         <td class="no-print" style="white-space: nowrap;">
                             <button class="table-btn btn-edit" title="Düzelt" onclick="giderDuzenle('${g.id}', '${tur}')"><i class="fas fa-edit"></i> Düzelt</button>
                             <button class="table-btn btn-danger" title="Sil" onclick="giderSil('${g.id}', '${tur}')"><i class="fas fa-trash"></i></button>
@@ -2699,9 +2805,9 @@
 
                     tbody.innerHTML += `<tr>
                         <td>${h.tarih}</td><td><b>${h.tur}</b></td><td>${h.aciklama}</td>
-                        <td style="text-align:right; color:#e74c3c; font-weight:bold;">${borc > 0 ? formatMoney(borc) + ' ₺' : '-'}</td>
-                        <td style="text-align:right; color:#2ecc71; font-weight:bold;">${alacak > 0 ? formatMoney(alacak) + ' ₺' : '-'}</td>
-                        <td style="text-align:right; font-weight:bold; background:#f4f6f9;">${formatMoney(anlikBakiye)} ₺</td>
+                        <td style="text-align:right; color:#e74c3c; font-weight:bold;">${borc > 0 ? '<span style="white-space:nowrap;">' + formatMoney(borc) + ' ₺</span>' : '-'}</td>
+                        <td style="text-align:right; color:#2ecc71; font-weight:bold;">${alacak > 0 ? '<span style="white-space:nowrap;">' + formatMoney(alacak) + ' ₺</span>' : '-'}</td>
+                        <td style="text-align:right; font-weight:bold; background:#f4f6f9;"><span style="white-space:nowrap;">${formatMoney(anlikBakiye)} ₺</span></td>
                         <td class="no-print" style="white-space: nowrap;">
                             <button class="table-btn btn-edit" title="Düzelt" onclick="hareketDuzenle('${h.id}')"><i class="fas fa-edit"></i> Düzelt</button>
                             <button class="table-btn btn-danger" title="Sil" onclick="hareketSil('${h.id}')"><i class="fas fa-trash"></i></button>
@@ -2958,7 +3064,8 @@
             document.getElementById("lbl_Gorev_KDV2").style.display = tTarih.kdv2 ? "flex" : "none";
             document.getElementById("lbl_Gorev_MUHSGK").style.display = tTarih.muhsgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_BABS").style.display = (defterTuru === "Bilanço Esası" && tTarih.babs) ? "flex" : "none";
-            document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet")) ? "flex" : "none";
+            let isDefterUcModal = (eDefterDurum === "Evet - Üç Aylık");
+            document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && (isDefterUcModal ? tTarih.defterUc : tTarih.defterAylik)) ? "flex" : "none";
             document.getElementById("lbl_Gorev_GECICI").style.display = (tTarih.geciciKurum || tTarih.geciciSahis || tTarih.yillik) ? "flex" : "none";
             document.getElementById("lbl_Gorev_SGK").style.display = tTarih.sgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_TUIK").style.display = tTarih.tuik ? "flex" : "none";
