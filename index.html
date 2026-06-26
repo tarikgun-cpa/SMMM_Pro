@@ -1594,15 +1594,14 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- BULUT SENKRONİZASYON MOTORU (GÜVENLİ VE HATA KORUMALI) ---
-        let veriIndiMi = sessionStorage.getItem("veriIndi");
+        // --- BULUT SENKRONİZASYON MOTORU (YENİ VE GERÇEK ZAMANLI) ---
         let isSyncing = false; 
         let syncTimeout = null;
 
         // LOCALSTORAGE OVERRIDE (Güvenli Yakalayıcı)
         const originalSetItem = localStorage.setItem;
         localStorage.setItem = function(key, value) {
-            originalSetItem.call(localStorage, key, value); // Güvenli çağrı
+            originalSetItem.call(localStorage, key, value); 
             
             try {
                 if(!isSyncing && auth && auth.currentUser) {
@@ -1625,61 +1624,59 @@
             } catch(err) { console.warn("Yedekleyici hatası:", err); }
         };
 
-        // Kullanıcı Giriş Kontrolü ve Buluttan Veri Çekme/Yükleme İşlemi
+        // Kullanıcı Giriş Kontrolü ve Buluttan SESSİZ Veri Çekme İşlemi
         auth.onAuthStateChanged(user => {
             if (user) {
-                if(!veriIndiMi) {
-                    let loginKutu = document.querySelector('.login-box');
-                    if(loginKutu) {
-                        loginKutu.innerHTML = '<h3 style="color:#2980b9;">Bulut Verileri Senkronize Ediliyor...</h3><p>Lütfen bekleyin, ofis verileriniz aktarılıyor.</p><br><button onclick="hataliGecisYap()" style="background:#e74c3c; padding:10px 15px; border:none; color:white; border-radius:5px; cursor:pointer; width:100%; margin-top:15px;"><i class="fas fa-exclamation-triangle"></i> Takılı Kaldıysa Tıklayın ve Atlayın</button>';
-                    }
-                    
-                    db.collection("smmm_veriler").doc("ortak_veritabani").get().then((doc) => {
-                        if (doc.exists) {
-                            let data = doc.data();
-                            isSyncing = true; 
-                            if(data.mukellefler) localStorage.setItem('mukellefler', JSON.stringify(data.mukellefler));
-                            if(data.giderIslemler) localStorage.setItem('giderIslemler', JSON.stringify(data.giderIslemler));
-                            if(data.giderKategorileri) localStorage.setItem('giderKategorileri', JSON.stringify(data.giderKategorileri));
-                            if(data.sistemAyarlari) localStorage.setItem('sistemAyarlari', JSON.stringify(data.sistemAyarlari));
-                            if(data.takvimVeritabanı) localStorage.setItem('takvimVeritabanı', JSON.stringify(data.takvimVeritabanı));
-                            if(data.teklifler) localStorage.setItem('teklifler', JSON.stringify(data.teklifler));
-                            if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
-                            if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
-                            isSyncing = false; 
-                            
-                            sessionStorage.setItem("veriIndi", "evet");
-                            window.location.reload(); 
-                        } else {
-                            db.collection("smmm_veriler").doc("ortak_veritabani").set({
-                                mukellefler: JSON.parse(localStorage.getItem('mukellefler') || "[]"),
-                                giderIslemler: JSON.parse(localStorage.getItem('giderIslemler') || "[]"),
-                                giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
-                                sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
-                                takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
-                                teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
-                                sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
-                                sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
-                            }).then(() => {
-                                sessionStorage.setItem("veriIndi", "evet");
-                                window.location.reload();
-                            }).catch(err => {
-                                alert("Buluta yazma izniniz yok. Verileriniz şimdilik sadece bilgisayarınıza kaydedilecek.\n\nLütfen Firebase Kurallarınızı kontrol edin.");
-                                sessionStorage.setItem("veriIndi", "evet");
-                                window.location.reload();
-                            });
-                        }
-                    }).catch(error => {
-                        alert("Veritabanı bağlantı hatası veya izin reddedildi!\nSistem çevrimdışı (sadece bu bilgisayarda) çalışmaya devam edecek.");
-                        sessionStorage.setItem("veriIndi", "evet");
-                        window.location.reload();
-                    });
-                } else {
-                    let ekran = document.getElementById('loginEkran');
-                    if(ekran) ekran.style.display = 'none';
+                let loginKutu = document.querySelector('.login-box');
+                if(loginKutu) {
+                    document.getElementById('loginEkran').style.display = 'flex';
+                    loginKutu.innerHTML = '<h3 style="color:#2980b9;">Bulut Verileri Senkronize Ediliyor...</h3><p>Ofis verileriniz aktarılıyor, lütfen bekleyin.</p>';
                 }
+                
+                // Her F5 atıldığında veya girildiğinde veriyi BULUTTAN TAZELER
+                db.collection("smmm_veriler").doc("ortak_veritabani").get().then((doc) => {
+                    if (doc.exists) {
+                        let data = doc.data();
+                        isSyncing = true; // Verileri lokale yazarken tekrar buluta göndermeyi engeller
+                        
+                        // 1. Gelen verileri hafızaya ve global değişkenlere yedekle
+                        if(data.mukellefler) { localStorage.setItem('mukellefler', JSON.stringify(data.mukellefler)); mukellefler = data.mukellefler; }
+                        if(data.giderIslemler) { localStorage.setItem('giderIslemler', JSON.stringify(data.giderIslemler)); giderIslemler = data.giderIslemler; }
+                        if(data.giderKategorileri) { localStorage.setItem('giderKategorileri', JSON.stringify(data.giderKategorileri)); giderKategorileri = data.giderKategorileri; }
+                        if(data.sistemAyarlari) { localStorage.setItem('sistemAyarlari', JSON.stringify(data.sistemAyarlari)); sistemAyarlari = data.sistemAyarlari; }
+                        if(data.takvimVeritabanı) { localStorage.setItem('takvimVeritabanı', JSON.stringify(data.takvimVeritabanı)); takvimVeritabanı = data.takvimVeritabanı; }
+                        if(data.teklifler) { localStorage.setItem('teklifler', JSON.stringify(data.teklifler)); kayitliTeklifler = data.teklifler; }
+                        if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
+                        if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
+                        
+                        isSyncing = false; 
+                        
+                        // 2. Sayfayı yenilemeden SESSİZCE tüm panoları (Cari, Takvim vs.) yeni veriyle çizdir
+                        listeyiYenile();
+                        ayarlariYukle();
+                        cariPanoCiz();
+                        takvimCiz();
+                        teklifleriListele();
+                        
+                        document.getElementById('loginEkran').style.display = 'none'; 
+                    } else {
+                        // Veritabanı ilk kez kuruluyorsa (boşsa) lokaldekileri buluta bas
+                        db.collection("smmm_veriler").doc("ortak_veritabani").set({
+                            mukellefler: mukellefler,
+                            giderIslemler: giderIslemler,
+                            giderKategorileri: giderKategorileri,
+                            sistemAyarlari: sistemAyarlari,
+                            takvimVeritabanı: takvimVeritabanı,
+                            teklifler: kayitliTeklifler,
+                            sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
+                            sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
+                        }).then(() => { document.getElementById('loginEkran').style.display = 'none'; });
+                    }
+                }).catch(error => {
+                    alert("Buluta bağlanılamadı. Cihazınızdaki son verilerle çalışacaksınız.");
+                    document.getElementById('loginEkran').style.display = 'none';
+                });
             } else {
-                sessionStorage.removeItem("veriIndi"); 
                 let ekran = document.getElementById('loginEkran');
                 if(ekran) {
                     ekran.style.display = 'flex';
@@ -1696,40 +1693,23 @@
             }
         });
 
-        // Manuel Atlatma Fonksiyonu (Takılı Kalmalara Karşı)
-        function hataliGecisYap() {
-            sessionStorage.setItem("veriIndi", "evet");
-            window.location.reload();
-        }
-
-        // Giriş Yap Butonu Fonksiyonu
+        // Giriş Yap Butonu
         function sistemeGirisYap() {
             let email = document.getElementById("loginEmail").value;
             let sifre = document.getElementById("loginSifre").value;
             let hataKutusu = document.getElementById("loginHata");
 
-            if(!email || !sifre) {
-                hataKutusu.textContent = "Lütfen e-posta ve şifrenizi girin.";
-                hataKutusu.style.display = "block"; return;
-            }
+            if(!email || !sifre) { hataKutusu.textContent = "E-posta ve şifrenizi girin."; hataKutusu.style.display = "block"; return; }
 
             auth.signInWithEmailAndPassword(email, sifre)
-                .then((userCredential) => {
-                    hataKutusu.style.display = "none";
-                })
-                .catch((error) => {
-                    hataKutusu.textContent = "Hatalı e-posta veya şifre!";
-                    hataKutusu.style.display = "block";
-                });
+                .then((userCredential) => { hataKutusu.style.display = "none"; })
+                .catch((error) => { hataKutusu.textContent = "Hatalı e-posta veya şifre!"; hataKutusu.style.display = "block"; });
         }
 
-        // Çıkış Yap Butonu Fonksiyonu
+        // Çıkış Yap Butonu
         function sistemdenCikisYap() {
             if(confirm("Güvenli çıkış yapmak istiyor musunuz?")) {
-                auth.signOut().then(() => {
-                    sessionStorage.removeItem("veriIndi");
-                    window.location.reload();
-                });
+                auth.signOut().then(() => { window.location.reload(); });
             }
         }
 
