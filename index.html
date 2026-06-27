@@ -4153,8 +4153,14 @@
             document.getElementById("mdNetKar").style.color = netKar >= 0 ? "#2ecc71" : "#e74c3c";
             document.getElementById("mdPiyasaAlacak").textContent = formatMoney(totalAlacak) + " ₺";
 
-            // 2. Operasyonel Beyanname / Görev Takibi (Kritik Son 3 Gün Filtresi)
-            let donem = `${bugun.getFullYear()}-${(bugun.getMonth() + 1).toString().padStart(2, '0')}`;
+            // 2. Operasyonel Beyanname / Görev Takibi (Kritik Son 7 Gün Filtresi)
+            let takvimInput = document.getElementById("takvimDonem");
+            let donem = takvimInput && takvimInput.value ? takvimInput.value : "";
+            if(!donem) {
+                let d = new Date(); d.setMonth(d.getMonth() - 1); 
+                donem = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            }
+
             let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
             let fGorevTop = 0; let fGorevTamam = 0;
             let alarmListesiHTML = "";
@@ -4163,8 +4169,8 @@
                 if(m.durum === "Pasif") return;
                 if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; // SMMM hariç düz danışmanlıkları buraya alma
                 
-                let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : null;
-                if(!f) return;
+                // KRİTİK DÜZELTME: Henüz o ay işlem görmemiş mükellefleri "boş obje" olarak algıla
+                let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : {};
 
                 let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
                 let isDefterUc = (m.eDefterDurum === "Evet - Üç Aylık");
@@ -4176,10 +4182,11 @@
                             fGorevTamam++;
                         } else {
                             let gun = gunFarkiHesapla(targetDate);
-                            if(gun !== null && gun <= 3) {
+                            // Alarm süresini Son 3 Günden Son 7 Güne çıkardık
+                            if(gun !== null && gun <= 7) {
                                 let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
                                 alarmListesiHTML += `
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fdf2f2; border-left:3px solid #e74c3c; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #f9d5d5; border-left:3px solid #e74c3c;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fdf2f2; border-left:3px solid #e74c3c; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #f9d5d5; margin-bottom: 5px;">
                                     <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(${isim})</span></div>
                                     <div>${text}</div>
                                 </div>`;
