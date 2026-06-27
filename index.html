@@ -573,7 +573,8 @@
         <img src="SMMM Logo.png" alt="Tarık GÜN SMMM" class="sidebar-logo">
         <h2>SMMM Yönetim</h2>
         <ul>
-            <li id="menuMukellef" class="active"><a href="#" onclick="sayfaDegistir('mukellefPaneli')">Mükellef Bilgileri</a></li>
+            <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-th-large"></i> Yönetici Özeti (Pano)</a></li>
+            <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')">Mükellef Bilgileri</a></li>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')">Ücret Hesaplama Sihirbazı</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')">Kayıtlı Teklifler</a></li>
             <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')">e-SMM / Fatura Merkezi</a></li>
@@ -586,7 +587,66 @@
 
     <div class="main-content">
         
-        <div id="listeGörünümü" class="view-section">
+        <div id="masterDashboardPaneli" class="view-section" style="display: block;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h1 style="margin:0; font-size:18px; color:#2c3e50; font-weight:700;"><i class="fas fa-chart-line" style="color:#3498db;"></i> Ofis Genel Durum & Yönetici Özeti</h1>
+                <div id="dashSaat" style="font-size:11px; color:#7f8c8d; font-weight:500; background:#fff; padding:5px 10px; border-radius:6px; border:1px solid #eef2f5;"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:12px;">
+                <div style="background:linear-gradient(135deg, #ffffff, #2ecc710a); border:1px solid #eef2f5; border-top:3px solid #2ecc71; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-wallet" style="color:#2ecc71;"></i> Finansal Sağlık Özet</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Net Ofis Kârlılığı:</span>
+                        <strong id="mdNetKar" style="font-size:14px; color:#2ecc71;">0,00 ₺</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#555; font-size:12px;">Toplam Piyasa Alacağı:</span>
+                        <strong id="mdPiyasaAlacak" style="font-size:14px; color:#e74c3c;">0,00 ₺</strong>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(135deg, #ffffff, #3498db0a); border:1px solid #eef2f5; border-top:3px solid #3498db; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-tasks" style="color:#3498db;"></i> Beyanname / Görev Durumu</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Genel Görev Başarı Oranı:</span>
+                        <strong id="mdGorevOran" style="font-size:14px; color:#f39c12;">%0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#555; font-size:12px;">Bekleyen Toplam Görev:</span>
+                        <strong id="mdBekleyenGorev" style="font-size:14px; color:#e74c3c;">0</strong>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(135deg, #ffffff, #9b59b60a); border:1px solid #eef2f5; border-top:3px solid #8e44ad; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-business-time" style="color:#8e44ad;"></i> Danışmanlık Projeleri</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Aktif Yürütülen Proje:</span>
+                        <strong id="mdAktifProje" style="font-size:14px; color:#8e44ad;">0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#555; font-size:12px;">Biten Proje Arşivi:</span>
+                        <strong id="mdBitenProje" style="font-size:14px; color:#27ae60;">0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div style="background:white; border:1px solid #eef2f5; border-radius:8px; padding:12px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:13px; color:#c0392b; font-weight:600; border-bottom:1px solid #f4f6f9; padding-bottom:6px; margin-bottom:8px;"><i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> Kritik Alarmlar & Yaklaşan Sorumluluklar (Son 3 Gün)</h3>
+                    <div id="mdKritikGorevlerListesi" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; padding-right:3px;">
+                        </div>
+                </div>
+
+                <div style="background:white; border:1px solid #eef2f5; border-radius:8px; padding:12px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:13px; color:#2c3e50; font-weight:600; border-bottom:1px solid #f4f6f9; padding-bottom:6px; margin-bottom:8px;"><i class="fas fa-project-diagram" style="color:#8e44ad;"></i> Aktif Danışmanlık Projeleri ve Süreç İlerlemesi</h3>
+                    <div id="mdAktifProjelerListesi" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; padding-right:3px;">
+                        </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="listeGörünümü" class="view-section" style="display: none;">
             <h1>Mükellef Takip Paneli</h1>
             <div class="list-header-actions">
                 <input type="text" id="aramaCubugu" class="search-bar" placeholder="Mükellef adı, unvanı veya VKN/TCKN ile ara..." oninput="mukellefAra()">
@@ -1795,6 +1855,7 @@
                         cariPanoCiz();
                         if(typeof takvimCiz === "function") takvimCiz();
                         if(typeof danismanlikCiz === "function") danismanlikCiz();
+                        masterDashboardCiz();
                         teklifleriListele();
                         
                         document.getElementById('loginEkran').style.display = 'none'; 
@@ -2411,6 +2472,7 @@
 
         // --- MENÜ (SAYFA) DEĞİŞTİRME YÖNETİMİ ---
         function sayfaDegistir(hedefPaneli) {
+            let masterDash = document.getElementById('masterDashboardPaneli');
             let liste = document.getElementById('listeGörünümü');
             let form = document.getElementById('formGörünümü');
             let sihirbaz = document.getElementById('sihirbazPaneli');
@@ -2420,6 +2482,7 @@
             let cariPaneli = document.getElementById('cariPaneli');
             let takvimPaneli = document.getElementById('takvimPaneli');
 
+            if(masterDash) masterDash.style.display = 'none';
             if(liste) liste.style.display = 'none'; 
             if(form) form.style.display = 'none';
             if(sihirbaz) sihirbaz.style.display = 'none'; 
@@ -2429,6 +2492,7 @@
             if(cariPaneli) cariPaneli.style.display = 'none';
             if(takvimPaneli) takvimPaneli.style.display = 'none';
 
+            if(document.getElementById('menuMaster')) document.getElementById('menuMaster').classList.remove('active');
             document.getElementById('menuMukellef').classList.remove('active');
             document.getElementById('menuSihirbaz').classList.remove('active');
             document.getElementById('menuTeklifler').classList.remove('active');
@@ -2442,7 +2506,10 @@
                 document.getElementById('anaSidebar').classList.remove('open');
             }
 
-            if(hedefPaneli === 'mukellefPaneli') { 
+            if(hedefPaneli === 'masterDashboardPaneli') {
+                if(masterDash) masterDash.style.display = 'block'; if(document.getElementById('menuMaster')) document.getElementById('menuMaster').classList.add('active'); masterDashboardCiz();
+            }
+            else if(hedefPaneli === 'mukellefPaneli') { 
                 if(liste) liste.style.display = 'block'; document.getElementById('menuMukellef').classList.add('active'); 
             } 
             else if (hedefPaneli === 'sihirbazPaneli') { 
@@ -3102,8 +3169,9 @@
             let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
 
             mukellefler.forEach(m => {
-                // Pasif VEYA "Danışmanlık" müşterilerini Mali Takvim'den gizle
-                if(m.durum === "Pasif" || m.hizmetKapsami === "Danışmanlık") return;
+                // Pasifleri gizle. Danışmanlık olanları gizle (AMAA Mükellef Türü SMMM ise onu her yerde göster!)
+                if(m.durum === "Pasif") return;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return;
 
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
                 filtrelenmisFirmaSayisi++;
@@ -3652,7 +3720,10 @@
             kartlarAlani.innerHTML = '';
 
             mukellefler.forEach(m => {
-                if(m.durum === "Pasif" || m.hizmetKapsami !== "Danışmanlık") return;
+                // Pasifleri gizle. Danışmanlık olmayanları gizle (AMAA Mükellef Türü SMMM ise onu her yerde göster!)
+                if(m.durum === "Pasif") return;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık") return;
+                
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
 
                 // Veritabanı yapısal dönüşümü (Eski objeyi Diziye çevirme koruması)
@@ -4036,6 +4107,156 @@
             };
             reader.readAsArrayBuffer(dosya);
         }
+
+        // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
+        function masterDashboardCiz() {
+            let bugun = new Date();
+            if(document.getElementById("dashSaat")) {
+                document.getElementById("dashSaat").innerHTML = `<i class="far fa-clock"></i> ${bugun.toLocaleDateString('tr-TR')} &nbsp;|&nbsp; ${bugun.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}`;
+            }
+
+            // 1. Kümülatif Finansal Hesaplama Verileri (SMMM Atlanarak Alınır)
+            let totalGelir = 0; let totalGider = 0; let totalAlacak = 0;
+            let seciliYil = bugun.getFullYear();
+            
+            mukellefler.forEach(m => {
+                if(m.mukellefTuru === "SMMM") return; 
+                let mFaturaYil = 0; let mOdemeYil = 0;
+                let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
+                if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") mDevredenBakiye = -mDevredenBakiye;
+
+                if(m.hareketler) {
+                    m.hareketler.forEach(h => {
+                        let hYil = parseInt(h.tarih.split('.')[2]);
+                        if (hYil < seciliYil) {
+                            if(h.tur === "Makbuz") mDevredenBakiye += (h.netTutar || h.tutar || 0);
+                            else if(h.tur === "Tahsilat") mDevredenBakiye -= (h.netTutar || h.tutar || 0);
+                        } else if (hYil === seciliYil) {
+                            if(h.tur === "Makbuz") mFaturaYil += (h.netTutar || h.tutar || 0);
+                            else if(h.tur === "Tahsilat") mOdemeYil += (h.netTutar || h.tutar || 0);
+                        }
+                    });
+                }
+                totalGelir += mFaturaYil;
+                totalAlacak += (mDevredenBakiye + mFaturaYil - mOdemeYil);
+            });
+
+            giderIslemler.forEach(g => {
+                let gYil = parseInt(g.tarih.split('.')[2]);
+                if(gYil === seciliYil && g.islemTipi !== "Ödeme") {
+                    totalGider += (g.net || g.tutar || 0);
+                }
+            });
+
+            let netKar = totalGelir - totalGider;
+            document.getElementById("mdNetKar").textContent = formatMoney(netKar) + " ₺";
+            document.getElementById("mdNetKar").style.color = netKar >= 0 ? "#2ecc71" : "#e74c3c";
+            document.getElementById("mdPiyasaAlacak").textContent = formatMoney(totalAlacak) + " ₺";
+
+            // 2. Operasyonel Beyanname / Görev Takibi (Kritik Son 3 Gün Filtresi)
+            let donem = `${bugun.getFullYear()}-${(bugun.getMonth() + 1).toString().padStart(2, '0')}`;
+            let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
+            let fGorevTop = 0; let fGorevTamam = 0;
+            let alarmListesiHTML = "";
+
+            mukellefler.forEach(m => {
+                if(m.durum === "Pasif") return;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; // SMMM hariç düz danışmanlıkları buraya alma
+                
+                let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : null;
+                if(!f) return;
+
+                let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
+                let isDefterUc = (m.eDefterDurum === "Evet - Üç Aylık");
+
+                function kontrolAlarm(isim, isDone, targetDate, isYok) {
+                    if(targetDate && !isYok) {
+                        fGorevTop++; 
+                        if(isDone) {
+                            fGorevTamam++;
+                        } else {
+                            let gun = gunFarkiHesapla(targetDate);
+                            if(gun !== null && gun <= 3) {
+                                let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
+                                alarmListesiHTML += `
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fdf2f2; border-left:3px solid #e74c3c; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #f9d5d5; border-left:3px solid #e74c3c;">
+                                    <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(${isim})</span></div>
+                                    <div>${text}</div>
+                                </div>`;
+                            }
+                        }
+                    }
+                }
+
+                if(tTarih.kdv1) kontrolAlarm("1 Nolu KDV", f.KDV1, tTarih.kdv1, false);
+                if(tTarih.kdv2) kontrolAlarm("2 Nolu KDV", f.KDV2, tTarih.kdv2, f.KDV2_Yok);
+                if(tTarih.muhsgk) kontrolAlarm("Muhtasar", f.MUHSGK, tTarih.muhsgk, f.MUHSGK_Yok);
+                if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false);
+                if(m.eDefterDurum && m.eDefterDurum.includes("Evet") && (isDefterUc ? tTarih.defterUc : tTarih.defterAylik)) {
+                    kontrolAlarm("Defter", f.DEFTER, isDefterUc ? tTarih.defterUc : tTarih.defterAylik, false);
+                }
+                if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
+                    kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
+                }
+                if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false);
+            });
+
+            document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
+            document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
+            document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik veya geciken görev bulunmuyor. Süreç stabil.</div>`;
+
+            // 3. Danışmanlık Projeleri İzleme Listesi
+            let aktifSayac = 0; let bitenSayac = 0;
+            let projelerHTML = "";
+
+            mukellefler.forEach(m => {
+                if(m.durum === "Pasif") return;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık") return; // SMMM kendi iç projelerini de görsün
+                
+                let projeler = danismanlikVeritabani[m.vkn] || [];
+                projeler.forEach(p => {
+                    if(p.tamamlandi) {
+                        bitenSayac++;
+                    } else {
+                        aktifSayac++;
+                        let topA = p.asamalar ? p.asamalar.length : 0;
+                        let bitA = p.asamalar ? p.asamalar.filter(a => a.durum).length : 0;
+                        let yz = topA === 0 ? 0 : Math.round((bitA / topA) * 100);
+                        
+                        projelerHTML += `
+                        <div style="background:#fcfaff; border:1px solid #e8e2f7; border-left:3px solid #8e44ad; padding:6px 10px; border-radius:5px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:600; color:#2c3e50; margin-bottom:3px;">
+                                <div style="max-width:75%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.unvan} <span style="font-weight:normal; color:#7f8c8d; font-size:10px;">(${p.projeAdi})</span></div>
+                                <div style="color:#8e44ad;">%${yz}</div>
+                            </div>
+                            <div style="width:100%; background:#f4ecf7; height:4px; border-radius:2px; overflow:hidden;">
+                                <div style="width:${yz}%; background:#8e44ad; height:100%;"></div>
+                            </div>
+                        </div>`;
+                    }
+                });
+            });
+
+            document.getElementById("mdAktifProje").textContent = aktifSayac;
+            document.getElementById("mdBitenProje").textContent = bitenSayac;
+            document.getElementById("mdAktifProjelerListesi").innerHTML = projelerHTML || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Şu an devam eden aktif bir danışmanlık projesi bulunmuyor.</div>`;
+        }
+
+        // Kendi Firmamızın (SMMM) Beyanname ve Projelerde de VIP Olarak Listelenmesi Düzeltmesi
+        // (Eski fonksiyonların başına bu kuralları otomatik inject ediyoruz)
+        const eskiTakvimCiz = takvimCiz;
+        takvimCiz = function() {
+            eskiTakvimCiz();
+            // VIP SMMM Entegrasyon Yaması
+            let donem = document.getElementById("takvimDonem").value;
+            let m = mukellefler.find(x => x.mukellefTuru === "SMMM");
+            if(m && m.durum !== "Pasif" && document.getElementById("takvimFirmaKartlarıAlani")) {
+                let varMi = document.getElementById("takvimFirmaKartlarıAlani").innerHTML.includes(m.vkn);
+                if(!varMi) {
+                    // Eğer listede yoksa zorunlu olarak ekle mantığı (Dahili çağrı zaten takvimCiz içinde SMMM VIP if kuralıyla çalışacak)
+                }
+            }
+        };
 
         // Sayfa ilk yüklendiğinde ayarları ve KDV kutularını aktif et
         window.addEventListener('DOMContentLoaded', (event) => {
