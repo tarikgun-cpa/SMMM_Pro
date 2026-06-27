@@ -1274,50 +1274,36 @@
 
             <div id="danismanlikMatrisTab" style="display: none;">
                 <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #8e44ad; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <input type="text" id="danismanlikArama" class="search-bar" placeholder="Danışmanlık firması ara..." oninput="danismanlikCiz()">
-                </div>
-                <div id="danismanlikKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                    <input type="text" id="danismanlikArama" class="search-bar" placeholder="Danışmanlık firması ara..." oninput="danismanlikCiz()" style="max-width:300px;">
+                    <div>
+                        <button class="action-btn" onclick="danGosterimDegistir('Aktif')" id="btnDanAktif" style="background:#8e44ad; color:white;">Aktif Projeler</button>
+                        <button class="action-btn" onclick="danGosterimDegistir('Biten')" id="btnDanBiten" style="background:#e1e8ed; color:#333;">Biten Projeler (Arşiv)</button>
                     </div>
+                </div>
+                <div id="danismanlikKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                </div>
             </div>
         </div>
 
         <div id="danismanlikGorevModal" class="modal-overlay">
-            <div class="modal-box modal-box-sm">
+            <div class="modal-box" style="max-width: 700px;">
                 <div class="modal-header" style="background:#8e44ad;">
-                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-project-diagram"></i> <span id="mdlDanFirmaAd">Firma Adı</span></h3>
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-project-diagram"></i> <span id="mdlDanFirmaAd">Firma Adı</span> - Proje Yönetimi</h3>
                     <button class="modal-close" onclick="modalKapat('danismanlikGorevModal')">X</button>
                 </div>
-                <div class="modal-body" style="padding:20px;">
+                <div class="modal-body" style="padding:20px; background:#f9fbfc;">
                     <input type="hidden" id="mdlDanVkn">
                     
-                    <div class="form-group mb-3">
-                        <label style="color:#2c3e50; font-weight:bold;">Proje / Danışmanlık Konusu:</label>
-                        <input type="text" id="danProjeAd" placeholder="Örn: Finansal Yeniden Yapılandırma" style="border:1px solid #8e44ad;">
-                    </div>
-                    
-                    <div style="background:#f4ecf7; padding:15px; border-radius:6px; border:1px solid #d2b4de; margin-bottom:15px;">
-                        <label style="font-weight:bold; color:#8e44ad; margin-bottom:10px; display:block;">Proje İlerleme Aşamaları:</label>
-                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
-                            <input type="checkbox" id="chk_Dan_A1" style="width:16px; height:16px;"> <div>Aşama 1: Analiz ve Veri Toplama</div>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
-                            <input type="checkbox" id="chk_Dan_A2" style="width:16px; height:16px;"> <div>Aşama 2: Strateji ve Planlama</div>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
-                            <input type="checkbox" id="chk_Dan_A3" style="width:16px; height:16px;"> <div>Aşama 3: Uygulama / Sistem Kurulumu</div>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
-                            <input type="checkbox" id="chk_Dan_A4" style="width:16px; height:16px;"> <div>Aşama 4: Raporlama ve Teslim</div>
-                        </label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #8e44ad; padding-bottom:10px;">
+                        <h4 style="color:#2c3e50; margin:0;">Kayıtlı Projeler</h4>
+                        <button class="action-btn btn-success" onclick="danismanlikYeniProjeEkleUI()"><i class="fas fa-plus"></i> Yeni Proje Ekle</button>
                     </div>
 
-                    <div class="form-group">
-                        <label>Son Durum Notları:</label>
-                        <textarea id="danNotlar" rows="3" placeholder="Projedeki son gelişmeleri buraya not alın..."></textarea>
-                    </div>
+                    <div id="danProjeListesiContainer" style="display:flex; flex-direction:column; gap:15px;">
+                        </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="action-btn btn-primary" style="background:#8e44ad;" onclick="danismanlikGorevKaydet()" style="width:100%;">Proje Durumunu Kaydet</button>
+                    <button class="action-btn btn-primary" style="background:#8e44ad; width:100%; font-size:15px;" onclick="danismanlikTumunuKaydet()">Tüm Proje Değişikliklerini Kaydet</button>
                 </div>
             </div>
         </div>
@@ -3539,8 +3525,9 @@
             }
         }
 
-        // --- DANIŞMANLIK PROJE YÖNETİM MOTORU ---
+        // --- GELİŞMİŞ DANIŞMANLIK PROJE YÖNETİM MOTORU ---
         let danismanlikVeritabani = JSON.parse(localStorage.getItem('danismanlikVeritabani')) || {};
+        let danismanlikGosterim = "Aktif"; // Aktif veya Biten
 
         function matrisSekmeDegistir(tabId) {
             document.getElementById('maliMatrisTab').style.display = 'none';
@@ -3563,76 +3550,164 @@
             }
         }
 
+        function danGosterimDegistir(durum) {
+            danismanlikGosterim = durum;
+            document.getElementById('btnDanAktif').style.background = durum === "Aktif" ? "#8e44ad" : "#e1e8ed";
+            document.getElementById('btnDanAktif').style.color = durum === "Aktif" ? "white" : "#333";
+            document.getElementById('btnDanBiten').style.background = durum === "Biten" ? "#8e44ad" : "#e1e8ed";
+            document.getElementById('btnDanBiten').style.color = durum === "Biten" ? "white" : "#333";
+            danismanlikCiz();
+        }
+
         function danismanlikCiz() {
             let kartlarAlani = document.getElementById("danismanlikKartlariAlani");
             let arama = document.getElementById("danismanlikArama").value.toLowerCase().trim();
             kartlarAlani.innerHTML = '';
 
             mukellefler.forEach(m => {
-                // Sadece aktif ve Hizmeti "Danışmanlık" olanları filtrele
                 if(m.durum === "Pasif" || m.hizmetKapsami !== "Danışmanlık") return;
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
 
-                if(!danismanlikVeritabani[m.vkn]) {
-                    danismanlikVeritabani[m.vkn] = { projeAdi: "", a1: false, a2: false, a3: false, a4: false, notlar: "" };
+                // Veritabanı yapısal dönüşümü (Eski objeyi Diziye çevirme koruması)
+                if(!danismanlikVeritabani[m.vkn] || !Array.isArray(danismanlikVeritabani[m.vkn])) {
+                    danismanlikVeritabani[m.vkn] = []; 
                 }
-                let d = danismanlikVeritabani[m.vkn];
                 
-                let tamamlanan = 0;
-                if(d.a1) tamamlanan++; if(d.a2) tamamlanan++; if(d.a3) tamamlanan++; if(d.a4) tamamlanan++;
-                let oran = (tamamlanan / 4) * 100;
-                
-                let barRenk = oran === 100 ? "#27ae60" : (oran > 0 ? "#8e44ad" : "#95a5a6");
+                let projeler = danismanlikVeritabani[m.vkn];
+                let gosterilecekProjeler = projeler.filter(p => (danismanlikGosterim === "Aktif" ? !p.tamamlandi : p.tamamlandi));
 
-                kartlarAlani.innerHTML += `
-                <div class="company-badge" onclick="danismanlikGorevPaneliAc('${m.vkn}', '${m.unvan}')" 
-                     style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
+                if(gosterilecekProjeler.length === 0 && danismanlikGosterim === "Aktif") {
+                    // Hiç projesi yoksa kartı ekle ama Proje Yok de
+                    kartlarAlani.innerHTML += `
+                    <div class="company-badge" onclick="danismanlikGorevPaneliAc('${m.vkn}', '${m.unvan}')" style="border: 1px solid #eef2f5; border-top: 3px solid #bdc3c7; padding: 15px; background: #fff;">
+                        <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
+                        <div style="font-size:11px; color:#bdc3c7; font-weight:bold; margin-top:15px; text-align:center;">Henüz Aktif Proje Yok. Eklemek için tıklayın.</div>
+                    </div>`;
+                    return;
+                }
+
+                gosterilecekProjeler.forEach(d => {
+                    let toplamAsama = d.asamalar ? d.asamalar.length : 0;
+                    let bitenAsama = d.asamalar ? d.asamalar.filter(a => a.durum).length : 0;
+                    let oran = toplamAsama === 0 ? 0 : Math.round((bitenAsama / toplamAsama) * 100);
                     
-                    <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
-                    <div style="font-size:11px; color:#8e44ad; font-weight:bold; margin-bottom:10px;"><i class="fas fa-briefcase"></i> Proje: ${d.projeAdi || "Belirtilmedi"}</div>
+                    let barRenk = d.tamamlandi ? "#27ae60" : (oran > 0 ? "#8e44ad" : "#95a5a6");
                     
-                    <div style="font-size:11px; color:#7f8c8d; margin-bottom:10px; height:32px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
-                        ${d.notlar || "Henüz bir durum notu girilmedi..."}
-                    </div>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed #f4f6f9;">
-                        <span style="font-size:10px; color:#7f8c8d; font-weight:bold;">Süreç İlerlemesi</span>
-                        <span style="font-size:11px; font-weight:bold; color:${barRenk};">%${oran} Tamam</span>
-                    </div>
-                    <div style="width:100%; background:#f4ecf7; height:5px; border-radius:2px; margin-top:6px; overflow:hidden;">
-                        <div style="width:${oran}%; background:${barRenk}; height:100%; transition: 0.4s;"></div>
-                    </div>
-                </div>`;
+                    // Rozetleri Çiz (İlk 3 aşamayı göster kalanı ...)
+                    let rozetlerHtml = "";
+                    if(d.asamalar) {
+                        d.asamalar.forEach((asama, idx) => {
+                            if(idx < 4) {
+                                let bg = asama.durum ? "#eafaf1" : "#f4f6f9";
+                                let col = asama.durum ? "#27ae60" : "#7f8c8d";
+                                let icon = asama.durum ? "✅" : "⏳";
+                                rozetlerHtml += `<span style="background:${bg}; color:${col}; border:1px solid ${col}; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:600; display:inline-block; margin:2px;">${asama.ad || ('Aşama '+(idx+1))} ${icon}</span>`;
+                            }
+                        });
+                    }
+
+                    kartlarAlani.innerHTML += `
+                    <div class="company-badge" onclick="danismanlikGorevPaneliAc('${m.vkn}', '${m.unvan}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
+                        <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
+                        <div style="font-size:12px; color:#8e44ad; font-weight:bold; margin-bottom:8px;"><i class="fas fa-briefcase"></i> Proje: ${d.projeAdi || "İsimsiz Proje"}</div>
+                        
+                        <div>${rozetlerHtml}</div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed #f4f6f9;">
+                            <span style="font-size:10px; color:#7f8c8d; font-weight:bold;">${d.tamamlandi ? "PROJE BİTTİ" : "Süreç İlerlemesi"}</span>
+                            <span style="font-size:11px; font-weight:bold; color:${barRenk};">%${oran} Tamam</span>
+                        </div>
+                        <div style="width:100%; background:#f4ecf7; height:5px; border-radius:2px; margin-top:6px; overflow:hidden;">
+                            <div style="width:${oran}%; background:${barRenk}; height:100%; transition: 0.4s;"></div>
+                        </div>
+                    </div>`;
+                });
             });
-            // Bulut yedeği için veritabanını localStorage'a yaz
             localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
         }
+
+        // Geçici Değişken (Modaldaki değişiklikleri tutar)
+        let acikDanismanlikProjeleri = []; 
 
         function danismanlikGorevPaneliAc(vkn, unvan) {
             document.getElementById("mdlDanVkn").value = vkn;
             document.getElementById("mdlDanFirmaAd").textContent = unvan;
             
-            let d = danismanlikVeritabani[vkn];
-            document.getElementById("danProjeAd").value = d.projeAdi || "";
-            document.getElementById("chk_Dan_A1").checked = d.a1;
-            document.getElementById("chk_Dan_A2").checked = d.a2;
-            document.getElementById("chk_Dan_A3").checked = d.a3;
-            document.getElementById("chk_Dan_A4").checked = d.a4;
-            document.getElementById("danNotlar").value = d.notlar || "";
-
+            if(!danismanlikVeritabani[vkn]) danismanlikVeritabani[vkn] = [];
+            // Derin Kopya al (Kaydet'e basmadan asıl veriyi bozmamak için)
+            acikDanismanlikProjeleri = JSON.parse(JSON.stringify(danismanlikVeritabani[vkn]));
+            
+            danismanlikProjeleriUI_Ciz();
             modalAc('danismanlikGorevModal');
         }
 
-        function danismanlikGorevKaydet() {
+        function danismanlikProjeleriUI_Ciz() {
+            let container = document.getElementById("danProjeListesiContainer");
+            container.innerHTML = "";
+
+            if(acikDanismanlikProjeleri.length === 0) {
+                container.innerHTML = "<p style='color:#7f8c8d; font-size:13px;'>Kayıtlı proje yok. Yukarıdan Yeni Proje Ekle'ye tıklayın.</p>";
+                return;
+            }
+
+            acikDanismanlikProjeleri.forEach((p, pIndex) => {
+                let asamalarHtml = "";
+                if(!p.asamalar) p.asamalar = [{ad: "Aşama 1: Analiz", durum: false}, {ad: "Aşama 2: Raporlama", durum: false}];
+                
+                p.asamalar.forEach((a, aIndex) => {
+                    asamalarHtml += `
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <input type="checkbox" ${a.durum ? 'checked' : ''} onchange="danAsamaDurumGuncelle(${pIndex}, ${aIndex}, this.checked)" style="width:18px; height:18px; cursor:pointer;">
+                        <input type="text" value="${a.ad}" onchange="danAsamaAdGuncelle(${pIndex}, ${aIndex}, this.value)" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:13px;" placeholder="Aşama adı girin...">
+                        <button class="btn-danger" style="padding:4px 8px; border:none; border-radius:4px; cursor:pointer;" onclick="danAsamaSil(${pIndex}, ${aIndex})"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                });
+
+                let pBg = p.tamamlandi ? "#eafaf1" : "#fff";
+                let pBorder = p.tamamlandi ? "#2ecc71" : "#d2b4de";
+
+                container.innerHTML += `
+                <div style="background:${pBg}; border:1px solid ${pBorder}; border-radius:8px; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <input type="text" value="${p.projeAdi}" onchange="danProjeAdGuncelle(${pIndex}, this.value)" style="font-weight:bold; color:#8e44ad; font-size:15px; border:none; background:transparent; border-bottom:1px dashed #8e44ad; width:70%; outline:none;" placeholder="Proje Adını Girin...">
+                        <div>
+                            <label style="color:#27ae60; font-weight:bold; font-size:12px; cursor:pointer; margin-right:10px;"><input type="checkbox" ${p.tamamlandi ? 'checked' : ''} onchange="danProjeTamamlaToggle(${pIndex}, this.checked)"> BİTİR</label>
+                            <button onclick="danProjeSil(${pIndex})" style="background:none; border:none; color:#e74c3c; cursor:pointer;" title="Projeyi Tamamen Sil"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <h5 style="color:#2c3e50; font-size:12px; margin-bottom:8px;">Aşamalar:</h5>
+                        ${asamalarHtml}
+                        <button onclick="danAsamaEkle(${pIndex})" style="background:#e1e8ed; border:none; padding:4px 10px; font-size:11px; cursor:pointer; border-radius:4px; margin-top:5px;">+ Yeni Aşama Ekle</button>
+                    </div>
+
+                    <div>
+                        <textarea onchange="danProjeNotGuncelle(${pIndex}, this.value)" rows="2" style="width:100%; border:1px solid #ccc; border-radius:4px; padding:8px; font-size:12px;" placeholder="Bu proje ile ilgili son notlar...">${p.notlar || ''}</textarea>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // Modal İçi Dinamik Güncelleme Fonksiyonları
+        function danismanlikYeniProjeEkleUI() {
+            acikDanismanlikProjeleri.push({ id: "PRJ_"+Date.now(), projeAdi: "Yeni Danışmanlık Projesi", asamalar: [{ad: "Aşama 1", durum: false}], tamamlandi: false, notlar: "" });
+            danismanlikProjeleriUI_Ciz();
+        }
+        function danProjeAdGuncelle(pIndex, val) { acikDanismanlikProjeleri[pIndex].projeAdi = val; }
+        function danProjeNotGuncelle(pIndex, val) { acikDanismanlikProjeleri[pIndex].notlar = val; }
+        function danProjeTamamlaToggle(pIndex, val) { acikDanismanlikProjeleri[pIndex].tamamlandi = val; danismanlikProjeleriUI_Ciz(); }
+        function danProjeSil(pIndex) { if(confirm("Bu projeyi tamamen silmek istediğinize emin misiniz?")) { acikDanismanlikProjeleri.splice(pIndex, 1); danismanlikProjeleriUI_Ciz(); } }
+        
+        function danAsamaAdGuncelle(pIndex, aIndex, val) { acikDanismanlikProjeleri[pIndex].asamalar[aIndex].ad = val; }
+        function danAsamaDurumGuncelle(pIndex, aIndex, val) { acikDanismanlikProjeleri[pIndex].asamalar[aIndex].durum = val; }
+        function danAsamaEkle(pIndex) { acikDanismanlikProjeleri[pIndex].asamalar.push({ad: "Yeni Aşama", durum: false}); danismanlikProjeleriUI_Ciz(); }
+        function danAsamaSil(pIndex, aIndex) { acikDanismanlikProjeleri[pIndex].asamalar.splice(aIndex, 1); danismanlikProjeleriUI_Ciz(); }
+
+        // Tüm Değişiklikleri Ana Veritabanına ve Buluta Kaydet
+        function danismanlikTumunuKaydet() {
             let vkn = document.getElementById("mdlDanVkn").value;
-            danismanlikVeritabani[vkn] = {
-                projeAdi: document.getElementById("danProjeAd").value,
-                a1: document.getElementById("chk_Dan_A1").checked,
-                a2: document.getElementById("chk_Dan_A2").checked,
-                a3: document.getElementById("chk_Dan_A3").checked,
-                a4: document.getElementById("chk_Dan_A4").checked,
-                notlar: document.getElementById("danNotlar").value
-            };
+            danismanlikVeritabani[vkn] = acikDanismanlikProjeleri;
             localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
             danismanlikCiz();
             modalKapat('danismanlikGorevModal');
