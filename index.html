@@ -518,11 +518,17 @@
         .form-group input, .form-group textarea, .search-bar, select { padding: 7px 10px !important; font-size: 13px !important; }
         .action-btn, .submit-btn, .tab-btn { padding: 7px 14px !important; font-size: 13px !important; }
         
-        /* Pano (Dashboard) Kartlarını Küçültme */
-        .summary-cards { margin-bottom: 15px; gap: 10px; }
-        .summary-card { padding: 12px; }
-        .summary-card h4 { font-size: 11px; margin-bottom: 4px; }
-        .summary-card .amount { font-size: 18px; }
+        /* Pano (Dashboard) Kartlarını Küçültme (ULTRA COMPACT) */
+        .summary-cards { margin-bottom: 10px; gap: 10px; }
+        .summary-card { padding: 8px 12px; border-bottom-width: 3px; display:flex; flex-direction:column; justify-content:center; }
+        .summary-card h4 { font-size: 10.5px; margin-bottom: 2px; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .summary-card .amount { font-size: 16px; }
+        
+        .cari-tabs { margin-bottom: 10px; }
+        .cari-tab-btn { padding: 6px 15px; font-size: 12px; }
+        .list-header-actions { padding: 8px 15px !important; margin-bottom: 10px !important; }
+        .list-header-actions .search-bar { padding: 6px 10px !important; font-size: 12px !important; }
+        .list-header-actions .action-btn { padding: 6px 12px !important; font-size: 12px !important; }
         
         /* Mali Takvim Mükellef Rozetlerini Küçültme */
         .company-badge { padding: 10px 12px !important; }
@@ -1238,34 +1244,32 @@
         <!-- MALİ TAKVİM VE BEYANNAME MATRIX DASHBOARD -->
         <!-- ========================================== -->
         <div id="takvimPaneli" class="view-section" style="display: none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h1 style="margin:0; border:none;">Müşteri Görev ve Proje Takip Matrisi</h1>
-            </div>
-
-            <div class="cari-tabs" style="margin-bottom: 20px;">
-                <button class="cari-tab-btn active" id="btnTakvimMali" onclick="matrisSekmeDegistir('maliMatrisTab')"><i class="fas fa-calculator"></i> Mali Müşavirlik (Beyanname Takibi)</button>
-                <button class="cari-tab-btn" id="btnTakvimDanismanlik" onclick="matrisSekmeDegistir('danismanlikMatrisTab')" style="background:#f4ecf7; color:#8e44ad; border:1px solid #8e44ad;"><i class="fas fa-chart-line"></i> Danışmanlık Projeleri (Durum Takibi)</button>
-            </div>
-
-            <div id="maliMatrisTab" style="display: block;">
-            <div class="form-container" style="background:#edf2fa; border:1px solid #3498db; margin-bottom:20px; padding: 15px;">
-                <div class="form-grid" style="align-items: end; margin-bottom: 0;">
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label style="color:#2980b9; font-weight:bold;">Çalışma Dönemi Seçimi (Ay / Yıl):</label>
-                        <input type="month" id="takvimDonem" class="search-bar" onchange="takvimCiz()" style="border: 2px solid #3498db;">
-                    </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <h1 style="margin:0; font-size:18px;">Görev & Proje Matrisi</h1>
+                <div class="cari-tabs" style="margin:0;">
+                    <button class="cari-tab-btn active" id="btnTakvimMali" onclick="matrisSekmeDegistir('maliMatrisTab')"><i class="fas fa-calculator"></i> Mali Müşavirlik</button>
+                    <button class="cari-tab-btn" id="btnTakvimDanismanlik" onclick="matrisSekmeDegistir('danismanlikMatrisTab')" style="background:#f4ecf7; color:#8e44ad; border:1px solid #8e44ad;"><i class="fas fa-chart-line"></i> Danışmanlık Projeleri</button>
                 </div>
             </div>
 
-            <div class="summary-cards">
-                <div class="summary-card" style="border-bottom-color:#3498db;"><h4>Toplam Sorumlu Firma</h4><div class="amount" id="takvimToplamFirmalar">0</div></div>
-                <div class="summary-card" style="border-bottom-color:#2ecc71;"><h4>Tamamlanan Beyan/Görev</h4><div class="amount" id="takvimTamamlananGorev" style="color:#2ecc71;">0</div></div>
-                <div class="summary-card" style="border-bottom-color:#e74c3c;"><h4>Bekleyen Beyan/Görev</h4><div class="amount" id="takvimBekleyenGorev" style="color:#e74c3c;">0</div></div>
-                <div class="summary-card" style="border-bottom-color:#f1c40f;"><h4>Genel Ofis Başarı Oranı</h4><div class="amount" id="takvimGenelOran" style="color:#f39c12;">%0</div></div>
+            <div id="maliMatrisTab" style="display: block;">
+            
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; align-items:stretch;">
+                <div style="background:#edf2fa; border:1px solid #3498db; padding:10px 15px; border-radius:8px; display:flex; flex-direction:column; justify-content:center; min-width:180px;">
+                    <label style="color:#2980b9; font-weight:bold; font-size:11px; margin-bottom:4px;">Çalışma Dönemi (Ay/Yıl):</label>
+                    <input type="month" id="takvimDonem" class="search-bar" onchange="takvimCiz()" style="border: 2px solid #3498db; padding:4px 8px !important; font-size:13px !important; height:auto;">
+                </div>
+                
+                <div class="summary-cards" style="flex:1; margin:0; grid-template-columns: repeat(4, 1fr); gap:10px;">
+                    <div class="summary-card" style="border-bottom-color:#3498db;"><h4>Toplam Firma</h4><div class="amount" id="takvimToplamFirmalar">0</div></div>
+                    <div class="summary-card" style="border-bottom-color:#2ecc71;"><h4>Tamamlanan</h4><div class="amount" id="takvimTamamlananGorev" style="color:#2ecc71;">0</div></div>
+                    <div class="summary-card" style="border-bottom-color:#e74c3c;"><h4>Bekleyen</h4><div class="amount" id="takvimBekleyenGorev" style="color:#e74c3c;">0</div></div>
+                    <div class="summary-card" style="border-bottom-color:#f1c40f;"><h4>Başarı Oranı</h4><div class="amount" id="takvimGenelOran" style="color:#f39c12;">%0</div></div>
+                </div>
             </div>
 
-            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <input type="text" id="takvimArama" class="search-bar" placeholder="Firma unvanı veya VKN ile filtrele..." oninput="takvimCiz()">
+            <div class="list-header-actions mb-3" style="background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="takvimArama" class="search-bar" placeholder="Firma unvanı veya VKN ile filtrele..." oninput="takvimCiz()" style="max-width:300px;">
             </div>
 
             <!-- FIRMA DASHBOARD KARTLARI ALANI -->
@@ -1468,10 +1472,10 @@
         </div>
 
         <div id="cariPaneli" class="view-section" style="display: none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <h1 style="margin:0; border:none;">Cari Hesaplar ve Ofis Finans Paneli</h1>
-                    <select id="cariYilSecim" class="search-bar" style="width:130px; font-weight:bold; color:#c0392b; border:2px solid #c0392b; padding: 8px;" onchange="cariPanoCiz()">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h1 style="margin:0; font-size:18px;">Finans Paneli</h1>
+                    <select id="cariYilSecim" class="search-bar" style="width:100px; font-weight:bold; color:#c0392b; border:2px solid #c0392b; padding: 4px 8px !important; font-size:12px !important; height:auto;" onchange="cariPanoCiz()">
                         <option value="2025">2025 Yılı</option>
                         <option value="2026" selected>2026 Yılı</option>
                         <option value="2027">2027 Yılı</option>
@@ -1480,26 +1484,28 @@
                         <option value="2030">2030 Yılı</option>
                     </select>
                 </div>
-                <div style="text-align:right; font-size:12px; font-weight:bold; color:#7f8c8d; background:#fff; padding:10px 15px; border-radius:8px; border:1px solid #ddd;">
-                    <div><i class="fas fa-file-invoice" style="color:#3498db;"></i> Son Kesilen Makbuz: <span id="dashSonMakbuzTarih" style="color:#e74c3c;">-</span></div>
-                    <div style="margin-top:5px;"><i class="fas fa-hand-holding-usd" style="color:#2ecc71;"></i> Son Tahsilat / Ödeme: <span id="dashSonTahsilatTarih" style="color:#e74c3c;">-</span></div>
+                <div style="display:flex; gap:15px; font-size:11px; color:#7f8c8d; background:#fff; padding:6px 12px; border-radius:6px; border:1px solid #ddd;">
+                    <div><i class="fas fa-file-invoice" style="color:#3498db;"></i> Son Makbuz: <span id="dashSonMakbuzTarih" style="color:#e74c3c;">-</span></div>
+                    <div><i class="fas fa-hand-holding-usd" style="color:#2ecc71;"></i> Son Tahsilat: <span id="dashSonTahsilatTarih" style="color:#e74c3c;">-</span></div>
                 </div>
             </div>
             
-            <div class="summary-cards">
+            <div class="summary-cards" style="grid-template-columns: repeat(4, 1fr);">
                 <div class="summary-card card-gelir"><h4>Kesilen Makbuz (Brüt)</h4><div class="amount" id="sumGelir">0.00 TL</div></div>
                 <div class="summary-card card-gider"><h4>Toplam Ofis Gideri</h4><div class="amount" id="sumGider">0.00 TL</div></div>
                 <div class="summary-card card-oran"><h4>Piyasa Alacağı</h4><div class="amount" id="sumAlacak" style="color:#e74c3c;">0.00 TL</div></div>
                 <div class="summary-card card-gider" style="border-bottom-color:#c0392b;"><h4>Piyasa Borcu</h4><div class="amount" id="sumBorc" style="color:#c0392b;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 4px solid #9b59b6;"><h4>Yıllık Ödenecek KDV</h4><div class="amount" id="sumKdv" style="color:#8e44ad;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 4px solid #d35400;"><h4>Peşin Ödenen Stopaj</h4><div class="amount" id="sumStopaj" style="color:#d35400;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 4px solid #e67e22;"><h4>Ödenecek Stopaj (Gider)</h4><div class="amount" id="sumGiderStopaj" style="color:#e67e22;">0.00 TL</div></div>
+                <div class="summary-card text-center" style="border-bottom: 3px solid #9b59b6;"><h4>Yıllık Ödenecek KDV</h4><div class="amount" id="sumKdv" style="color:#8e44ad;">0.00 TL</div></div>
+                <div class="summary-card text-center" style="border-bottom: 3px solid #d35400;"><h4>Peşin Ödenen Stopaj</h4><div class="amount" id="sumStopaj" style="color:#d35400;">0.00 TL</div></div>
+                <div class="summary-card text-center" style="border-bottom: 3px solid #e67e22;"><h4>Ödenecek Stopaj (Gid.)</h4><div class="amount" id="sumGiderStopaj" style="color:#e67e22;">0.00 TL</div></div>
                 <div class="summary-card card-kar"><h4>Net Ofis Karlılığı</h4><div class="amount" id="sumKar">0.00 TL</div></div>
             </div>
 
-            <div class="cari-tabs">
-                <button class="cari-tab-btn active" onclick="cariSekmeDegistir('cariGelirler')"><i class="fas fa-arrow-down"></i> Gelirler</button>
-                <button class="cari-tab-btn" onclick="cariSekmeDegistir('cariGiderler')"><i class="fas fa-arrow-up"></i> Giderler</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div class="cari-tabs" style="margin-bottom:0;">
+                    <button class="cari-tab-btn active" onclick="cariSekmeDegistir('cariGelirler')"><i class="fas fa-arrow-down"></i> Gelirler</button>
+                    <button class="cari-tab-btn" onclick="cariSekmeDegistir('cariGiderler')"><i class="fas fa-arrow-up"></i> Giderler</button>
+                </div>
             </div>
 
             <!-- MÜKELLEF BAKİYELERİ (PANO) -->
