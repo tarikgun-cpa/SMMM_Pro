@@ -647,6 +647,13 @@
                             <input type="date" id="fesihTarihi">
                         </div>
                         <div class="form-group">
+                            <label style="color:#8e44ad; font-weight:bold;">Hizmet Kapsamı:</label>
+                            <select id="hizmetKapsami" style="padding:10px; border:1px solid #8e44ad; border-radius:4px; font-weight:bold;">
+                                <option value="Mali Müşavirlik" selected>Mali Müşavirlik (Beyanname / Defter)</option>
+                                <option value="Danışmanlık">Sadece Danışmanlık (Proje / Finans vb.)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Mükellef Türü:</label>
                             <select id="mukellefTuru" style="padding:10px; border:1px solid #ccc; border-radius:4px;">
                                 <option value="">Seçiniz...</option>
@@ -1231,9 +1238,15 @@
         <!-- ========================================== -->
         <div id="takvimPaneli" class="view-section" style="display: none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h1 style="margin:0; border:none;">Mali Takvim ve Mükellef İş Takip Matrisi</h1>
+                <h1 style="margin:0; border:none;">Müşteri Görev ve Proje Takip Matrisi</h1>
             </div>
 
+            <div class="cari-tabs" style="margin-bottom: 20px;">
+                <button class="cari-tab-btn active" id="btnTakvimMali" onclick="matrisSekmeDegistir('maliMatrisTab')"><i class="fas fa-calculator"></i> Mali Müşavirlik (Beyanname Takibi)</button>
+                <button class="cari-tab-btn" id="btnTakvimDanismanlik" onclick="matrisSekmeDegistir('danismanlikMatrisTab')" style="background:#f4ecf7; color:#8e44ad; border:1px solid #8e44ad;"><i class="fas fa-chart-line"></i> Danışmanlık Projeleri (Durum Takibi)</button>
+            </div>
+
+            <div id="maliMatrisTab" style="display: block;">
             <div class="form-container" style="background:#edf2fa; border:1px solid #3498db; margin-bottom:20px; padding: 15px;">
                 <div class="form-grid" style="align-items: end; margin-bottom: 0;">
                     <div class="form-group" style="grid-column: span 2;">
@@ -1256,7 +1269,56 @@
 
             <!-- FIRMA DASHBOARD KARTLARI ALANI -->
             <div id="takvimFirmaKartlarıAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                <!-- JS ile dinamik kartlar çizilecek -->
+                </div>
+            </div>
+
+            <div id="danismanlikMatrisTab" style="display: none;">
+                <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #8e44ad; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <input type="text" id="danismanlikArama" class="search-bar" placeholder="Danışmanlık firması ara..." oninput="danismanlikCiz()">
+                </div>
+                <div id="danismanlikKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                    </div>
+            </div>
+        </div>
+
+        <div id="danismanlikGorevModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#8e44ad;">
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-project-diagram"></i> <span id="mdlDanFirmaAd">Firma Adı</span></h3>
+                    <button class="modal-close" onclick="modalKapat('danismanlikGorevModal')">X</button>
+                </div>
+                <div class="modal-body" style="padding:20px;">
+                    <input type="hidden" id="mdlDanVkn">
+                    
+                    <div class="form-group mb-3">
+                        <label style="color:#2c3e50; font-weight:bold;">Proje / Danışmanlık Konusu:</label>
+                        <input type="text" id="danProjeAd" placeholder="Örn: Finansal Yeniden Yapılandırma" style="border:1px solid #8e44ad;">
+                    </div>
+                    
+                    <div style="background:#f4ecf7; padding:15px; border-radius:6px; border:1px solid #d2b4de; margin-bottom:15px;">
+                        <label style="font-weight:bold; color:#8e44ad; margin-bottom:10px; display:block;">Proje İlerleme Aşamaları:</label>
+                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
+                            <input type="checkbox" id="chk_Dan_A1" style="width:16px; height:16px;"> <div>Aşama 1: Analiz ve Veri Toplama</div>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
+                            <input type="checkbox" id="chk_Dan_A2" style="width:16px; height:16px;"> <div>Aşama 2: Strateji ve Planlama</div>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; margin-bottom:8px; cursor:pointer;">
+                            <input type="checkbox" id="chk_Dan_A3" style="width:16px; height:16px;"> <div>Aşama 3: Uygulama / Sistem Kurulumu</div>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
+                            <input type="checkbox" id="chk_Dan_A4" style="width:16px; height:16px;"> <div>Aşama 4: Raporlama ve Teslim</div>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Son Durum Notları:</label>
+                        <textarea id="danNotlar" rows="3" placeholder="Projedeki son gelişmeleri buraya not alın..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn btn-primary" style="background:#8e44ad;" onclick="danismanlikGorevKaydet()" style="width:100%;">Proje Durumunu Kaydet</button>
+                </div>
             </div>
         </div>
 
@@ -1629,6 +1691,7 @@
                                 giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
                                 sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
                                 takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
+                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),
                                 teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
                                 sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                                 sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -1654,23 +1717,23 @@
                         let data = doc.data();
                         isSyncing = true; // Verileri lokale yazarken tekrar buluta göndermeyi engeller
                         
-                        // 1. Gelen verileri hafızaya ve global değişkenlere yedekle
                         if(data.mukellefler) { localStorage.setItem('mukellefler', JSON.stringify(data.mukellefler)); mukellefler = data.mukellefler; }
                         if(data.giderIslemler) { localStorage.setItem('giderIslemler', JSON.stringify(data.giderIslemler)); giderIslemler = data.giderIslemler; }
                         if(data.giderKategorileri) { localStorage.setItem('giderKategorileri', JSON.stringify(data.giderKategorileri)); giderKategorileri = data.giderKategorileri; }
                         if(data.sistemAyarlari) { localStorage.setItem('sistemAyarlari', JSON.stringify(data.sistemAyarlari)); sistemAyarlari = data.sistemAyarlari; }
                         if(data.takvimVeritabanı) { localStorage.setItem('takvimVeritabanı', JSON.stringify(data.takvimVeritabanı)); takvimVeritabanı = data.takvimVeritabanı; }
+                        if(data.danismanlikVeritabani) { localStorage.setItem('danismanlikVeritabani', JSON.stringify(data.danismanlikVeritabani)); danismanlikVeritabani = data.danismanlikVeritabani; }
                         if(data.teklifler) { localStorage.setItem('teklifler', JSON.stringify(data.teklifler)); kayitliTeklifler = data.teklifler; }
                         if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
                         if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
                         
                         isSyncing = false; 
                         
-                        // 2. Sayfayı yenilemeden SESSİZCE tüm panoları (Cari, Takvim vs.) yeni veriyle çizdir
                         listeyiYenile();
                         ayarlariYukle();
                         cariPanoCiz();
-                        takvimCiz();
+                        if(typeof takvimCiz === "function") takvimCiz();
+                        if(typeof danismanlikCiz === "function") danismanlikCiz();
                         teklifleriListele();
                         
                         document.getElementById('loginEkran').style.display = 'none'; 
@@ -1682,6 +1745,7 @@
                             giderKategorileri: giderKategorileri,
                             sistemAyarlari: sistemAyarlari,
                             takvimVeritabanı: takvimVeritabanı,
+                            danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),
                             teklifler: kayitliTeklifler,
                             sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                             sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2390,17 +2454,28 @@
             let giderPano = document.getElementById("giderPanoAlani");
             let aranacak = document.getElementById("panoArama") ? document.getElementById("panoArama").value.toLowerCase().trim() : "";
             
-            // Seçili yılı al, yoksa mevcut yılı kullan
             let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
             
             if(pano) pano.innerHTML = '';
             if(giderPano) giderPano.innerHTML = '';
             
             let tMakbuzBrut = 0; let tMakbuzKdv = 0; let tMakbuzStopaj = 0; let tMakbuzNet = 0; let tTahsilat = 0;
-            let genelPiyasaAlacagi = 0; // Bu her zaman kümülatif (Devir + Yeni) hesaplanacak
+            let genelPiyasaAlacagi = 0; 
+            
+            // Hata Düzeltme: Tüm hareketleri tarayıp mutlak en son tarihi bul
+            let enSonMakbuz = ""; let enSonTahsilat = "";
+            mukellefler.forEach(m => {
+                m.hareketler.forEach(h => {
+                    if(h.tur === "Makbuz" && h.tarihDüzz > enSonMakbuz) enSonMakbuz = h.tarihDüzz;
+                    if(h.tur === "Tahsilat" && h.tarihDüzz > enSonTahsilat) enSonTahsilat = h.tarihDüzz;
+                });
+            });
+            giderIslemler.forEach(g => {
+                if(g.islemTipi === "Ödeme" && g.tarihDüzz > enSonTahsilat) enSonTahsilat = g.tarihDüzz;
+            });
 
-            document.getElementById("dashSonMakbuzTarih").textContent = localStorage.getItem('sonMakbuzTarih') || "-";
-            document.getElementById("dashSonTahsilatTarih").textContent = localStorage.getItem('sonTahsilatTarih') || "-";
+            document.getElementById("dashSonMakbuzTarih").textContent = enSonMakbuz ? parseTR(enSonMakbuz) : "-";
+            document.getElementById("dashSonTahsilatTarih").textContent = enSonTahsilat ? parseTR(enSonTahsilat) : "-";
 
             mukellefler.forEach(m => {
                 let mFaturaYil = 0; let mOdemeYil = 0;
@@ -2945,8 +3020,8 @@
             let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
 
             mukellefler.forEach(m => {
-                // Pasif mükellefleri takvimde gösterme (Cari hesapta kalmaya devam ederler)
-                if(m.durum === "Pasif") return;
+                // Pasif VEYA "Danışmanlık" müşterilerini Mali Takvim'den gizle
+                if(m.durum === "Pasif" || m.hizmetKapsami === "Danışmanlık") return;
 
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
                 filtrelenmisFirmaSayisi++;
@@ -3453,6 +3528,105 @@
                     teklifleriListele(); 
                 }
             }
+        }
+
+        // --- DANIŞMANLIK PROJE YÖNETİM MOTORU ---
+        let danismanlikVeritabani = JSON.parse(localStorage.getItem('danismanlikVeritabani')) || {};
+
+        function matrisSekmeDegistir(tabId) {
+            document.getElementById('maliMatrisTab').style.display = 'none';
+            document.getElementById('danismanlikMatrisTab').style.display = 'none';
+            document.getElementById('btnTakvimMali').style.background = "#e1e8ed";
+            document.getElementById('btnTakvimMali').style.color = "#333";
+            document.getElementById('btnTakvimDanismanlik').style.background = "#f4ecf7";
+            document.getElementById('btnTakvimDanismanlik').style.color = "#8e44ad";
+            
+            if(tabId === 'maliMatrisTab') {
+                document.getElementById('maliMatrisTab').style.display = 'block';
+                document.getElementById('btnTakvimMali').style.background = "#2c3e50";
+                document.getElementById('btnTakvimMali').style.color = "white";
+                takvimCiz();
+            } else {
+                document.getElementById('danismanlikMatrisTab').style.display = 'block';
+                document.getElementById('btnTakvimDanismanlik').style.background = "#8e44ad";
+                document.getElementById('btnTakvimDanismanlik').style.color = "white";
+                danismanlikCiz();
+            }
+        }
+
+        function danismanlikCiz() {
+            let kartlarAlani = document.getElementById("danismanlikKartlariAlani");
+            let arama = document.getElementById("danismanlikArama").value.toLowerCase().trim();
+            kartlarAlani.innerHTML = '';
+
+            mukellefler.forEach(m => {
+                // Sadece aktif ve Hizmeti "Danışmanlık" olanları filtrele
+                if(m.durum === "Pasif" || m.hizmetKapsami !== "Danışmanlık") return;
+                if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
+
+                if(!danismanlikVeritabani[m.vkn]) {
+                    danismanlikVeritabani[m.vkn] = { projeAdi: "", a1: false, a2: false, a3: false, a4: false, notlar: "" };
+                }
+                let d = danismanlikVeritabani[m.vkn];
+                
+                let tamamlanan = 0;
+                if(d.a1) tamamlanan++; if(d.a2) tamamlanan++; if(d.a3) tamamlanan++; if(d.a4) tamamlanan++;
+                let oran = (tamamlanan / 4) * 100;
+                
+                let barRenk = oran === 100 ? "#27ae60" : (oran > 0 ? "#8e44ad" : "#95a5a6");
+
+                kartlarAlani.innerHTML += `
+                <div class="company-badge" onclick="danismanlikGorevPaneliAc('${m.vkn}', '${m.unvan}')" 
+                     style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
+                    
+                    <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
+                    <div style="font-size:11px; color:#8e44ad; font-weight:bold; margin-bottom:10px;"><i class="fas fa-briefcase"></i> Proje: ${d.projeAdi || "Belirtilmedi"}</div>
+                    
+                    <div style="font-size:11px; color:#7f8c8d; margin-bottom:10px; height:32px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                        ${d.notlar || "Henüz bir durum notu girilmedi..."}
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed #f4f6f9;">
+                        <span style="font-size:10px; color:#7f8c8d; font-weight:bold;">Süreç İlerlemesi</span>
+                        <span style="font-size:11px; font-weight:bold; color:${barRenk};">%${oran} Tamam</span>
+                    </div>
+                    <div style="width:100%; background:#f4ecf7; height:5px; border-radius:2px; margin-top:6px; overflow:hidden;">
+                        <div style="width:${oran}%; background:${barRenk}; height:100%; transition: 0.4s;"></div>
+                    </div>
+                </div>`;
+            });
+            // Bulut yedeği için veritabanını localStorage'a yaz
+            localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
+        }
+
+        function danismanlikGorevPaneliAc(vkn, unvan) {
+            document.getElementById("mdlDanVkn").value = vkn;
+            document.getElementById("mdlDanFirmaAd").textContent = unvan;
+            
+            let d = danismanlikVeritabani[vkn];
+            document.getElementById("danProjeAd").value = d.projeAdi || "";
+            document.getElementById("chk_Dan_A1").checked = d.a1;
+            document.getElementById("chk_Dan_A2").checked = d.a2;
+            document.getElementById("chk_Dan_A3").checked = d.a3;
+            document.getElementById("chk_Dan_A4").checked = d.a4;
+            document.getElementById("danNotlar").value = d.notlar || "";
+
+            modalAc('danismanlikGorevModal');
+        }
+
+        function danismanlikGorevKaydet() {
+            let vkn = document.getElementById("mdlDanVkn").value;
+            danismanlikVeritabani[vkn] = {
+                projeAdi: document.getElementById("danProjeAd").value,
+                a1: document.getElementById("chk_Dan_A1").checked,
+                a2: document.getElementById("chk_Dan_A2").checked,
+                a3: document.getElementById("chk_Dan_A3").checked,
+                a4: document.getElementById("chk_Dan_A4").checked,
+                notlar: document.getElementById("danNotlar").value
+            };
+            localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
+            danismanlikCiz();
+            modalKapat('danismanlikGorevModal');
         }
 
         // Sayfa ilk yüklendiğinde ayarları ve KDV kutularını aktif et
