@@ -570,6 +570,7 @@
             <li id="menuMukellef" class="active"><a href="#" onclick="sayfaDegistir('mukellefPaneli')">Mükellef Bilgileri</a></li>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')">Ücret Hesaplama Sihirbazı</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')">Kayıtlı Teklifler</a></li>
+            <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')">e-SMM / Fatura Merkezi</a></li>
             <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">Cari Hesaplar</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">Mali Takvim / Beyanname</a></li>
             <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
@@ -1398,6 +1399,74 @@
         <!-- ========================================== -->
         <!-- 5. CARİ HESAPLAR PANELİ (CARI PRO TARZI) -->
         <!-- ========================================== -->
+        <div id="faturaPaneli" class="view-section" style="display: none;">
+            <h1>Kesilen e-SMM ve Fatura Merkezi</h1>
+            
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="faturaArama" class="search-bar" placeholder="Makbuz No, Müşteri Unvanı veya VKN ara..." oninput="faturalariListele()" style="max-width: 400px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="action-btn btn-secondary" onclick="ornekFaturaExcelIndir()"><i class="fas fa-download"></i> Örnek Şablon</button>
+                    <button type="button" class="action-btn btn-success" style="background:#27ae60; color:white;" onclick="triggerFaturaExcelYukle()"><i class="fas fa-file-excel"></i> Excel'den Fatura Aktar</button>
+                    <input type="file" id="faturaDosyaInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="faturaExcelDosyaOku(event)">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="mukellef-table">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Mükellef Unvanı (VKN)</th>
+                            <th>Makbuz No / Açıklama</th>
+                            <th style="text-align:right;">Brüt Tutar</th>
+                            <th style="text-align:right; color:#16a085;">KDV</th>
+                            <th style="text-align:right; color:#d35400;">Stopaj</th>
+                            <th style="text-align:right; color:#e74c3c;">Net (Cari Borç)</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="faturaListeGovdesi"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="faturaDuzenleModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#27ae60;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-edit"></i> e-SMM Makbuzunu Düzenle</h3>
+                    <button class="modal-close" onclick="modalKapat('faturaDuzenleModal')">X</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="fdVkn">
+                    <input type="hidden" id="fdHrkId">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Tarih:</label><input type="date" id="fdTarih" class="search-bar"></div>
+                        <div class="form-group"><label>Makbuz No / Açıklama:</label><input type="text" id="fdAciklama" class="search-bar"></div>
+                    </div>
+                    
+                    <div class="form-grid" style="background:#eafaf1; padding:15px; border-radius:5px; border:1px solid #2ecc71; margin-top:15px;">
+                        <div class="form-group full-width"><label>Brüt Tutar (₺):</label><input type="number" id="fdBrut" class="search-bar" oninput="fdMatrahHesapla()" style="font-size:18px; font-weight:bold; color:#27ae60;"></div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="fdChkStopaj" onchange="fdMatrahHesapla()"> Stopaj</label>
+                            <input type="text" id="fdStopaj" readonly style="background:#eee; color:#d35400; font-weight:bold; width:100%; padding:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="fdChkKdv" onchange="fdMatrahHesapla()"> KDV</label>
+                            <input type="text" id="fdKdv" readonly style="background:#eee; color:#16a085; font-weight:bold; width:100%; padding:8px;">
+                        </div>
+                        <div class="form-group full-width" style="margin-top:10px;">
+                            <label>Net Cari Borç:</label>
+                            <input type="text" id="fdNet" readonly style="background:#fff; border:1px solid #2ecc71; color:#27ae60; font-size:18px; font-weight:bold; width:100%; padding:10px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn" onclick="modalKapat('faturaDuzenleModal')">İptal</button>
+                    <button class="action-btn btn-primary" style="background:#27ae60;" onclick="faturaDuzenleKaydet()">Değişiklikleri Kaydet</button>
+                </div>
+            </div>
+        </div>
+
         <div id="cariPaneli" class="view-section" style="display: none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <div style="display:flex; align-items:center; gap:15px;">
@@ -2340,6 +2409,7 @@
             let form = document.getElementById('formGörünümü');
             let sihirbaz = document.getElementById('sihirbazPaneli');
             let tekliflerPaneli = document.getElementById('teklifPaneli');
+            let faturaPaneli = document.getElementById('faturaPaneli');
             let ayarlarPaneli = document.getElementById('ayarlarPaneli');
             let cariPaneli = document.getElementById('cariPaneli');
             let takvimPaneli = document.getElementById('takvimPaneli');
@@ -2348,6 +2418,7 @@
             if(form) form.style.display = 'none';
             if(sihirbaz) sihirbaz.style.display = 'none'; 
             if(tekliflerPaneli) tekliflerPaneli.style.display = 'none';
+            if(faturaPaneli) faturaPaneli.style.display = 'none';
             if(ayarlarPaneli) ayarlarPaneli.style.display = 'none'; 
             if(cariPaneli) cariPaneli.style.display = 'none';
             if(takvimPaneli) takvimPaneli.style.display = 'none';
@@ -2356,6 +2427,7 @@
             document.getElementById('menuSihirbaz').classList.remove('active');
             document.getElementById('menuTeklifler').classList.remove('active');
             document.getElementById('menuAyarlar').classList.remove('active');
+            if(document.getElementById('menuFaturalar')) document.getElementById('menuFaturalar').classList.remove('active');
             if(document.getElementById('menuCari')) document.getElementById('menuCari').classList.remove('active');
             if(document.getElementById('menuTakvim')) document.getElementById('menuTakvim').classList.remove('active');
 
@@ -2373,7 +2445,10 @@
             else if (hedefPaneli === 'teklifPaneli') { 
                 if(tekliflerPaneli) tekliflerPaneli.style.display = 'block'; document.getElementById('menuTeklifler').classList.add('active'); teklifleriListele(); 
             }
-            else if (hedefPaneli === 'ayarlarPaneli') { 
+            else if (hedefPaneli === 'faturaPaneli') { 
+                if(faturaPaneli) faturaPaneli.style.display = 'block'; document.getElementById('menuFaturalar').classList.add('active'); faturalariListele(); 
+            }
+            else if (hedefPaneli === 'ayarlarPaneli') {
                 if(ayarlarPaneli) ayarlarPaneli.style.display = 'block'; document.getElementById('menuAyarlar').classList.add('active'); ayarlariYukle(); 
             }
             else if (hedefPaneli === 'cariPaneli') { 
@@ -3711,6 +3786,243 @@
             localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
             danismanlikCiz();
             modalKapat('danismanlikGorevModal');
+        }
+
+        // --- FATURA MERKEZİ VE EXCEL AKTARIM MOTORU ---
+        function faturalariListele() {
+            let tbody = document.getElementById('faturaListeGovdesi');
+            if(!tbody) return;
+            let arama = document.getElementById('faturaArama').value.toLowerCase().trim();
+            tbody.innerHTML = '';
+
+            let tumMakbuzlar = [];
+            mukellefler.forEach(m => {
+                if(m.hareketler) {
+                    m.hareketler.forEach(h => {
+                        if(h.tur === "Makbuz") {
+                            tumMakbuzlar.push({ ...h, vkn: m.vkn, unvan: m.unvan });
+                        }
+                    });
+                }
+            });
+
+            // Tarihe göre en yeniden eskiye sırala
+            tumMakbuzlar.sort((a,b) => new Date(b.tarihDüzz) - new Date(a.tarihDüzz));
+
+            let filtrelenmis = tumMakbuzlar.filter(h => 
+                (h.unvan && h.unvan.toLowerCase().includes(arama)) || 
+                (h.vkn && h.vkn.includes(arama)) ||
+                (h.aciklama && h.aciklama.toLowerCase().includes(arama))
+            );
+
+            if(filtrelenmis.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#7f8c8d;">Kesilmiş herhangi bir makbuz bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filtrelenmis.forEach(h => {
+                let temizAciklama = h.aciklama ? h.aciklama.replace(/ \[KDV:.*?\]/g, '').replace(/ \[Stp:.*?\]/g, '') : "";
+                
+                tbody.innerHTML += `<tr>
+                    <td>${h.tarih}</td>
+                    <td><b style="color:#2c3e50;">${h.unvan}</b><br><small style="color:#7f8c8d;">VKN: ${h.vkn}</small></td>
+                    <td>${temizAciklama}</td>
+                    <td style="text-align:right;">${formatMoney(h.brut)} ₺</td>
+                    <td style="text-align:right; color:#16a085; font-weight:bold;">${formatMoney(h.kdv)} ₺</td>
+                    <td style="text-align:right; color:#d35400; font-weight:bold;">${formatMoney(h.stopaj)} ₺</td>
+                    <td style="text-align:right; font-weight:bold; color:#27ae60; font-size:14px;">${formatMoney(h.netTutar || h.tutar)} ₺</td>
+                    <td style="white-space:nowrap;">
+                        <button class="table-btn btn-edit" onclick="faturaMerkeziDuzenle('${h.vkn}', '${h.id}')" title="Düzenle"><i class="fas fa-edit"></i></button>
+                        <button class="table-btn btn-danger" onclick="faturaMerkeziSil('${h.vkn}', '${h.id}')" title="Sil"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        // Fatura Düzenleme Modalı
+        function faturaMerkeziDuzenle(vkn, id) {
+            let m = mukellefler.find(x => x.vkn === vkn);
+            let h = m.hareketler.find(x => x.id === id);
+            if(!h) return;
+            
+            document.getElementById('fdVkn').value = vkn;
+            document.getElementById('fdHrkId').value = id;
+            document.getElementById('fdTarih').value = h.tarihDüzz;
+            let temizAciklama = h.aciklama ? h.aciklama.replace(/ \[KDV:.*?\]/g, '').replace(/ \[Stp:.*?\]/g, '') : "";
+            document.getElementById('fdAciklama').value = temizAciklama;
+            document.getElementById('fdBrut').value = h.brut || 0;
+            
+            document.getElementById('fdChkKdv').checked = (h.kdv > 0);
+            document.getElementById('fdChkStopaj').checked = (h.stopaj > 0);
+            
+            fdMatrahHesapla();
+            modalAc('faturaDuzenleModal');
+        }
+
+        function fdMatrahHesapla() {
+            let brut = parseFloat(document.getElementById("fdBrut").value) || 0;
+            let kdvOran = (sistemAyarlari["KDV"] || 20) / 100;
+            let stopajOran = (sistemAyarlari["STOPAJ"] || 20) / 100;
+
+            let kdvTutar = document.getElementById("fdChkKdv").checked ? (brut * kdvOran) : 0;
+            let stopajTutar = document.getElementById("fdChkStopaj").checked ? (brut * stopajOran) : 0;
+            let net = brut + kdvTutar - stopajTutar; 
+
+            document.getElementById("fdKdv").value = formatMoney(kdvTutar) + " ₺";
+            document.getElementById("fdStopaj").value = formatMoney(stopajTutar) + " ₺";
+            document.getElementById("fdNet").value = formatMoney(net) + " ₺";
+        }
+
+        function faturaDuzenleKaydet() {
+            let vkn = document.getElementById('fdVkn').value;
+            let id = document.getElementById('fdHrkId').value;
+            let m = mukellefler.find(x => x.vkn === vkn);
+            let h = m.hareketler.find(x => x.id === id);
+
+            let tarihRaw = document.getElementById("fdTarih").value;
+            let brut = parseFloat(document.getElementById("fdBrut").value) || 0;
+            
+            if(!tarihRaw || brut <= 0) { alert("Tarih ve Brüt Tutar eksik olamaz."); return; }
+
+            // Eski tutarı cari toplamdan düşüyoruz
+            m.makbuzToplami -= (h.netTutar || h.tutar);
+
+            let kdvOran = (sistemAyarlari["KDV"] || 20) / 100;
+            let stopajOran = (sistemAyarlari["STOPAJ"] || 20) / 100;
+            let kdvTutar = document.getElementById("fdChkKdv").checked ? (brut * kdvOran) : 0;
+            let stopajTutar = document.getElementById("fdChkStopaj").checked ? (brut * stopajOran) : 0;
+            let net = brut + kdvTutar - stopajTutar; 
+
+            let p = tarihRaw.split("-"); let tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
+
+            h.tarih = tarihTR;
+            h.tarihDüzz = tarihRaw;
+            h.aciklama = document.getElementById("fdAciklama").value;
+            h.brut = brut;
+            h.kdv = kdvTutar;
+            h.stopaj = stopajTutar;
+            h.netTutar = net;
+            h.tutar = net;
+
+            // Yeni tutarı cari toplama ekliyoruz
+            m.makbuzToplami += net;
+            
+            localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+            modalKapat('faturaDuzenleModal');
+            faturalariListele();
+            if(typeof cariPanoCiz === "function") cariPanoCiz();
+        }
+
+        function faturaMerkeziSil(vkn, id) {
+            if(!confirm("Bu faturayı silmek istediğinize emin misiniz? (Cari hesaptan da tamamen silinecektir!)")) return;
+            let m = mukellefler.find(x => x.vkn === vkn);
+            let idx = m.hareketler.findIndex(x => x.id === id);
+            if(idx !== -1) {
+                let h = m.hareketler[idx];
+                m.makbuzToplami -= (h.netTutar || h.tutar);
+                m.hareketler.splice(idx, 1);
+                localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                faturalariListele();
+                if(typeof cariPanoCiz === "function") cariPanoCiz();
+            }
+        }
+
+        // --- EXCEL FATURA TOPLU YÜKLEME ---
+        function ornekFaturaExcelIndir() {
+            // Türkçe karakterleri bozmayan BOM (Byte Order Mark) eklenmiş CSV formatı
+            let csvIcerik = "VKN,Tarih (GG.AA.YYYY),Makbuz No,Brut Tutar\n11111111111,01.05.2026,GUN2026000000001,5000\n22222222222,05.05.2026,GUN2026000000002,12500";
+            let blob = new Blob(["\uFEFF"+csvIcerik], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement("a");
+            a.href = url;
+            a.download = "Ornek_Fatura_Yukleme_Sablonu.csv";
+            a.click();
+        }
+
+        function triggerFaturaExcelYukle() { 
+            document.getElementById('faturaDosyaInput').click(); 
+        }
+
+        function faturaExcelDosyaOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    let jsonSatirlar = XLSX.utils.sheet_to_json(sayfa);
+
+                    let eklenen = 0; let atlanan = 0;
+                    let kdvOran = (sistemAyarlari["KDV"] || 20) / 100;
+                    let stopajOran = (sistemAyarlari["STOPAJ"] || 20) / 100;
+
+                    jsonSatirlar.forEach(satir => {
+                        let vkn = satir["VKN"] || satir["TCKN"] || satir["VKN/TCKN"] || satir["Vergi No"];
+                        let tarih = satir["Tarih"] || satir["Tarih (GG.AA.YYYY)"] || satir["Belge Tarihi"];
+                        let makbuzNo = satir["Makbuz No"] || satir["Belge No"] || satir["Fatura No"] || satir["Açıklama"];
+                        let brut = parseFloat(satir["Brüt Tutar"] || satir["Brut Tutar"] || satir["Brüt"]);
+
+                        if(!vkn || !tarih || isNaN(brut)) { atlanan++; return; }
+                        vkn = String(vkn).trim();
+                        
+                        let m = mukellefler.find(x => x.vkn === vkn);
+                        if(!m) { atlanan++; return; } // Mükellef sistemde yoksa atla
+
+                        // Mükerrer Makbuz No Kontrolü
+                        if(m.hareketler.some(h => h.tur === "Makbuz" && h.aciklama === String(makbuzNo))) {
+                            atlanan++; return;
+                        }
+
+                        // Tarihi GG.AA.YYYY formatından YYYY-AA-GG formatına çevirme (Input value ve sıralama için)
+                        let t = String(tarih).trim();
+                        let p = t.split(".");
+                        let tarihTR = t;
+                        let tarihDüzz = t;
+                        if(p.length === 3) {
+                            tarihTR = `${p[0]}.${p[1]}.${p[2]}`;
+                            tarihDüzz = `${p[2]}-${p[1]}-${p[0]}`;
+                        } else {
+                            tarihDüzz = new Date().toISOString().split('T')[0]; // Beklenmeyen format gelirse bugünü atar
+                        }
+
+                        // Eğer Excel'de KDV/Stopaj sütunu varsa onu kullan, yoksa sistem yüzdesinden hesapla
+                        let kdvTutar = satir["KDV"] !== undefined ? parseFloat(satir["KDV"]) : (brut * kdvOran);
+                        let stopajTutar = satir["Stopaj"] !== undefined ? parseFloat(satir["Stopaj"]) : (brut * stopajOran);
+                        let netCariBorc = brut + kdvTutar - stopajTutar;
+
+                        m.hareketler.push({
+                            id: "HRK_" + Date.now() + Math.floor(Math.random()*1000),
+                            tur: "Makbuz",
+                            tarih: tarihTR,
+                            tarihDüzz: tarihDüzz,
+                            aciklama: String(makbuzNo),
+                            brut: brut,
+                            kdv: kdvTutar,
+                            stopaj: stopajTutar,
+                            netTutar: netCariBorc,
+                            tutar: netCariBorc
+                        });
+                        m.makbuzToplami += netCariBorc;
+                        eklenen++;
+                    });
+
+                    if(eklenen > 0) {
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        faturalariListele();
+                        if(typeof cariPanoCiz === "function") cariPanoCiz();
+                        alert(`İşlem Tamamlandı!\n🎉 ${eklenen} adet e-SMM makbuzu Cari Hesaplara işlendi.\n⚠️ ${atlanan} satır (Mükellef bulunamadığı veya makbuz numarası zaten kayıtlı olduğu için) atlandı.`);
+                    } else {
+                        alert("Yüklenecek geçerli makbuz bulunamadı. VKN'lerin sistemle eşleştiğinden ve şablona uyduğunuzdan emin olun.");
+                    }
+                } catch(err) {
+                    console.error(err);
+                    alert("Excel okunurken hata oluştu. Lütfen dosyanın 'Örnek Şablon' ile aynı formatta olduğundan emin olun.");
+                }
+                event.target.value = ""; // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
+            };
+            reader.readAsArrayBuffer(dosya);
         }
 
         // Sayfa ilk yüklendiğinde ayarları ve KDV kutularını aktif et
