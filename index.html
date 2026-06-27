@@ -1998,7 +1998,10 @@
             if (duzenlenenVkn) {
                 // DÜZENLEME MODU
                 let indeks = mukellefler.findIndex(m => m.vkn === duzenlenenVkn);
-                if (indeks !== -1) mukellefler[indeks] = musteriVerisi;
+                if (indeks !== -1) {
+                    // KRİTİK DÜZELTME: Eski verileri (hareketler, mutabakatlar vb.) koruyarak, sadece formdaki yeni bilgileri üstüne yazıyoruz!
+                    mukellefler[indeks] = { ...mukellefler[indeks], ...musteriVerisi };
+                }
                 alert("Mükellef bilgileri başarıyla güncellendi!");
             } else {
                 // YENİ KAYIT MODU
@@ -2007,6 +2010,12 @@
                     alert("HATA: Bu VKN/TCKN numarasına sahip bir mükellef zaten kayıtlı!");
                     return;
                 }
+                // Yeni kayıtta cari arka plan alt yapısını güvene alıyoruz
+                musteriVerisi.hareketler = [];
+                musteriVerisi.makbuzToplami = 0;
+                musteriVerisi.tahsilatToplami = 0;
+                musteriVerisi.mutabakatlar = [];
+                
                 mukellefler.push(musteriVerisi);
                 alert("Mükellef başarıyla sisteme kaydedildi!");
             }
