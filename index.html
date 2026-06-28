@@ -1466,7 +1466,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button class="action-btn btn-primary" onclick="modalKapat('takvimGorevModal')" style="width:100%;">Değişiklikleri Kaydet ve Kapat</button>
+                    <button class="action-btn btn-primary" onclick="takvimGorevKaydet(); modalKapat('takvimGorevModal')" style="width:100%;">Değişiklikleri Kaydet ve Kapat</button>
                 </div>
             </div>
         </div>
@@ -3393,8 +3393,6 @@
             document.getElementById("chk_Gorev_SGK").checked = f.SGK || false;
             document.getElementById("chk_Gorev_TUIK").checked = f.TUIK || false;
             document.getElementById("chk_Gorev_ISKUR").checked = f.ISKUR || false;
-            document.getElementById("chk_Gorev_OZEL1").checked = f.OZEL1 || false;
-            document.getElementById("chk_Gorev_OZEL2").checked = f.OZEL2 || false;
 
             // Kilit Mekanizması
             document.getElementById("chk_Gorev_KDV2").disabled = f.KDV2_Yok || false;
@@ -3438,7 +3436,7 @@
 
                     dinKutu.innerHTML += `
                     <label style="display:flex; align-items:center; gap:10px; font-size:14px; background:#e8f8f5; padding:8px; border-radius:4px; border-left:4px solid #16a085; cursor:pointer;">
-                        <input type="checkbox" class="mdl-dinamik-chk" data-id="${og.id}" ${isDone ? 'checked' : ''} style="width:16px; height:16px;"> 
+                        <input type="checkbox" class="mdl-dinamik-chk" data-id="${og.id}" ${isDone ? 'checked' : ''} onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> 
                         <div>${og.ad}</div>
                     </label>`;
                 }
