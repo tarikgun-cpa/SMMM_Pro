@@ -631,6 +631,23 @@
                 </div>
             </div>
 
+            <div style="background:linear-gradient(to right, #2c3e50, #34495e); border-radius:8px; padding:15px; margin-bottom:12px; color:white; box-shadow:0 4px 15px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px;">
+                <div style="flex:1; min-width:200px;">
+                    <h3 style="font-size:14px; margin-bottom:5px; color:#f1c40f;"><i class="fas fa-book"></i> E-Defter Yükleme Merkezi</h3>
+                    <p id="mdDefterBaslik" style="font-size:12px; color:#bdc3c7; margin:0;">Takvimden dönem seçin...</p>
+                </div>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <div style="text-align:center; background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:6px; min-width:120px;">
+                        <div style="font-size:11px; color:#bdc3c7; margin-bottom:5px;">Aylık Beratlar</div>
+                        <div style="font-size:18px; font-weight:bold; color:#2ecc71;" id="mdDefterAylikDurum">0 / 0</div>
+                    </div>
+                    <div style="text-align:center; background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:6px; min-width:120px;">
+                        <div style="font-size:11px; color:#bdc3c7; margin-bottom:5px;">3 Aylık Beratlar</div>
+                        <div style="font-size:18px; font-weight:bold; color:#3498db;" id="mdDefterUcDurum">0 / 0</div>
+                    </div>
+                </div>
+            </div>
+
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div style="background:white; border:1px solid #eef2f5; border-radius:8px; padding:12px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
                     <h3 style="font-size:13px; color:#c0392b; font-weight:600; border-bottom:1px solid #f4f6f9; padding-bottom:6px; margin-bottom:8px;"><i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> Kritik Alarmlar & Yaklaşan Sorumluluklar (Son 3 Gün)</h3>
@@ -1116,6 +1133,10 @@
                         <div class="form-group"><label style="color:#c0392b;">Yıllık Kurumlar / Gelir Vergisi:</label><input type="date" id="ayarYillikTarih"></div>
                         <div class="form-group"><label style="color:#2ecc71;">SGK İşe Giriş/Çıkış Kontrolü:</label><input type="date" id="ayarSgkTarih"></div>
                         
+                        <div class="form-group full-width" style="background:#f4ecf7; padding:10px; border-radius:5px; border:1px dashed #9b59b6; margin-top:10px; margin-bottom:5px;">
+                            <label style="color:#8e44ad; font-weight:bold; margin-bottom:5px;"><i class="fas fa-edit"></i> Bu Ay Yüklenecek E-Defterin Ait Olduğu Dönem:</label>
+                            <input type="text" id="ayarDefterDonemAdi" placeholder="Örn: Nisan 2026 E-Defteri (Ağustos ayında yüklenen defter için)">
+                        </div>
                         <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Şahıs):</label><input type="date" id="ayarDefterAylikSahisTarih"></div>
                         <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Kurumlar):</label><input type="date" id="ayarDefterAylikKurumTarih"></div>
                         
@@ -1428,7 +1449,7 @@
 
                         <div style="font-size:13px; font-weight:bold; color:#27ae60; margin-top:5px; margin-bottom:-5px; border-bottom:1px solid #eee; padding-bottom:5px;">Defter ve Diğer Bildirimler</div>
                         <label id="lbl_Gorev_DEFTER" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #9b59b6; cursor:pointer;">
-                            <input type="checkbox" id="chk_Gorev_DEFTER" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>E-Defter Beratı / Defter Onayı</div>
+                            <input type="checkbox" id="chk_Gorev_DEFTER" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div id="txt_Gorev_DEFTER">E-Defter Beratı / Defter Onayı</div>
                         </label>
                         <label id="lbl_Gorev_SGK" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #2ecc71; cursor:pointer;">
                             <input type="checkbox" id="chk_Gorev_SGK" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>SGK İşe Giriş/Çıkış Kontrolleri</div>
@@ -2444,7 +2465,8 @@
             document.getElementById('ayarGeciciSahisTarih').value = t.geciciSahis || "";
             document.getElementById('ayarYillikTarih').value = t.yillik || "";
             
-            // Yeni e-Defter Ayrımı - Eski veriler kaybolmasın diye fallback eklendi
+            // Yeni e-Defter Ayrımı ve Dönem İsimlendirmesi
+            if(document.getElementById('ayarDefterDonemAdi')) document.getElementById('ayarDefterDonemAdi').value = t.defterDonemAdi || "";
             document.getElementById('ayarDefterAylikSahisTarih').value = t.defterAylikSahis || t.defterAylik || "";
             document.getElementById('ayarDefterAylikKurumTarih').value = t.defterAylikKurum || t.defterAylik || "";
             document.getElementById('ayarDefterUcSahisTarih').value = t.defterUcSahis || t.defterUc || "";
@@ -2477,6 +2499,7 @@
                 geciciSahis: document.getElementById('ayarGeciciSahisTarih').value,
                 yillik: document.getElementById('ayarYillikTarih').value,
                 
+                defterDonemAdi: document.getElementById('ayarDefterDonemAdi') ? document.getElementById('ayarDefterDonemAdi').value : "",
                 defterAylikSahis: document.getElementById('ayarDefterAylikSahisTarih').value,
                 defterAylikKurum: document.getElementById('ayarDefterAylikKurumTarih').value,
                 defterUcSahis: document.getElementById('ayarDefterUcSahisTarih').value,
@@ -3255,13 +3278,14 @@
                 }
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) { fToplam++; if(f.BABS) fTamam++; rozetlerHTML += rozetEkle("Ba/Bs", f.BABS, tTarih.babs, false); }
                 
-                // e-Defter Ayrıştırma Mantığı
+                // e-Defter Ayrıştırma ve İsimlendirme Mantığı
                 let defterTarihi = null;
+                let defterRozetIsmi = tTarih.defterDonemAdi ? tTarih.defterDonemAdi : "Defter";
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
                     if(isDefterUc) defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
                     else defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                 }
-                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("Defter", f.DEFTER, defterTarihi, false); }
+                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle(defterRozetIsmi, f.DEFTER, defterTarihi, false); }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) { 
                     fToplam++; if(f.GECICI) fTamam++; rozetlerHTML += rozetEkle("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false); 
@@ -3357,6 +3381,9 @@
             else defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
             
             document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
+            let defterLabel = tTarih.defterDonemAdi ? tTarih.defterDonemAdi + " Onayı" : "E-Defter Beratı / Defter Onayı";
+            if(document.getElementById("txt_Gorev_DEFTER")) document.getElementById("txt_Gorev_DEFTER").textContent = defterLabel;
+            
             document.getElementById("lbl_Gorev_GECICI").style.display = (tTarih.geciciKurum || tTarih.geciciSahis || tTarih.yillik) ? "flex" : "none";
             document.getElementById("lbl_Gorev_SGK").style.display = tTarih.sgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_TUIK").style.display = tTarih.tuik ? "flex" : "none";
@@ -4224,6 +4251,9 @@
             let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
             let fGorevTop = 0; let fGorevTamam = 0;
             let alarmListesiHTML = "";
+            
+            let aylikDefterTop = 0, aylikDefterTamam = 0;
+            let ucAylikDefterTop = 0, ucAylikDefterTamam = 0;
 
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
@@ -4264,8 +4294,15 @@
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
                     if(isDefterUc) defterTarihiDash = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
                     else defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+                    
+                    // Dashboard E-Defter Sayacı Beslemesi
+                    if(defterTarihiDash) {
+                        if(isDefterUc) { ucAylikDefterTop++; if(f.DEFTER) ucAylikDefterTamam++; }
+                        else { aylikDefterTop++; if(f.DEFTER) aylikDefterTamam++; }
+                    }
                 }
-                if(defterTarihiDash) kontrolAlarm("Defter", f.DEFTER, defterTarihiDash, false);
+                let dashDefterRozetIsmi = tTarih.defterDonemAdi ? tTarih.defterDonemAdi : "Defter";
+                if(defterTarihiDash) kontrolAlarm(dashDefterRozetIsmi, f.DEFTER, defterTarihiDash, false);
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
                     kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
@@ -4284,6 +4321,13 @@
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik veya geciken görev bulunmuyor. Süreç stabil.</div>`;
+            
+            // Dashboard E-Defter Kutusuna Veri Basma
+            if(document.getElementById("mdDefterBaslik")) {
+                document.getElementById("mdDefterBaslik").innerHTML = (tTarih.defterDonemAdi ? `<strong style="color:#f1c40f;">${tTarih.defterDonemAdi}</strong> Dönemine Ait Defterler` : "Bu ay yüklenecek defterler");
+            }
+            if(document.getElementById("mdDefterAylikDurum")) document.getElementById("mdDefterAylikDurum").textContent = `${aylikDefterTamam} / ${aylikDefterTop}`;
+            if(document.getElementById("mdDefterUcDurum")) document.getElementById("mdDefterUcDurum").textContent = `${ucAylikDefterTamam} / ${ucAylikDefterTop}`;
 
             // 3. Danışmanlık Projeleri İzleme Listesi
             let aktifSayac = 0; let bitenSayac = 0;
