@@ -3234,6 +3234,37 @@
             return Math.ceil((hedef - bugun) / (1000 * 60 * 60 * 24));
         }
 
+        // YENİ EKLENEN AKILLI TARİH MOTORU (Girilen tarihi baz alır)
+        function hedefAyaAitTarihleriGetir(donem) {
+            let tTarih = { ozelGorevler: [] };
+            let ayarlar = sistemAyarlari.takvimGunleri || {};
+            
+            Object.keys(ayarlar).forEach(key => {
+                let b = ayarlar[key];
+                if(b.kdv1 && b.kdv1.startsWith(donem)) tTarih.kdv1 = b.kdv1;
+                if(b.kdv2 && b.kdv2.startsWith(donem)) tTarih.kdv2 = b.kdv2;
+                if(b.muhsgk && b.muhsgk.startsWith(donem)) tTarih.muhsgk = b.muhsgk;
+                if(b.babs && b.babs.startsWith(donem)) tTarih.babs = b.babs;
+                if(b.geciciKurum && b.geciciKurum.startsWith(donem)) tTarih.geciciKurum = b.geciciKurum;
+                if(b.geciciSahis && b.geciciSahis.startsWith(donem)) tTarih.geciciSahis = b.geciciSahis;
+                if(b.yillik && b.yillik.startsWith(donem)) tTarih.yillik = b.yillik;
+                if(b.defterAylikSahis && b.defterAylikSahis.startsWith(donem)) tTarih.defterAylikSahis = b.defterAylikSahis;
+                if(b.defterAylikKurum && b.defterAylikKurum.startsWith(donem)) tTarih.defterAylikKurum = b.defterAylikKurum;
+                if(b.defterUcSahis && b.defterUcSahis.startsWith(donem)) tTarih.defterUcSahis = b.defterUcSahis;
+                if(b.defterUcKurum && b.defterUcKurum.startsWith(donem)) tTarih.defterUcKurum = b.defterUcKurum;
+                if(b.sgk && b.sgk.startsWith(donem)) tTarih.sgk = b.sgk;
+                if(b.tuik && b.tuik.startsWith(donem)) tTarih.tuik = b.tuik;
+                if(b.iskur && b.iskur.startsWith(donem)) tTarih.iskur = b.iskur;
+                
+                if(b.ozelGorevler) {
+                    b.ozelGorevler.forEach(og => {
+                        if(og.tarih && og.tarih.startsWith(donem)) tTarih.ozelGorevler.push(og);
+                    });
+                }
+            });
+            return tTarih;
+        }
+
         function takvimCiz() {
             let donem = document.getElementById("takvimDonem").value;
             let arama = document.getElementById("takvimArama") ? document.getElementById("takvimArama").value.toLowerCase().trim() : "";
@@ -3251,7 +3282,7 @@
             if(!takvimVeritabanı[donem]) takvimVeritabanı[donem] = {};
 
             let toplamGorevSayisi = 0; let tamamlananGorevSayisi = 0; let filtrelenmisFirmaSayisi = 0;
-            let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
+            let tTarih = hedefAyaAitTarihleriGetir(donem);
 
             mukellefler.forEach(m => {
                 // Pasifleri gizle. Danışmanlık olanları gizle (AMAA Mükellef Türü SMMM ise onu her yerde göster!)
@@ -3301,13 +3332,29 @@
                 }
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) { fToplam++; if(f.BABS) fTamam++; rozetlerHTML += rozetEkle("Ba/Bs", f.BABS, tTarih.babs, false); }
                 
-                // e-Defter Ayrıştırma
+                // e-Defter Ayrıştırma ve Akıllı İsimlendirme
                 let defterTarihi = null;
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
                     if(isDefterUc) defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
                     else defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                 }
-                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("E-Defter Beratı", f.DEFTER, defterTarihi, false); }
+                if(defterTarihi) { 
+                    fToplam++; if(f.DEFTER) fTamam++; 
+                    let ayNum = parseInt(defterTarihi.split("-")[1]);
+                    let dAd = "E-Defter Beratı";
+                    if(!isDefterUc) {
+                        let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
+                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                        dAd = aylar[hAy - 1] + " Defteri";
+                    } else {
+                        if(ayNum === 5) dAd = "1. Dönem Defteri"; 
+                        else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defteri"; 
+                        else if(ayNum === 11) dAd = "3. Dönem Defteri"; 
+                        else if(ayNum === 2) dAd = "4. Dönem Defteri"; 
+                        else dAd = "3 Aylık Defter";
+                    }
+                    rozetlerHTML += rozetEkle(dAd, f.DEFTER, defterTarihi, false); 
+                }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) { 
                     fToplam++; if(f.GECICI) fTamam++; rozetlerHTML += rozetEkle("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false); 
@@ -3398,7 +3445,7 @@
             document.getElementById("chk_Gorev_KDV2").disabled = f.KDV2_Yok || false;
             document.getElementById("chk_Gorev_MUHSGK").disabled = f.MUHSGK_Yok || false;
 
-            let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
+            let tTarih = hedefAyaAitTarihleriGetir(donem);
             
             document.getElementById("lbl_Gorev_KDV1").style.display = tTarih.kdv1 ? "flex" : "none";
             document.getElementById("lbl_Gorev_KDV2").style.display = tTarih.kdv2 ? "flex" : "none";
@@ -3413,6 +3460,19 @@
             else defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
             
             document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
+            
+            if(defterTarihVarmı) {
+                let ayNum = parseInt(defterTarihVarmı.split("-")[1]);
+                let dAd = "E-Defter Beratı";
+                if(!isDefterUcModal) {
+                    let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
+                    let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                    dAd = aylar[hAy - 1] + " E-Defter Beratı";
+                } else {
+                    if(ayNum === 5) dAd = "1. Dönem Defter Beratı"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defter Beratı"; else if(ayNum === 11) dAd = "3. Dönem Defter Beratı"; else if(ayNum === 2) dAd = "4. Dönem Defter Beratı";
+                }
+                document.querySelector("#lbl_Gorev_DEFTER div").textContent = dAd;
+            }
             
             document.getElementById("lbl_Gorev_GECICI").style.display = (tTarih.geciciKurum || tTarih.geciciSahis || tTarih.yillik) ? "flex" : "none";
             document.getElementById("lbl_Gorev_SGK").style.display = tTarih.sgk ? "flex" : "none";
@@ -4299,7 +4359,7 @@
                 donem = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
             }
 
-            let tTarih = (sistemAyarlari.takvimGunleri && sistemAyarlari.takvimGunleri[donem]) ? sistemAyarlari.takvimGunleri[donem] : {};
+            let tTarih = hedefAyaAitTarihleriGetir(donem);
             let fGorevTop = 0; let fGorevTamam = 0;
             let alarmListesiHTML = "";
             
@@ -4352,8 +4412,18 @@
                         else { aylikDefterTop++; if(f.DEFTER) aylikDefterTamam++; }
                     }
                 }
-                let dashDefterRozetIsmi = tTarih.defterDonemAdi ? tTarih.defterDonemAdi : "Defter";
-                if(defterTarihiDash) kontrolAlarm(dashDefterRozetIsmi, f.DEFTER, defterTarihiDash, false);
+                if(defterTarihiDash) {
+                    let ayNum = parseInt(defterTarihiDash.split("-")[1]);
+                    let dAd = "Defter";
+                    if(!isDefterUc) {
+                        let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
+                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                        dAd = aylar[hAy - 1] + " Defteri";
+                    } else {
+                        if(ayNum === 5) dAd = "1. Dönem Defter"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defter"; else if(ayNum === 11) dAd = "3. Dönem Defter"; else if(ayNum === 2) dAd = "4. Dönem Defter";
+                    }
+                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false);
+                }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
                     kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
