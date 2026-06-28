@@ -1114,10 +1114,13 @@
                         <div class="form-group"><label style="color:#d35400;">Geçici Vergi (Şahıs/İşletme):</label><input type="date" id="ayarGeciciSahisTarih"></div>
                         
                         <div class="form-group"><label style="color:#c0392b;">Yıllık Kurumlar / Gelir Vergisi:</label><input type="date" id="ayarYillikTarih"></div>
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık):</label><input type="date" id="ayarDefterAylikTarih"></div>
-                        
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Üç Aylık):</label><input type="date" id="ayarDefterUcTarih"></div>
                         <div class="form-group"><label style="color:#2ecc71;">SGK İşe Giriş/Çıkış Kontrolü:</label><input type="date" id="ayarSgkTarih"></div>
+                        
+                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Şahıs):</label><input type="date" id="ayarDefterAylikSahisTarih"></div>
+                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Kurumlar):</label><input type="date" id="ayarDefterAylikKurumTarih"></div>
+                        
+                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Üç Aylık - Şahıs):</label><input type="date" id="ayarDefterUcSahisTarih"></div>
+                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Üç Aylık - Kurumlar):</label><input type="date" id="ayarDefterUcKurumTarih"></div>
                         
                         <div class="form-group"><label style="color:#f1c40f;">TÜİK Anketleri:</label><input type="date" id="ayarTuikTarih"></div>
                         <div class="form-group"><label style="color:#e67e22;">İŞKUR Çizelgesi:</label><input type="date" id="ayarIskurTarih"></div>
@@ -1127,8 +1130,17 @@
                     <div class="form-grid">
                         <div class="form-group"><label>1. Özel Görev Adı:</label><input type="text" id="ayarOzel1Ad" placeholder="Örn: Sanayi Sicil Belgesi"></div>
                         <div class="form-group"><label>1. Görev Son Günü:</label><input type="date" id="ayarOzel1Tarih"></div>
-                        <div class="form-group"><label>2. Özel Görev Adı:</label><input type="text" id="ayarOzel2Ad" placeholder="Örn: Kapasite Raporu"></div>
-                        <div class="form-group"><label>2. Görev Son Günü:</label><input type="date" id="ayarOzel2Tarih"></div>
+                        <div class="form-group full-width">
+                            <label style="color:#16a085;">1. Geçerli Mükellef (Seçilmezse tüm firmalarda çıkar):</label>
+                            <select id="ayarOzel1Vkn" class="search-bar" style="padding: 8px;"><option value="HEPSI">Tüm Mükellefler (Varsayılan)</option></select>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top:10px;"><label>2. Özel Görev Adı:</label><input type="text" id="ayarOzel2Ad" placeholder="Örn: Kapasite Raporu"></div>
+                        <div class="form-group" style="margin-top:10px;"><label>2. Görev Son Günü:</label><input type="date" id="ayarOzel2Tarih"></div>
+                        <div class="form-group full-width">
+                            <label style="color:#16a085;">2. Geçerli Mükellef (Seçilmezse tüm firmalarda çıkar):</label>
+                            <select id="ayarOzel2Vkn" class="search-bar" style="padding: 8px;"><option value="HEPSI">Tüm Mükellefler (Varsayılan)</option></select>
+                        </div>
                     </div>
 
                     <button type="button" class="action-btn btn-danger" onclick="ayarDonemTarihleriniKaydet()" style="margin-top:15px; width:100%;"><i class="fas fa-save"></i> Seçili Dönemin Tarihlerini Kaydet</button>
@@ -2397,6 +2409,18 @@
             document.getElementById('ayar2029').value = sistemAyarlari["2029"] || 0;
             document.getElementById('ayar2030').value = sistemAyarlari["2030"] || 0;
 
+            // Özel görev mükellef listesini doldur
+            let select1 = document.getElementById("ayarOzel1Vkn");
+            let select2 = document.getElementById("ayarOzel2Vkn");
+            if(select1 && select2) {
+                let options = '<option value="HEPSI">Tüm Mükellefler (Varsayılan)</option>';
+                mukellefler.forEach(m => {
+                    if(m.unvan) options += `<option value="${m.vkn}">${m.unvan} (${m.vkn})</option>`;
+                });
+                select1.innerHTML = options;
+                select2.innerHTML = options;
+            }
+
             let d = new Date();
             let guncelDonem = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
             if(document.getElementById('ayarTakvimDonem')) {
@@ -2419,16 +2443,24 @@
             document.getElementById('ayarGeciciKurumTarih').value = t.geciciKurum || "";
             document.getElementById('ayarGeciciSahisTarih').value = t.geciciSahis || "";
             document.getElementById('ayarYillikTarih').value = t.yillik || "";
-            document.getElementById('ayarDefterAylikTarih').value = t.defterAylik || "";
-            document.getElementById('ayarDefterUcTarih').value = t.defterUc || "";
+            
+            // Yeni e-Defter Ayrımı - Eski veriler kaybolmasın diye fallback eklendi
+            document.getElementById('ayarDefterAylikSahisTarih').value = t.defterAylikSahis || t.defterAylik || "";
+            document.getElementById('ayarDefterAylikKurumTarih').value = t.defterAylikKurum || t.defterAylik || "";
+            document.getElementById('ayarDefterUcSahisTarih').value = t.defterUcSahis || t.defterUc || "";
+            document.getElementById('ayarDefterUcKurumTarih').value = t.defterUcKurum || t.defterUc || "";
+            
             document.getElementById('ayarTuikTarih').value = t.tuik || "";
             document.getElementById('ayarIskurTarih').value = t.iskur || "";
             document.getElementById('ayarSgkTarih').value = t.sgk || "";
             
             if(document.getElementById('ayarOzel1Ad')) document.getElementById('ayarOzel1Ad').value = t.ozel1Ad || "";
             if(document.getElementById('ayarOzel1Tarih')) document.getElementById('ayarOzel1Tarih').value = t.ozel1Tarih || "";
+            if(document.getElementById('ayarOzel1Vkn')) document.getElementById('ayarOzel1Vkn').value = t.ozel1Vkn || "HEPSI";
+            
             if(document.getElementById('ayarOzel2Ad')) document.getElementById('ayarOzel2Ad').value = t.ozel2Ad || "";
             if(document.getElementById('ayarOzel2Tarih')) document.getElementById('ayarOzel2Tarih').value = t.ozel2Tarih || "";
+            if(document.getElementById('ayarOzel2Vkn')) document.getElementById('ayarOzel2Vkn').value = t.ozel2Vkn || "HEPSI";
         }
 
         function ayarDonemTarihleriniKaydet() {
@@ -2444,16 +2476,23 @@
                 geciciKurum: document.getElementById('ayarGeciciKurumTarih').value,
                 geciciSahis: document.getElementById('ayarGeciciSahisTarih').value,
                 yillik: document.getElementById('ayarYillikTarih').value,
-                defterAylik: document.getElementById('ayarDefterAylikTarih').value,
-                defterUc: document.getElementById('ayarDefterUcTarih').value,
+                
+                defterAylikSahis: document.getElementById('ayarDefterAylikSahisTarih').value,
+                defterAylikKurum: document.getElementById('ayarDefterAylikKurumTarih').value,
+                defterUcSahis: document.getElementById('ayarDefterUcSahisTarih').value,
+                defterUcKurum: document.getElementById('ayarDefterUcKurumTarih').value,
+                
                 tuik: document.getElementById('ayarTuikTarih').value,
                 iskur: document.getElementById('ayarIskurTarih').value,
                 sgk: document.getElementById('ayarSgkTarih').value,
                 
                 ozel1Ad: document.getElementById('ayarOzel1Ad') ? document.getElementById('ayarOzel1Ad').value : "",
                 ozel1Tarih: document.getElementById('ayarOzel1Tarih') ? document.getElementById('ayarOzel1Tarih').value : "",
+                ozel1Vkn: document.getElementById('ayarOzel1Vkn') ? document.getElementById('ayarOzel1Vkn').value : "HEPSI",
+                
                 ozel2Ad: document.getElementById('ayarOzel2Ad') ? document.getElementById('ayarOzel2Ad').value : "",
-                ozel2Tarih: document.getElementById('ayarOzel2Tarih') ? document.getElementById('ayarOzel2Tarih').value : ""
+                ozel2Tarih: document.getElementById('ayarOzel2Tarih') ? document.getElementById('ayarOzel2Tarih').value : "",
+                ozel2Vkn: document.getElementById('ayarOzel2Vkn') ? document.getElementById('ayarOzel2Vkn').value : "HEPSI"
             };
             localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
             alert(donem + " Dönemi İçin Takvim Tarihleri Kaydedildi!");
@@ -3215,17 +3254,28 @@
                     else { rozetlerHTML += rozetEkle("Muhtasar", false, tTarih.muhsgk, true); }
                 }
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) { fToplam++; if(f.BABS) fTamam++; rozetlerHTML += rozetEkle("Ba/Bs", f.BABS, tTarih.babs, false); }
-                if(m.eDefterDurum && m.eDefterDurum.includes("Evet") && (isDefterUc ? tTarih.defterUc : tTarih.defterAylik)) { 
-                    fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("Defter", f.DEFTER, isDefterUc ? tTarih.defterUc : tTarih.defterAylik, false); 
+                
+                // e-Defter Ayrıştırma Mantığı
+                let defterTarihi = null;
+                if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
+                    if(isDefterUc) defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+                    else defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                 }
+                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("Defter", f.DEFTER, defterTarihi, false); }
+                
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) { 
                     fToplam++; if(f.GECICI) fTamam++; rozetlerHTML += rozetEkle("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false); 
                 }
                 if(tTarih.sgk) { fToplam++; if(f.SGK) fTamam++; rozetlerHTML += rozetEkle("SGK", f.SGK, tTarih.sgk, false); }
                 if(tTarih.tuik) { fToplam++; if(f.TUIK) fTamam++; rozetlerHTML += rozetEkle("TÜİK", f.TUIK, tTarih.tuik, false); }
                 if(tTarih.iskur) { fToplam++; if(f.ISKUR) fTamam++; rozetlerHTML += rozetEkle("İŞKUR", f.ISKUR, tTarih.iskur, false); }
-                if(tTarih.ozel1Ad && tTarih.ozel1Tarih) { fToplam++; if(f.OZEL1) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false); }
-                if(tTarih.ozel2Ad && tTarih.ozel2Tarih) { fToplam++; if(f.OZEL2) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false); }
+                
+                // Özel Görev Mükellef Filtresi (Eğer vkn tanımlanmamışsa veya HEPSI seçilmişse veya o mükellef seçilmişse göster)
+                let gosterOzel1 = (tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn);
+                let gosterOzel2 = (tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === m.vkn);
+                
+                if(gosterOzel1) { fToplam++; if(f.OZEL1) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false); }
+                if(gosterOzel2) { fToplam++; if(f.OZEL2) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false); }
                 
                 rozetlerHTML += `</div>`;
 
@@ -3238,7 +3288,7 @@
                 let shadow = kartKirmiziMi && fYuzde < 100 ? "0 4px 15px rgba(231, 76, 60, 0.15)" : "0 2px 8px rgba(0,0,0,0.04)";
 
                 kartlarAlani.innerHTML += `
-                <div class="company-badge" onclick="takvimGorevPaneliAc('${m.vkn}', '${m.unvan}', '${m.muhasebeSistemi}', '${m.eDefterDurum}')" 
+                <div class="company-badge" onclick="takvimGorevPaneliAc('${m.vkn}', '${m.unvan.replace(/'/g, "\\'")}', '${m.muhasebeSistemi}', '${m.eDefterDurum}', '${m.mukellefTuru}')" 
                      style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; box-shadow: ${shadow}; padding: 15px; background: #fff; border-radius: 8px; height: auto;">
                     
                     <div style="font-weight:600; color:#2c3e50; font-size:13px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
@@ -3264,7 +3314,7 @@
             document.getElementById("takvimGenelOran").textContent = "%" + (toplamGorevSayisi === 0 ? 0 : Math.round((tamamlananGorevSayisi / toplamGorevSayisi) * 100));
         }
 
-        function takvimGorevPaneliAc(vkn, unvan, defterTuru, eDefterDurum) {
+        function takvimGorevPaneliAc(vkn, unvan, defterTuru, eDefterDurum, mukellefTuru) {
             let donem = document.getElementById("takvimDonem").value;
             document.getElementById("mdlTakvimVkn").value = vkn;
             document.getElementById("mdlTakvimFirmaAd").textContent = unvan;
@@ -3288,7 +3338,7 @@
             document.getElementById("chk_Gorev_OZEL1").checked = f.OZEL1 || false;
             document.getElementById("chk_Gorev_OZEL2").checked = f.OZEL2 || false;
 
-            // Kilit Mekanizması: Eğer "İşlem Yok" seçiliyse "Verildi" kutusunu kilitler
+            // Kilit Mekanizması
             document.getElementById("chk_Gorev_KDV2").disabled = f.KDV2_Yok || false;
             document.getElementById("chk_Gorev_MUHSGK").disabled = f.MUHSGK_Yok || false;
 
@@ -3298,15 +3348,25 @@
             document.getElementById("lbl_Gorev_KDV2").style.display = tTarih.kdv2 ? "flex" : "none";
             document.getElementById("lbl_Gorev_MUHSGK").style.display = tTarih.muhsgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_BABS").style.display = (defterTuru === "Bilanço Esası" && tTarih.babs) ? "flex" : "none";
+            
+            let isKurumModal = (mukellefTuru === "Limited Şirket" || mukellefTuru === "Anonim Şirket" || mukellefTuru === "Kooperatif");
             let isDefterUcModal = (eDefterDurum === "Evet - Üç Aylık");
-            document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && (isDefterUcModal ? tTarih.defterUc : tTarih.defterAylik)) ? "flex" : "none";
+            
+            let defterTarihVarmı = false;
+            if(isDefterUcModal) defterTarihVarmı = isKurumModal ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+            else defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+            
+            document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
             document.getElementById("lbl_Gorev_GECICI").style.display = (tTarih.geciciKurum || tTarih.geciciSahis || tTarih.yillik) ? "flex" : "none";
             document.getElementById("lbl_Gorev_SGK").style.display = tTarih.sgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_TUIK").style.display = tTarih.tuik ? "flex" : "none";
             document.getElementById("lbl_Gorev_ISKUR").style.display = tTarih.iskur ? "flex" : "none";
 
-            if(tTarih.ozel1Ad && tTarih.ozel1Tarih) { document.getElementById("lbl_Gorev_OZEL1").style.display = "flex"; document.getElementById("txt_Gorev_OZEL1").textContent = tTarih.ozel1Ad; } else { document.getElementById("lbl_Gorev_OZEL1").style.display = "none"; }
-            if(tTarih.ozel2Ad && tTarih.ozel2Tarih) { document.getElementById("lbl_Gorev_OZEL2").style.display = "flex"; document.getElementById("txt_Gorev_OZEL2").textContent = tTarih.ozel2Ad; } else { document.getElementById("lbl_Gorev_OZEL2").style.display = "none"; }
+            let gosterOzel1Mdl = (tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === vkn);
+            let gosterOzel2Mdl = (tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === vkn);
+
+            if(gosterOzel1Mdl) { document.getElementById("lbl_Gorev_OZEL1").style.display = "flex"; document.getElementById("txt_Gorev_OZEL1").textContent = tTarih.ozel1Ad; } else { document.getElementById("lbl_Gorev_OZEL1").style.display = "none"; }
+            if(gosterOzel2Mdl) { document.getElementById("lbl_Gorev_OZEL2").style.display = "flex"; document.getElementById("txt_Gorev_OZEL2").textContent = tTarih.ozel2Ad; } else { document.getElementById("lbl_Gorev_OZEL2").style.display = "none"; }
 
             modalAc('takvimGorevModal');
         }
@@ -4199,13 +4259,26 @@
                 if(tTarih.kdv2) kontrolAlarm("2 Nolu KDV", f.KDV2, tTarih.kdv2, f.KDV2_Yok);
                 if(tTarih.muhsgk) kontrolAlarm("Muhtasar", f.MUHSGK, tTarih.muhsgk, f.MUHSGK_Yok);
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false);
-                if(m.eDefterDurum && m.eDefterDurum.includes("Evet") && (isDefterUc ? tTarih.defterUc : tTarih.defterAylik)) {
-                    kontrolAlarm("Defter", f.DEFTER, isDefterUc ? tTarih.defterUc : tTarih.defterAylik, false);
+                
+                let defterTarihiDash = null;
+                if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
+                    if(isDefterUc) defterTarihiDash = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+                    else defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                 }
+                if(defterTarihiDash) kontrolAlarm("Defter", f.DEFTER, defterTarihiDash, false);
+                
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
                     kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
                 }
                 if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false);
+                
+                // Dashboard Özel Görev Alarmları
+                if((tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn)) {
+                    kontrolAlarm(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false);
+                }
+                if((tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === m.vkn)) {
+                    kontrolAlarm(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false);
+                }
             });
 
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
