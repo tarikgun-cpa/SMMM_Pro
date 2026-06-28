@@ -1086,88 +1086,66 @@
             </form>
         </div>
         </div> <div id="ayarlarPaneli" class="view-section" style="display: none;">
-            <h1>Sistem Ayarları ve Yıllık Zam Oranları</h1>
-            <p style="color:#777; margin-bottom: 20px;">Sistem 2025 yılı Kocaeli Odası Asgari Tarifesini baz alır. Her yıl için <b>bir önceki yıla göre</b> uygulanan zam oranını giriniz (Sistem bileşik zammı kendi hesaplayacaktır).</p>
+            <h1>Sistem Ayarları ve Dönemsel Takvim</h1>
             
-            <div class="form-container" style="max-width: 600px;">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>2026 Yılı Zam Oranı (%):</label>
-                        <input type="number" id="ayar2026" value="50">
-                    </div>
-                    <div class="form-group">
-                        <label>2027 Yılı Zam Oranı (%):</label>
-                        <input type="number" id="ayar2027" value="85">
-                    </div>
-                    <div class="form-group">
-                        <label>2028 Yılı Zam Oranı (%):</label>
-                        <input type="number" id="ayar2028" value="120">
-                    </div>
-                    <div class="form-group">
-                        <label>2029 Yılı Zam Oranı (%):</label>
-                        <input type="number" id="ayar2029" value="150">
-                    </div>
-                    <div class="form-group">
-                        <label>2030 Yılı Zam Oranı (%):</label>
-                        <input type="number" id="ayar2030" value="180">
-                    </div>
+            <div class="form-container" style="max-width: 800px; padding:0;">
+                <div style="display:flex; background:#2c3e50; border-radius:8px 8px 0 0; overflow:hidden;">
+                    <button class="ayar-tab-btn active" onclick="ayarTabDegistir('ayarZamlar')" style="flex:1; padding:15px; background:none; border:none; color:white; font-weight:bold; cursor:pointer; border-right:1px solid #34495e;">Yıllık Zam Oranları</button>
+                    <button class="ayar-tab-btn" onclick="ayarTabDegistir('ayarTakvim')" style="flex:1; padding:15px; background:none; border:none; color:white; font-weight:bold; cursor:pointer; border-right:1px solid #34495e;">Beyanname / Bildirim Tarihleri</button>
+                    <button class="ayar-tab-btn" onclick="ayarTabDegistir('ayarOzelGorev')" style="flex:1; padding:15px; background:none; border:none; color:white; font-weight:bold; cursor:pointer;">Özel Görev Yönetimi</button>
                 </div>
                 
-                <div style="background:#fdf2f2; border:1px solid #fadbd8; padding:15px; border-radius:8px; margin-top:30px;">
-                    <h4 style="border-bottom:1px solid #fadbd8; padding-bottom:10px; color:#c0392b; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Dönemsel Beyanname ve Bildirim Son Günleri</h4>
-                    <div class="form-group" style="margin-bottom:15px;">
-                        <label style="color:#2c3e50; font-weight:bold;">Ayarları Düzenlenecek Dönem (Ay/Yıl):</label>
-                        <input type="month" id="ayarTakvimDonem" class="search-bar" style="border: 2px solid #e74c3c;" onchange="ayarDonemTarihleriniGetir()">
-                    </div>
-                    
-                    <div class="form-grid mt-3">
-                        <div class="form-group"><label style="color:#3498db;">KDV 1 Son Günü:</label><input type="date" id="ayarKdv1Tarih"></div>
-                        <div class="form-group"><label style="color:#2980b9;">KDV 2 Son Günü (Tevkifat):</label><input type="date" id="ayarKdv2Tarih"></div>
-                        
-                        <div class="form-group"><label style="color:#e67e22;">MUHSGK Son Günü:</label><input type="date" id="ayarMuhSgkTarih"></div>
-                        <div class="form-group"><label style="color:#8e44ad;">Ba/Bs Formu Son Günü:</label><input type="date" id="ayarBabsTarih"></div>
-                        
-                        <div class="form-group"><label style="color:#d35400;">Geçici Vergi (Kurumlar/Bilanço):</label><input type="date" id="ayarGeciciKurumTarih"></div>
-                        <div class="form-group"><label style="color:#d35400;">Geçici Vergi (Şahıs/İşletme):</label><input type="date" id="ayarGeciciSahisTarih"></div>
-                        
-                        <div class="form-group"><label style="color:#c0392b;">Yıllık Kurumlar / Gelir Vergisi:</label><input type="date" id="ayarYillikTarih"></div>
-                        <div class="form-group"><label style="color:#2ecc71;">SGK İşe Giriş/Çıkış Kontrolü:</label><input type="date" id="ayarSgkTarih"></div>
-                        
-                        <div class="form-group full-width" style="background:#f4ecf7; padding:10px; border-radius:5px; border:1px dashed #9b59b6; margin-top:10px; margin-bottom:5px;">
-                            <label style="color:#8e44ad; font-weight:bold; margin-bottom:5px;"><i class="fas fa-edit"></i> Bu Ay Yüklenecek E-Defterin Ait Olduğu Dönem:</label>
-                            <input type="text" id="ayarDefterDonemAdi" placeholder="Örn: Nisan 2026 E-Defteri (Ağustos ayında yüklenen defter için)">
+                <div style="padding:25px;">
+                    <div id="ayarZamlar" class="ayar-tab-content" style="display:block;">
+                        <p style="color:#777; margin-bottom: 20px; font-size:13px;">Sistem 2025 yılı Asgari Tarifesini baz alır. Her yıl için bir önceki yıla göre uygulanan zam oranını giriniz.</p>
+                        <div class="form-grid">
+                            <div class="form-group"><label>2026 Yılı Zam Oranı (%):</label><input type="number" id="ayar2026" value="50"></div>
+                            <div class="form-group"><label>2027 Yılı Zam Oranı (%):</label><input type="number" id="ayar2027" value="85"></div>
+                            <div class="form-group"><label>2028 Yılı Zam Oranı (%):</label><input type="number" id="ayar2028" value="120"></div>
+                            <div class="form-group"><label>2029 Yılı Zam Oranı (%):</label><input type="number" id="ayar2029" value="150"></div>
+                            <div class="form-group"><label>2030 Yılı Zam Oranı (%):</label><input type="number" id="ayar2030" value="180"></div>
                         </div>
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Şahıs):</label><input type="date" id="ayarDefterAylikSahisTarih"></div>
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Aylık - Kurumlar):</label><input type="date" id="ayarDefterAylikKurumTarih"></div>
-                        
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Üç Aylık - Şahıs):</label><input type="date" id="ayarDefterUcSahisTarih"></div>
-                        <div class="form-group"><label style="color:#9b59b6;">E-Defter Berat (Üç Aylık - Kurumlar):</label><input type="date" id="ayarDefterUcKurumTarih"></div>
-                        
-                        <div class="form-group"><label style="color:#f1c40f;">TÜİK Anketleri:</label><input type="date" id="ayarTuikTarih"></div>
-                        <div class="form-group"><label style="color:#e67e22;">İŞKUR Çizelgesi:</label><input type="date" id="ayarIskurTarih"></div>
-                    </div>
-                    
-                    <h5 style="color:#16a085; margin-top:20px; margin-bottom:10px; border-bottom:1px dashed #16a085; padding-bottom:5px;"><i class="fas fa-plus-circle"></i> Manuel Eklenen Özel Görevler</h5>
-                    <div class="form-grid">
-                        <div class="form-group"><label>1. Özel Görev Adı:</label><input type="text" id="ayarOzel1Ad" placeholder="Örn: Sanayi Sicil Belgesi"></div>
-                        <div class="form-group"><label>1. Görev Son Günü:</label><input type="date" id="ayarOzel1Tarih"></div>
-                        <div class="form-group full-width">
-                            <label style="color:#16a085;">1. Geçerli Mükellef (Seçilmezse tüm firmalarda çıkar):</label>
-                            <select id="ayarOzel1Vkn" class="search-bar" style="padding: 8px;"><option value="HEPSI">Tüm Mükellefler (Varsayılan)</option></select>
-                        </div>
-                        
-                        <div class="form-group" style="margin-top:10px;"><label>2. Özel Görev Adı:</label><input type="text" id="ayarOzel2Ad" placeholder="Örn: Kapasite Raporu"></div>
-                        <div class="form-group" style="margin-top:10px;"><label>2. Görev Son Günü:</label><input type="date" id="ayarOzel2Tarih"></div>
-                        <div class="form-group full-width">
-                            <label style="color:#16a085;">2. Geçerli Mükellef (Seçilmezse tüm firmalarda çıkar):</label>
-                            <select id="ayarOzel2Vkn" class="search-bar" style="padding: 8px;"><option value="HEPSI">Tüm Mükellefler (Varsayılan)</option></select>
-                        </div>
+                        <button type="button" class="action-btn btn-primary" onclick="ayarlariKaydet()" style="margin-top:20px; width:100%;">Zam Oranlarını Kaydet</button>
                     </div>
 
-                    <button type="button" class="action-btn btn-danger" onclick="ayarDonemTarihleriniKaydet()" style="margin-top:15px; width:100%;"><i class="fas fa-save"></i> Seçili Dönemin Tarihlerini Kaydet</button>
+                    <div id="ayarTakvim" class="ayar-tab-content" style="display:none;">
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="color:#2c3e50; font-weight:bold; font-size:15px;">İşlem Yapılacak Dönem (Ay/Yıl):</label>
+                            <input type="month" id="ayarTakvimDonem" class="search-bar" style="border: 2px solid #3498db; background:#f4f6f9;" onchange="ayarDonemTarihleriniGetir()">
+                        </div>
+                        <div class="form-grid mt-3">
+                            <div class="form-group"><label style="color:#3498db;">KDV 1 Son Günü:</label><input type="date" id="ayarKdv1Tarih"></div>
+                            <div class="form-group"><label style="color:#2980b9;">KDV 2 Son Günü (Tevkifat):</label><input type="date" id="ayarKdv2Tarih"></div>
+                            <div class="form-group"><label style="color:#e67e22;">MUHSGK Son Günü:</label><input type="date" id="ayarMuhSgkTarih"></div>
+                            <div class="form-group"><label style="color:#8e44ad;">Ba/Bs Formu Son Günü:</label><input type="date" id="ayarBabsTarih"></div>
+                            <div class="form-group"><label style="color:#d35400;">Geçici Vergi (Kurumlar):</label><input type="date" id="ayarGeciciKurumTarih"></div>
+                            <div class="form-group"><label style="color:#d35400;">Geçici Vergi (Şahıs):</label><input type="date" id="ayarGeciciSahisTarih"></div>
+                            <div class="form-group"><label style="color:#c0392b;">Yıllık Kurumlar / Gelir:</label><input type="date" id="ayarYillikTarih"></div>
+                            <div class="form-group"><label style="color:#2ecc71;">SGK İşe Giriş/Çıkış Kontrolü:</label><input type="date" id="ayarSgkTarih"></div>
+                            <div class="form-group"><label style="color:#f1c40f;">TÜİK Anketleri:</label><input type="date" id="ayarTuikTarih"></div>
+                            <div class="form-group"><label style="color:#e67e22;">İŞKUR Çizelgesi:</label><input type="date" id="ayarIskurTarih"></div>
+                        </div>
+                        
+                        <div style="background:#f4ecf7; padding:15px; border-radius:5px; border:1px dashed #9b59b6; margin-top:15px;">
+                            <h5 style="color:#8e44ad; margin-bottom:10px;"><i class="fas fa-book"></i> E-Defter Berat Yükleme Son Günleri</h5>
+                            <div class="form-grid">
+                                <div class="form-group"><label>E-Defter Berat (Aylık - Şahıs):</label><input type="date" id="ayarDefterAylikSahisTarih"></div>
+                                <div class="form-group"><label>E-Defter Berat (Aylık - Kurumlar):</label><input type="date" id="ayarDefterAylikKurumTarih"></div>
+                                <div class="form-group"><label>E-Defter Berat (Üç Aylık - Şahıs):</label><input type="date" id="ayarDefterUcSahisTarih"></div>
+                                <div class="form-group"><label>E-Defter Berat (Üç Aylık - Kurumlar):</label><input type="date" id="ayarDefterUcKurumTarih"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="action-btn btn-danger" onclick="ayarDonemTarihleriniKaydet()" style="margin-top:15px; width:100%;"><i class="fas fa-save"></i> Seçili Dönem Tarihlerini Kaydet</button>
+                    </div>
+
+                    <div id="ayarOzelGorev" class="ayar-tab-content" style="display:none;">
+                        <p style="color:#16a085; font-weight:bold; margin-bottom:15px;"><i class="fas fa-info-circle"></i> Sadece seçili olan dönem (Takvim sekmesinden seçtiğiniz ay) için geçerlidir. Sınırsız görev ekleyebilirsiniz.</p>
+                        <div id="ayarOzelGorevListesi"></div>
+                        <button type="button" class="action-btn" style="background:#16a085; color:white; margin-bottom:15px;" onclick="ayarYeniOzelGorevSatiri()">+ Yeni Özel Görev Ekle</button>
+                        
+                        <button type="button" class="action-btn btn-danger" onclick="ayarDonemTarihleriniKaydet()" style="margin-top:15px; width:100%;"><i class="fas fa-save"></i> Tüm Değişiklikleri Kaydet</button>
+                    </div>
                 </div>
-
-                <button type="button" class="action-btn btn-primary" onclick="ayarlariKaydet()" style="margin-top:20px; width:100%;">Sistem Yıllık Zam Oranlarını Kaydet</button>
             </div>
         </div>
 
@@ -1372,13 +1350,35 @@
 
             <div id="danismanlikMatrisTab" style="display: none;">
                 <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #8e44ad; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <input type="text" id="danismanlikArama" class="search-bar" placeholder="Danışmanlık firması ara..." oninput="danismanlikCiz()" style="max-width:300px;">
+                    <div style="display:flex; gap:10px; flex:1;">
+                        <input type="text" id="danismanlikArama" class="search-bar" placeholder="Firma ara..." oninput="danismanlikCiz()" style="max-width:300px;">
+                        <button class="action-btn" onclick="acDanismanlikEkleModal()" style="background:#9b59b6; color:white;"><i class="fas fa-plus"></i> Manuel Proje Ekle</button>
+                    </div>
                     <div>
                         <button class="action-btn" onclick="danGosterimDegistir('Aktif')" id="btnDanAktif" style="background:#8e44ad; color:white;">Aktif Projeler</button>
                         <button class="action-btn" onclick="danGosterimDegistir('Biten')" id="btnDanBiten" style="background:#e1e8ed; color:#333;">Biten Projeler (Arşiv)</button>
                     </div>
                 </div>
                 <div id="danismanlikKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                </div>
+            </div>
+        </div>
+
+        <div id="danismanlikFirmaSecModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#8e44ad;">
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-rocket"></i> Danışmanlık Projesi Başlat</h3>
+                    <button class="modal-close" onclick="modalKapat('danismanlikFirmaSecModal')">X</button>
+                </div>
+                <div class="modal-body" style="padding:20px;">
+                    <p style="font-size:13px; color:#555; margin-bottom:15px;">Sistemde kayıtlı herhangi bir mükellefiniz için proje başlatabilirsiniz.</p>
+                    <div class="form-group">
+                        <label>Firma / Mükellef Seçin:</label>
+                        <select id="danYeniFirmaSec" class="search-bar" style="width:100%;"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn btn-primary" style="background:#8e44ad; width:100%;" onclick="danismanlikYeniFirmaBaslatBtn()">Firmaya Proje Alanı Aç</button>
                 </div>
             </div>
         </div>
@@ -1449,7 +1449,7 @@
 
                         <div style="font-size:13px; font-weight:bold; color:#27ae60; margin-top:5px; margin-bottom:-5px; border-bottom:1px solid #eee; padding-bottom:5px;">Defter ve Diğer Bildirimler</div>
                         <label id="lbl_Gorev_DEFTER" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #9b59b6; cursor:pointer;">
-                            <input type="checkbox" id="chk_Gorev_DEFTER" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div id="txt_Gorev_DEFTER">E-Defter Beratı / Defter Onayı</div>
+                            <input type="checkbox" id="chk_Gorev_DEFTER" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>E-Defter Beratı / Defter Onayı</div>
                         </label>
                         <label id="lbl_Gorev_SGK" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #2ecc71; cursor:pointer;">
                             <input type="checkbox" id="chk_Gorev_SGK" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>SGK İşe Giriş/Çıkış Kontrolleri</div>
@@ -1461,12 +1461,7 @@
                             <input type="checkbox" id="chk_Gorev_ISKUR" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>İŞKUR Çizelgeleri</div>
                         </label>
                         
-                        <label id="lbl_Gorev_OZEL1" style="display:none; align-items:center; gap:10px; font-size:14px; background:#e8f8f5; padding:8px; border-radius:4px; border-left:4px solid #16a085; cursor:pointer;">
-                            <input type="checkbox" id="chk_Gorev_OZEL1" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div id="txt_Gorev_OZEL1">Özel Görev 1</div>
-                        </label>
-                        <label id="lbl_Gorev_OZEL2" style="display:none; align-items:center; gap:10px; font-size:14px; background:#e8f8f5; padding:8px; border-radius:4px; border-left:4px solid #16a085; cursor:pointer;">
-                            <input type="checkbox" id="chk_Gorev_OZEL2" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div id="txt_Gorev_OZEL2">Özel Görev 2</div>
-                        </label>
+                        <div id="mdl_DinamikOzelGorevler" style="display:flex; flex-direction:column; gap:8px;"></div>
                     </div>
 
                 </div>
@@ -2423,6 +2418,16 @@
             "takvimGunleri": {} 
         };
 
+        function ayarTabDegistir(tabId) {
+            document.querySelectorAll('.ayar-tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.ayar-tab-btn').forEach(el => { el.classList.remove('active'); el.style.background = 'none'; });
+            document.getElementById(tabId).style.display = 'block';
+            event.currentTarget.classList.add('active');
+            event.currentTarget.style.background = '#34495e';
+        }
+
+        let tempTumFirmalarHtml = '<option value="HEPSI">Tüm Mükellefler (Varsayılan)</option>';
+
         function ayarlariYukle() {
             document.getElementById('ayar2026').value = sistemAyarlari["2026"] || 0;
             document.getElementById('ayar2027').value = sistemAyarlari["2027"] || 0;
@@ -2430,17 +2435,10 @@
             document.getElementById('ayar2029').value = sistemAyarlari["2029"] || 0;
             document.getElementById('ayar2030').value = sistemAyarlari["2030"] || 0;
 
-            // Özel görev mükellef listesini doldur
-            let select1 = document.getElementById("ayarOzel1Vkn");
-            let select2 = document.getElementById("ayarOzel2Vkn");
-            if(select1 && select2) {
-                let options = '<option value="HEPSI">Tüm Mükellefler (Varsayılan)</option>';
-                mukellefler.forEach(m => {
-                    if(m.unvan) options += `<option value="${m.vkn}">${m.unvan} (${m.vkn})</option>`;
-                });
-                select1.innerHTML = options;
-                select2.innerHTML = options;
-            }
+            tempTumFirmalarHtml = '<option value="HEPSI">Tüm Mükellefler (Varsayılan)</option>';
+            mukellefler.forEach(m => {
+                if(m.unvan && m.durum !== "Pasif") tempTumFirmalarHtml += `<option value="${m.vkn}">${m.unvan}</option>`;
+            });
 
             let d = new Date();
             let guncelDonem = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -2448,6 +2446,29 @@
                 document.getElementById('ayarTakvimDonem').value = guncelDonem;
                 ayarDonemTarihleriniGetir();
             }
+        }
+
+        function ayarYeniOzelGorevSatiri(id, ad = "", tarih = "", vkn = "HEPSI") {
+            let container = document.getElementById("ayarOzelGorevListesi");
+            let rowId = id || "OG_" + Date.now() + Math.floor(Math.random()*1000);
+            
+            let html = `
+            <div class="ayar-ozel-gorev-satir" data-id="${rowId}" style="background:#fef9e7; padding:15px; border:1px solid #f1c40f; border-radius:5px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <b style="color:#d35400;">Özel Görev Tanımı</b>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color:#c0392b; cursor:pointer;" title="Sil"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Görev Adı:</label><input type="text" class="og-ad search-bar" value="${ad}" placeholder="Örn: Sanayi Sicil Belgesi"></div>
+                    <div class="form-group"><label>Son Günü:</label><input type="date" class="og-tarih search-bar" value="${tarih}"></div>
+                    <div class="form-group full-width">
+                        <label>Geçerli Mükellef:</label>
+                        <select class="og-vkn search-bar" style="width:100%; padding:8px;">${tempTumFirmalarHtml}</select>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            container.lastElementChild.querySelector('.og-vkn').value = vkn;
         }
 
         function ayarDonemTarihleriniGetir() {
@@ -2465,8 +2486,6 @@
             document.getElementById('ayarGeciciSahisTarih').value = t.geciciSahis || "";
             document.getElementById('ayarYillikTarih').value = t.yillik || "";
             
-            // Yeni e-Defter Ayrımı ve Dönem İsimlendirmesi
-            if(document.getElementById('ayarDefterDonemAdi')) document.getElementById('ayarDefterDonemAdi').value = t.defterDonemAdi || "";
             document.getElementById('ayarDefterAylikSahisTarih').value = t.defterAylikSahis || t.defterAylik || "";
             document.getElementById('ayarDefterAylikKurumTarih').value = t.defterAylikKurum || t.defterAylik || "";
             document.getElementById('ayarDefterUcSahisTarih').value = t.defterUcSahis || t.defterUc || "";
@@ -2476,19 +2495,32 @@
             document.getElementById('ayarIskurTarih').value = t.iskur || "";
             document.getElementById('ayarSgkTarih').value = t.sgk || "";
             
-            if(document.getElementById('ayarOzel1Ad')) document.getElementById('ayarOzel1Ad').value = t.ozel1Ad || "";
-            if(document.getElementById('ayarOzel1Tarih')) document.getElementById('ayarOzel1Tarih').value = t.ozel1Tarih || "";
-            if(document.getElementById('ayarOzel1Vkn')) document.getElementById('ayarOzel1Vkn').value = t.ozel1Vkn || "HEPSI";
-            
-            if(document.getElementById('ayarOzel2Ad')) document.getElementById('ayarOzel2Ad').value = t.ozel2Ad || "";
-            if(document.getElementById('ayarOzel2Tarih')) document.getElementById('ayarOzel2Tarih').value = t.ozel2Tarih || "";
-            if(document.getElementById('ayarOzel2Vkn')) document.getElementById('ayarOzel2Vkn').value = t.ozel2Vkn || "HEPSI";
+            // Dinamik Görevleri Yükle (Geriye Dönük Destekli)
+            let container = document.getElementById("ayarOzelGorevListesi");
+            if(container) {
+                container.innerHTML = "";
+                let ozelGorevler = t.ozelGorevler || [];
+                if(ozelGorevler.length === 0 && (t.ozel1Ad || t.ozel2Ad)) {
+                    if(t.ozel1Ad) ozelGorevler.push({id: "og_1", ad: t.ozel1Ad, tarih: t.ozel1Tarih, vkn: t.ozel1Vkn || "HEPSI"});
+                    if(t.ozel2Ad) ozelGorevler.push({id: "og_2", ad: t.ozel2Ad, tarih: t.ozel2Tarih, vkn: t.ozel2Vkn || "HEPSI"});
+                }
+                ozelGorevler.forEach(g => ayarYeniOzelGorevSatiri(g.id, g.ad, g.tarih, g.vkn));
+            }
         }
 
         function ayarDonemTarihleriniKaydet() {
             let donem = document.getElementById('ayarTakvimDonem').value;
             if(!donem) { alert("Lütfen bir dönem seçin!"); return; }
             if(!sistemAyarlari.takvimGunleri) sistemAyarlari.takvimGunleri = {};
+
+            let toplananOzelGorevler = [];
+            document.querySelectorAll('.ayar-ozel-gorev-satir').forEach(satir => {
+                let id = satir.getAttribute("data-id");
+                let ad = satir.querySelector('.og-ad').value;
+                let tarih = satir.querySelector('.og-tarih').value;
+                let vkn = satir.querySelector('.og-vkn').value;
+                if(ad && tarih) toplananOzelGorevler.push({id, ad, tarih, vkn});
+            });
 
             sistemAyarlari.takvimGunleri[donem] = {
                 kdv1: document.getElementById('ayarKdv1Tarih').value,
@@ -2498,25 +2530,16 @@
                 geciciKurum: document.getElementById('ayarGeciciKurumTarih').value,
                 geciciSahis: document.getElementById('ayarGeciciSahisTarih').value,
                 yillik: document.getElementById('ayarYillikTarih').value,
-                
-                defterDonemAdi: document.getElementById('ayarDefterDonemAdi') ? document.getElementById('ayarDefterDonemAdi').value : "",
                 defterAylikSahis: document.getElementById('ayarDefterAylikSahisTarih').value,
                 defterAylikKurum: document.getElementById('ayarDefterAylikKurumTarih').value,
                 defterUcSahis: document.getElementById('ayarDefterUcSahisTarih').value,
                 defterUcKurum: document.getElementById('ayarDefterUcKurumTarih').value,
-                
                 tuik: document.getElementById('ayarTuikTarih').value,
                 iskur: document.getElementById('ayarIskurTarih').value,
                 sgk: document.getElementById('ayarSgkTarih').value,
-                
-                ozel1Ad: document.getElementById('ayarOzel1Ad') ? document.getElementById('ayarOzel1Ad').value : "",
-                ozel1Tarih: document.getElementById('ayarOzel1Tarih') ? document.getElementById('ayarOzel1Tarih').value : "",
-                ozel1Vkn: document.getElementById('ayarOzel1Vkn') ? document.getElementById('ayarOzel1Vkn').value : "HEPSI",
-                
-                ozel2Ad: document.getElementById('ayarOzel2Ad') ? document.getElementById('ayarOzel2Ad').value : "",
-                ozel2Tarih: document.getElementById('ayarOzel2Tarih') ? document.getElementById('ayarOzel2Tarih').value : "",
-                ozel2Vkn: document.getElementById('ayarOzel2Vkn') ? document.getElementById('ayarOzel2Vkn').value : "HEPSI"
+                ozelGorevler: toplananOzelGorevler
             };
+            
             localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
             alert(donem + " Dönemi İçin Takvim Tarihleri Kaydedildi!");
             if(typeof takvimCiz === "function") takvimCiz();
@@ -3278,14 +3301,13 @@
                 }
                 if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) { fToplam++; if(f.BABS) fTamam++; rozetlerHTML += rozetEkle("Ba/Bs", f.BABS, tTarih.babs, false); }
                 
-                // e-Defter Ayrıştırma ve İsimlendirme Mantığı
+                // e-Defter Ayrıştırma
                 let defterTarihi = null;
-                let defterRozetIsmi = tTarih.defterDonemAdi ? tTarih.defterDonemAdi : "Defter";
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
                     if(isDefterUc) defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
                     else defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                 }
-                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle(defterRozetIsmi, f.DEFTER, defterTarihi, false); }
+                if(defterTarihi) { fToplam++; if(f.DEFTER) fTamam++; rozetlerHTML += rozetEkle("E-Defter Beratı", f.DEFTER, defterTarihi, false); }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) { 
                     fToplam++; if(f.GECICI) fTamam++; rozetlerHTML += rozetEkle("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false); 
@@ -3294,12 +3316,24 @@
                 if(tTarih.tuik) { fToplam++; if(f.TUIK) fTamam++; rozetlerHTML += rozetEkle("TÜİK", f.TUIK, tTarih.tuik, false); }
                 if(tTarih.iskur) { fToplam++; if(f.ISKUR) fTamam++; rozetlerHTML += rozetEkle("İŞKUR", f.ISKUR, tTarih.iskur, false); }
                 
-                // Özel Görev Mükellef Filtresi (Eğer vkn tanımlanmamışsa veya HEPSI seçilmişse veya o mükellef seçilmişse göster)
-                let gosterOzel1 = (tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn);
-                let gosterOzel2 = (tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === m.vkn);
-                
-                if(gosterOzel1) { fToplam++; if(f.OZEL1) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false); }
-                if(gosterOzel2) { fToplam++; if(f.OZEL2) fTamam++; rozetlerHTML += rozetEkle(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false); }
+                // Dinamik Özel Görev Mükellef Filtresi
+                let ozelGorevler = tTarih.ozelGorevler || [];
+                if(ozelGorevler.length === 0 && (tTarih.ozel1Ad || tTarih.ozel2Ad)) {
+                    if(tTarih.ozel1Ad) ozelGorevler.push({id: "og_1", ad: tTarih.ozel1Ad, tarih: tTarih.ozel1Tarih, vkn: tTarih.ozel1Vkn || "HEPSI"});
+                    if(tTarih.ozel2Ad) ozelGorevler.push({id: "og_2", ad: tTarih.ozel2Ad, tarih: tTarih.ozel2Tarih, vkn: tTarih.ozel2Vkn || "HEPSI"});
+                }
+
+                ozelGorevler.forEach(og => {
+                    if(!og.vkn || og.vkn === "HEPSI" || og.vkn === m.vkn) {
+                        fToplam++;
+                        let isDone = (f.ozelGorevDurumlari && f.ozelGorevDurumlari[og.id]) ? true : false;
+                        if(og.id === "og_1" && f.OZEL1) isDone = true; // Eski veriyi kaybetmemek için
+                        if(og.id === "og_2" && f.OZEL2) isDone = true;
+                        
+                        if(isDone) fTamam++;
+                        rozetlerHTML += rozetEkle(og.ad, isDone, og.tarih, false);
+                    }
+                });
                 
                 rozetlerHTML += `</div>`;
 
@@ -3381,19 +3415,34 @@
             else defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
             
             document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
-            let defterLabel = tTarih.defterDonemAdi ? tTarih.defterDonemAdi + " Onayı" : "E-Defter Beratı / Defter Onayı";
-            if(document.getElementById("txt_Gorev_DEFTER")) document.getElementById("txt_Gorev_DEFTER").textContent = defterLabel;
             
             document.getElementById("lbl_Gorev_GECICI").style.display = (tTarih.geciciKurum || tTarih.geciciSahis || tTarih.yillik) ? "flex" : "none";
             document.getElementById("lbl_Gorev_SGK").style.display = tTarih.sgk ? "flex" : "none";
             document.getElementById("lbl_Gorev_TUIK").style.display = tTarih.tuik ? "flex" : "none";
             document.getElementById("lbl_Gorev_ISKUR").style.display = tTarih.iskur ? "flex" : "none";
 
-            let gosterOzel1Mdl = (tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === vkn);
-            let gosterOzel2Mdl = (tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === vkn);
+            // Dinamik Özel Görevleri Modala Basma
+            let dinKutu = document.getElementById("mdl_DinamikOzelGorevler");
+            dinKutu.innerHTML = "";
+            let ozelGorevler = tTarih.ozelGorevler || [];
+            if(ozelGorevler.length === 0 && (tTarih.ozel1Ad || tTarih.ozel2Ad)) {
+                if(tTarih.ozel1Ad) ozelGorevler.push({id: "og_1", ad: tTarih.ozel1Ad, tarih: tTarih.ozel1Tarih, vkn: tTarih.ozel1Vkn || "HEPSI"});
+                if(tTarih.ozel2Ad) ozelGorevler.push({id: "og_2", ad: tTarih.ozel2Ad, tarih: tTarih.ozel2Tarih, vkn: tTarih.ozel2Vkn || "HEPSI"});
+            }
 
-            if(gosterOzel1Mdl) { document.getElementById("lbl_Gorev_OZEL1").style.display = "flex"; document.getElementById("txt_Gorev_OZEL1").textContent = tTarih.ozel1Ad; } else { document.getElementById("lbl_Gorev_OZEL1").style.display = "none"; }
-            if(gosterOzel2Mdl) { document.getElementById("lbl_Gorev_OZEL2").style.display = "flex"; document.getElementById("txt_Gorev_OZEL2").textContent = tTarih.ozel2Ad; } else { document.getElementById("lbl_Gorev_OZEL2").style.display = "none"; }
+            ozelGorevler.forEach(og => {
+                if(!og.vkn || og.vkn === "HEPSI" || og.vkn === vkn) {
+                    let isDone = (f.ozelGorevDurumlari && f.ozelGorevDurumlari[og.id]) ? true : false;
+                    if(og.id === "og_1" && f.OZEL1) isDone = true; 
+                    if(og.id === "og_2" && f.OZEL2) isDone = true;
+
+                    dinKutu.innerHTML += `
+                    <label style="display:flex; align-items:center; gap:10px; font-size:14px; background:#e8f8f5; padding:8px; border-radius:4px; border-left:4px solid #16a085; cursor:pointer;">
+                        <input type="checkbox" class="mdl-dinamik-chk" data-id="${og.id}" ${isDone ? 'checked' : ''} style="width:16px; height:16px;"> 
+                        <div>${og.ad}</div>
+                    </label>`;
+                }
+            });
 
             modalAc('takvimGorevModal');
         }
@@ -3406,9 +3455,11 @@
             let isKdv2Yok = document.getElementById("chk_KDV2_Yok").checked;
             let isMuhsgkYok = document.getElementById("chk_MUHSGK_Yok").checked;
 
-            // Arayüz Kilitlerini Anlık Güncelle
-            document.getElementById("chk_Gorev_KDV2").disabled = isKdv2Yok;
-            document.getElementById("chk_Gorev_MUHSGK").disabled = isMuhsgkYok;
+            // Dinamik Görev Durumlarını Topla
+            let ogDurumlari = {};
+            document.querySelectorAll('.mdl-dinamik-chk').forEach(chk => {
+                ogDurumlari[chk.getAttribute('data-id')] = chk.checked;
+            });
             
             takvimVeritabanı[donem][vkn] = {
                 KDV1: document.getElementById("chk_Gorev_KDV1").checked,
@@ -3422,11 +3473,11 @@
                 SGK: document.getElementById("chk_Gorev_SGK").checked,
                 TUIK: document.getElementById("chk_Gorev_TUIK").checked,
                 ISKUR: document.getElementById("chk_Gorev_ISKUR").checked,
-                OZEL1: document.getElementById("chk_Gorev_OZEL1").checked,
-                OZEL2: document.getElementById("chk_Gorev_OZEL2").checked
+                ozelGorevDurumlari: ogDurumlari
             };
 
             localStorage.setItem('takvimVeritabanı', JSON.stringify(takvimVeritabanı));
+            modalKapat('takvimGorevModal');
             takvimCiz();
         }
        
@@ -3807,9 +3858,11 @@
             kartlarAlani.innerHTML = '';
 
             mukellefler.forEach(m => {
-                // Pasifleri gizle. Danışmanlık olmayanları gizle (AMAA Mükellef Türü SMMM ise onu her yerde göster!)
                 if(m.durum === "Pasif") return;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık") return;
+                
+                // Mükellefin projesi var mı kontrol et. Eğer projesi yoksa ve "Sadece Danışmanlık" değilse gizle.
+                let hasProject = danismanlikVeritabani[m.vkn] && danismanlikVeritabani[m.vkn].length > 0;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık" && !hasProject) return;
                 
                 if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
 
@@ -4324,7 +4377,7 @@
             
             // Dashboard E-Defter Kutusuna Veri Basma
             if(document.getElementById("mdDefterBaslik")) {
-                document.getElementById("mdDefterBaslik").innerHTML = (tTarih.defterDonemAdi ? `<strong style="color:#f1c40f;">${tTarih.defterDonemAdi}</strong> Dönemine Ait Defterler` : "Bu ay yüklenecek defterler");
+                document.getElementById("mdDefterBaslik").innerHTML = "Bu ay yüklenmesi gereken beratlar";
             }
             if(document.getElementById("mdDefterAylikDurum")) document.getElementById("mdDefterAylikDurum").textContent = `${aylikDefterTamam} / ${aylikDefterTop}`;
             if(document.getElementById("mdDefterUcDurum")) document.getElementById("mdDefterUcDurum").textContent = `${ucAylikDefterTamam} / ${ucAylikDefterTop}`;
@@ -4364,6 +4417,33 @@
             document.getElementById("mdAktifProje").textContent = aktifSayac;
             document.getElementById("mdBitenProje").textContent = bitenSayac;
             document.getElementById("mdAktifProjelerListesi").innerHTML = projelerHTML || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Şu an devam eden aktif bir danışmanlık projesi bulunmuyor.</div>`;
+        }
+
+        function acDanismanlikEkleModal() {
+            let select = document.getElementById("danYeniFirmaSec");
+            select.innerHTML = '<option value="">-- Firma Seçiniz --</option>';
+            mukellefler.forEach(m => {
+                if(m.durum !== "Pasif") { select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; }
+            });
+            modalAc('danismanlikFirmaSecModal');
+        }
+
+        function danismanlikYeniFirmaBaslatBtn() {
+            let vkn = document.getElementById("danYeniFirmaSec").value;
+            if(!vkn) { alert("Lütfen bir firma seçin!"); return; }
+            let m = mukellefler.find(x => x.vkn === vkn);
+            
+            if(!danismanlikVeritabani[vkn] || !Array.isArray(danismanlikVeritabani[vkn])) danismanlikVeritabani[vkn] = [];
+            
+            danismanlikVeritabani[vkn].push({ 
+                id: "PRJ_"+Date.now(), projeAdi: "Yeni Özel Danışmanlık Projesi", 
+                asamalar: [{ad: "Aşama 1", durum: false}], tamamlandi: false, notlar: "" 
+            });
+            
+            localStorage.setItem('danismanlikVeritabani', JSON.stringify(danismanlikVeritabani));
+            modalKapat('danismanlikFirmaSecModal');
+            danGosterimDegistir('Aktif');
+            danismanlikGorevPaneliAc(m.vkn, m.unvan);
         }
 
         // Kendi Firmamızın (SMMM) Beyanname ve Projelerde de VIP Olarak Listelenmesi Düzeltmesi
