@@ -462,6 +462,33 @@
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .mukellef-table { white-space: nowrap; box-shadow: none !important; }
 
+        /* --- PREMIUM UI CİLALARI (Görsel İyileştirmeler) --- */
+        
+        /* 1. Özel İnce Kaydırma Çubuğu (Scrollbar) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f4f6f9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+
+        /* 2. Modern Checkbox'lar (Kutucukları Büyütür ve Rengini Değiştirir) */
+        input[type="checkbox"] { 
+            width: 18px !important; height: 18px !important; 
+            accent-color: #2980b9; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+
+        /* 3. Modal ve Kart Hover (Üzerine Gelince Kayma) Efektleri */
+        .modal-body label { transition: all 0.2s ease; border: 1px solid transparent; }
+        .modal-body label:hover { transform: translateX(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-color: #e1e8ed; }
+        .modal-box { border-radius: 12px !important; border: 1px solid #eef2f5; }
+        
+        /* 4. Butonlara ve Modal Başlıklarına Derinlik (Gradient) */
+        .action-btn, .submit-btn { transition: all 0.2s ease; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .action-btn:hover, .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); filter: brightness(1.05); }
+        .btn-primary, .submit-btn { background: linear-gradient(135deg, #3498db, #2980b9) !important; border: none; }
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60) !important; border: none; }
+
         .mobile-header { display: none; } /* Bilgisayarda üst bar gizli kalır */
 
         /* --- MOBİL EKRAN (TELEFON/TABLET) AYARLARI --- */
@@ -499,6 +526,17 @@
         @media (max-width: 480px) {
             #cariPaneli .summary-cards, #takvimPaneli .summary-cards { grid-template-columns: 1fr; }
         }
+
+        /* --- TOAST (BİLDİRİM) MESAJI --- */
+        #toast-mesaj {
+            visibility: hidden; min-width: 250px; background-color: #2c3e50; color: #fff;
+            text-align: center; border-radius: 6px; padding: 12px; position: fixed;
+            z-index: 99999; left: 50%; bottom: 30px; transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 14px; font-weight: 500;
+        }
+        #toast-mesaj.show { visibility: visible; animation: fadein 0.4s, fadeout 0.4s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
         /* ========================================= */
         /* --- COMPACT (SIKILAŞTIRILMIŞ) ARAYÜZ --- */
@@ -1477,6 +1515,46 @@
         </div>
 
         <!-- MÜKELLEF PROFİLİ GÖRÜNTÜLEME MODALI -->
+        <div id="evrakModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#9b59b6;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-file-archive"></i> Evrak & Teslimat Çetelesi</h3>
+                    <button class="modal-close" onclick="modalKapat('evrakModal')">X</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="evrakVkn">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h4 id="evrakFirmaAd" style="color:#2c3e50; font-size:14px; margin:0;">Firma Adı</h4>
+                        <input type="month" id="evrakDonem" class="search-bar" style="width:auto; padding:5px 10px;" onchange="evrakAyiGetir()">
+                    </div>
+                    
+                    <div style="background:#f4ecf7; border:1px solid #d2b4de; border-radius:8px; padding:15px;">
+                        <div style="display:flex; flex-direction:column; gap:12px;" id="evrakChecklist">
+                            <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
+                                <input type="checkbox" id="chk_evrak_alis" style="width:18px; height:18px;"> <div>Alış Faturaları Geldi / İşlendi</div>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
+                                <input type="checkbox" id="chk_evrak_satis" style="width:18px; height:18px;"> <div>Satış Faturaları Geldi / İşlendi</div>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
+                                <input type="checkbox" id="chk_evrak_banka" style="width:18px; height:18px;"> <div>Banka Ekstreleri Geldi / İşlendi</div>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer;">
+                                <input type="checkbox" id="chk_evrak_puantaj" style="width:18px; height:18px;"> <div>Personel Puantajları / Bordro Onayları Alındı</div>
+                            </label>
+                            <hr style="border:0; border-top:1px dashed #c39bd3; margin:5px 0;">
+                            <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; color:#27ae60; font-weight:bold;">
+                                <input type="checkbox" id="chk_evrak_teslim" style="width:18px; height:18px;"> <div>Önceki Ayın Evrakları Mükellefe Teslim Edildi</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn btn-primary" style="background:#9b59b6; width:100%;" onclick="evrakKaydet()">Çeteleyi Kaydet</button>
+                </div>
+            </div>
+        </div>
+
         <div id="profilModal" class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-header" style="background:#2980b9;">
@@ -2239,14 +2317,85 @@
                     <td>${m.vkn || '-'}</td>
                     <td>${m.telefon || '-'}</td>
                     <td>${m.mukellefTuru || '-'}</td>
-                    <td>
-                        <button type="button" class="table-btn btn-primary" style="background:#3498db;" onclick="mukellefGoruntule('${m.vkn}')"><i class="fas fa-eye"></i> Görüntüle</button>
-                        <button type="button" class="table-btn btn-edit" onclick="mukellefDuzenle('${m.vkn}')">Düzenle</button>
-                        <button type="button" class="table-btn btn-delete" onclick="mukellefSil('${m.vkn}')">Sil</button>
+                    <td style="white-space: nowrap;">
+                        <button type="button" class="table-btn btn-primary" style="background:#3498db; padding:6px 10px;" onclick="mukellefGoruntule('${m.vkn}')" title="Profili & Şifreleri Görüntüle"><i class="fas fa-eye"></i></button>
+                        <button type="button" class="table-btn" style="background:#9b59b6; color:white; padding:6px 10px;" onclick="evrakCetelesiAc('${m.vkn}', '${m.unvan.replace(/'/g, "\\'")}')" title="Evrak & Teslimat Çetelesi"><i class="fas fa-file-archive"></i></button>
+                        <button type="button" class="table-btn btn-edit" style="padding:6px 10px;" onclick="mukellefDuzenle('${m.vkn}')" title="Düzenle"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSil('${m.vkn}')" title="Sil"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // --- KOPYALAMA ASİSTAN VE EVRAK YÖNETİM FONKSİYONLARI ---
+        function panoyaKopyala(metin) {
+            if(!metin || metin === '-') return;
+            navigator.clipboard.writeText(metin).then(() => {
+                let toast = document.getElementById("toast-mesaj");
+                if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+                toast.innerHTML = `<i class="fas fa-check-circle" style="color:#2ecc71;"></i> Kopyalandı: <b>${metin}</b>`;
+                toast.className = "show";
+                setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
+            }).catch(err => { alert("Tarayıcınız kopyalamaya izin vermiyor."); });
+        }
+
+        const btnCopy = (t) => {
+            if(!t || t==='-') return '';
+            let safeTxt = String(t).replace(/'/g, "\\'");
+            return `<button onclick="panoyaKopyala('${safeTxt}')" title="Panoya Kopyala" class="no-print" style="background:none; border:none; color:#3498db; cursor:pointer; font-size:14px; margin-left:8px; vertical-align:middle; transition:0.2s;" onmouseover="this.style.color='#2c3e50'" onmouseout="this.style.color='#3498db'"><i class="far fa-copy"></i></button>`;
+        };
+
+        function evrakCetelesiAc(vkn, unvan) {
+            document.getElementById("evrakVkn").value = vkn;
+            document.getElementById("evrakFirmaAd").textContent = unvan;
+            
+            let d = new Date(); d.setMonth(d.getMonth() - 1); // Varsayılan olarak geçen ayı seç
+            let guncelDonem = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            document.getElementById("evrakDonem").value = guncelDonem;
+            
+            evrakAyiGetir();
+            modalAc('evrakModal');
+        }
+
+        function evrakAyiGetir() {
+            let vkn = document.getElementById("evrakVkn").value;
+            let donem = document.getElementById("evrakDonem").value;
+            let m = mukellefler.find(x => x.vkn === vkn);
+            
+            if(!m.evraklar) m.evraklar = {};
+            let e = m.evraklar[donem] || {};
+            
+            document.getElementById("chk_evrak_alis").checked = e.alis || false;
+            document.getElementById("chk_evrak_satis").checked = e.satis || false;
+            document.getElementById("chk_evrak_banka").checked = e.banka || false;
+            document.getElementById("chk_evrak_puantaj").checked = e.puantaj || false;
+            document.getElementById("chk_evrak_teslim").checked = e.teslim || false;
+        }
+
+        function evrakKaydet() {
+            let vkn = document.getElementById("evrakVkn").value;
+            let donem = document.getElementById("evrakDonem").value;
+            let m = mukellefler.find(x => x.vkn === vkn);
+            
+            if(!m.evraklar) m.evraklar = {};
+            
+            m.evraklar[donem] = {
+                alis: document.getElementById("chk_evrak_alis").checked,
+                satis: document.getElementById("chk_evrak_satis").checked,
+                banka: document.getElementById("chk_evrak_banka").checked,
+                puantaj: document.getElementById("chk_evrak_puantaj").checked,
+                teslim: document.getElementById("chk_evrak_teslim").checked
+            };
+            
+            localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+            modalKapat('evrakModal');
+            
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#9b59b6;"></i> Evrak çetelesi güncellendi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
 
         // --- GÖRÜNTÜLE BUTONU FONKSİYONU ---
@@ -2256,7 +2405,6 @@
             
             let alan = document.getElementById("printProfilAlan");
             
-            // Dinamik şifreleri (baslik_ ile başlayanlar) tespit edip listeye ekleme
             let dinamikSifrelerHtml = "";
             Object.keys(m).forEach(key => {
                 if (key.startsWith('baslik_')) {
@@ -2268,9 +2416,9 @@
                     
                     dinamikSifrelerHtml += `
                         <tr><th colspan="2" style="background:#e1e8ed; text-align:center;">${sifreAdi}</th></tr>
-                        <tr><th>Kullanıcı Adı:</th><td>${kAd}</td></tr>
-                        <tr><th>Şifre/PIN:</th><td>${kSifre}</td></tr>
-                        <tr><th>Parola:</th><td>${kParola}</td></tr>
+                        <tr><th>Kullanıcı Adı:</th><td>${kAd}${btnCopy(kAd)}</td></tr>
+                        <tr><th>Şifre/PIN:</th><td>${kSifre}${btnCopy(kSifre)}</td></tr>
+                        <tr><th>Parola:</th><td>${kParola}${btnCopy(kParola)}</td></tr>
                     `;
                 }
             });
@@ -2288,7 +2436,7 @@
                 
                 <table>
                     <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">A. TEMEL BİLGİLER</th></tr>
-                    <tr><th>VKN / TCKN:</th><td>${m.vkn || '-'}</td></tr>
+                    <tr><th>VKN / TCKN:</th><td>${m.vkn || '-'}${btnCopy(m.vkn)}</td></tr>
                     <tr><th>Vergi Dairesi:</th><td>${m.vergiDairesi || '-'}</td></tr>
                     <tr><th>Mükellef Türü:</th><td>${m.mukellefTuru || '-'}</td></tr>
                     <tr><th>Faaliyet (NACE):</th><td>${m.naceKodu || '-'}</td></tr>
@@ -2296,27 +2444,27 @@
                     <tr><th>Muhasebe Sistemi:</th><td>${m.muhasebeSistemi || '-'}</td></tr>
                     
                     <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">B. İLETİŞİM & TEMSİLCİ BİLGİLERİ</th></tr>
-                    <tr><th>Telefon:</th><td>${m.telefon || '-'}</td></tr>
-                    <tr><th>E-Posta:</th><td>${m.eposta || '-'}</td></tr>
+                    <tr><th>Telefon:</th><td>${m.telefon || '-'}${btnCopy(m.telefon)}</td></tr>
+                    <tr><th>E-Posta:</th><td>${m.eposta || '-'}${btnCopy(m.eposta)}</td></tr>
                     <tr><th>Adres:</th><td>${m.adres || '-'}</td></tr>
-                    <tr><th>Ticaret Sicil No:</th><td>${m.ticaretSicilNo || '-'}</td></tr>
-                    <tr><th>MERSİS No:</th><td>${m.mersisNo || '-'}</td></tr>
+                    <tr><th>Ticaret Sicil No:</th><td>${m.ticaretSicilNo || '-'}${btnCopy(m.ticaretSicilNo)}</td></tr>
+                    <tr><th>MERSİS No:</th><td>${m.mersisNo || '-'}${btnCopy(m.mersisNo)}</td></tr>
                     <tr><th>Temsilci Adı:</th><td>${m.temsilciAd || '-'}</td></tr>
-                    <tr><th>Temsilci TCKN:</th><td>${m.temsilciTc || '-'}</td></tr>
-                    <tr><th>Temsilci Tel:</th><td>${m.temsilciTel || '-'}</td></tr>
+                    <tr><th>Temsilci TCKN:</th><td>${m.temsilciTc || '-'}${btnCopy(m.temsilciTc)}</td></tr>
+                    <tr><th>Temsilci Tel:</th><td>${m.temsilciTel || '-'}${btnCopy(m.temsilciTel)}</td></tr>
 
                     <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">C. E-BELGE & BİLDİRİM BİLGİLERİ</th></tr>
                     <tr><th>E-Fatura Mükellefiyeti:</th><td>${m.eFaturaDurum || '-'}</td></tr>
                     <tr><th>E-Defter Mükellefiyeti:</th><td>${m.eDefterDurum || '-'}</td></tr>
                     <tr><th>E-Arşiv Durumu:</th><td>${m.eArsivDurum || '-'}</td></tr>
-                    <tr><th>SGK Sicil No:</th><td>${m.sgkSicil || '-'}</td></tr>
+                    <tr><th>SGK Sicil No:</th><td>${m.sgkSicil || '-'}${btnCopy(m.sgkSicil)}</td></tr>
                     
                     <tr><th colspan="2" style="background:#ffe6cc; text-align:center; color:#d35400;">D. PORTAL ŞİFRELERİ</th></tr>
-                    <tr><th>E-Beyanname Kullanıcı:</th><td>${m.gibKullaniciKodu || '-'}</td></tr>
-                    <tr><th>E-Beyanname Şifre/Parola:</th><td>Şifre: ${m.gibSifre || '-'} | Parola: ${m.gibParola || '-'}</td></tr>
-                    <tr><th>SGK TCKN / Sistem Şifresi:</th><td>${m.sgkTcNo || '-'} | Sistem: ${m.sgkSistemSifre || '-'}</td></tr>
-                    <tr><th>SGK İşyeri Şifresi:</th><td>${m.sgkIsyeriSifre || '-'}</td></tr>
-                    <tr><th>Mali Mühür PIN / PUK:</th><td>PIN: ${m.muhurPin || '-'} | PUK: ${m.muhurGuvenlik || '-'}</td></tr>
+                    <tr><th>E-Beyanname Kullanıcı:</th><td>${m.gibKullaniciKodu || '-'}${btnCopy(m.gibKullaniciKodu)}</td></tr>
+                    <tr><th>E-Beyanname Şifre/Parola:</th><td>Şifre: ${m.gibSifre || '-'}${btnCopy(m.gibSifre)} | Parola: ${m.gibParola || '-'}${btnCopy(m.gibParola)}</td></tr>
+                    <tr><th>SGK TCKN / Sistem Şifresi:</th><td>${m.sgkTcNo || '-'}${btnCopy(m.sgkTcNo)} | Sistem: ${m.sgkSistemSifre || '-'}${btnCopy(m.sgkSistemSifre)}</td></tr>
+                    <tr><th>SGK İşyeri Şifresi:</th><td>${m.sgkIsyeriSifre || '-'}${btnCopy(m.sgkIsyeriSifre)}</td></tr>
+                    <tr><th>Mali Mühür PIN / PUK:</th><td>PIN: ${m.muhurPin || '-'}${btnCopy(m.muhurPin)} | PUK: ${m.muhurGuvenlik || '-'}${btnCopy(m.muhurGuvenlik)}</td></tr>
                     ${dinamikSifrelerHtml}
 
                     <tr><th colspan="2" style="background:#f8cecc; text-align:center;">E. NOTLAR VE İSTİSNALAR</th></tr>
