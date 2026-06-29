@@ -344,12 +344,17 @@
 
         /* --- CARİPRO KART, DASHBOARD VE MODAL STİLLERİ --- */
         .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .summary-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #bdc3c7; display: flex; flex-direction: column; justify-content: center; }
-        .summary-card h4 { color: #7f8c8d; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; }
-        .summary-card .amount { font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); border: 1px solid #f1f2f6; text-align: left; display: flex; flex-direction: column; justify-content: space-between; }
+        .summary-card h4 { color: #95a5a6; font-size: 11px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .summary-card .amount { font-size: 24px; font-weight: 800; color: #2c3e50; }
         
-        .card-gelir { border-bottom-color: #3498db; } .card-gider { border-bottom-color: #e74c3c; } 
-        .card-kar { border-bottom-color: #2ecc71; } .card-oran { border-bottom-color: #f1c40f; }
+        .card-gelir { border-left: 4px solid #3498db; } 
+        .card-gider { border-left: 4px solid #e74c3c; } 
+        .card-kar { border-left: 4px solid #2ecc71; } 
+        .card-oran { border-left: 4px solid #f39c12; }
+        .card-kdv { border-left: 4px solid #9b59b6; }
+        .card-stp { border-left: 4px solid #d35400; }
+        .card-stpgid { border-left: 4px solid #e67e22; }
 
         .cari-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .cari-tab-btn { padding: 10px 20px; border: none; background: #e1e8ed; color: #333; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s; }
@@ -611,7 +616,7 @@
         <img src="SMMM Logo.png" alt="Tarık GÜN SMMM" class="sidebar-logo">
         <h2>SMMM Yönetim</h2>
         <ul>
-            <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-th-large"></i> Yönetici Özeti (Pano)</a></li>
+            <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-th-large"></i> Yönetici Özeti</a></li>
             <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')">🧑🏻‍💼 Mükellef Bilgileri</a></li>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')">💲 Ücret Hesaplama</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')">🧾 Kayıtlı Teklifler</a></li>
@@ -1580,8 +1585,8 @@
             <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                 <input type="text" id="faturaArama" class="search-bar" placeholder="Makbuz No, Müşteri Unvanı veya VKN ara..." oninput="faturalariListele()" style="max-width: 400px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" class="action-btn btn-secondary" onclick="ornekFaturaExcelIndir()"><i class="fas fa-download"></i> Örnek Şablon</button>
-                    <button type="button" class="action-btn btn-success" style="background:#27ae60; color:white;" onclick="triggerFaturaExcelYukle()"><i class="fas fa-file-excel"></i> Excel'den Fatura Aktar</button>
+                    <button type="button" class="action-btn btn-secondary" style="margin-bottom:0; display:flex; align-items:center; justify-content:center; gap:8px; height:42px; padding:0 20px;" onclick="ornekFaturaExcelIndir()"><i class="fas fa-download"></i> Örnek Şablon</button>
+                    <button type="button" class="action-btn btn-success" style="background:#27ae60; color:white; margin-bottom:0; display:flex; align-items:center; justify-content:center; gap:8px; height:42px; padding:0 20px;" onclick="triggerFaturaExcelYukle()"><i class="fas fa-file-excel"></i> Excel'den Fatura Aktar</button>
                     <input type="file" id="faturaDosyaInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="faturaExcelDosyaOku(event)">
                 </div>
             </div>
@@ -1662,14 +1667,14 @@
             </div>
             
             <div class="summary-cards" style="grid-template-columns: repeat(4, 1fr);">
-                <div class="summary-card card-gelir"><h4>Kesilen Makbuz (Brüt)</h4><div class="amount" id="sumGelir">0.00 TL</div></div>
-                <div class="summary-card card-gider"><h4>Toplam Ofis Gideri</h4><div class="amount" id="sumGider">0.00 TL</div></div>
-                <div class="summary-card card-oran"><h4>Piyasa Alacağı</h4><div class="amount" id="sumAlacak" style="color:#e74c3c;">0.00 TL</div></div>
-                <div class="summary-card card-gider" style="border-bottom-color:#c0392b;"><h4>Piyasa Borcu</h4><div class="amount" id="sumBorc" style="color:#c0392b;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 3px solid #9b59b6;"><h4>Yıllık Ödenecek KDV</h4><div class="amount" id="sumKdv" style="color:#8e44ad;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 3px solid #d35400;"><h4>Peşin Ödenen Stopaj</h4><div class="amount" id="sumStopaj" style="color:#d35400;">0.00 TL</div></div>
-                <div class="summary-card text-center" style="border-bottom: 3px solid #e67e22;"><h4>Ödenecek Stopaj (Gid.)</h4><div class="amount" id="sumGiderStopaj" style="color:#e67e22;">0.00 TL</div></div>
-                <div class="summary-card card-kar"><h4>Net Ofis Karlılığı</h4><div class="amount" id="sumKar">0.00 TL</div></div>
+                <div class="summary-card card-gelir"><h4><i class="fas fa-arrow-down" style="color:#3498db; font-size:14px;"></i> Kesilen Makbuz (Brüt)</h4><div class="amount" id="sumGelir">0.00 TL</div></div>
+                <div class="summary-card card-gider"><h4><i class="fas fa-arrow-up" style="color:#e74c3c; font-size:14px;"></i> Toplam Ofis Gideri</h4><div class="amount" id="sumGider">0.00 TL</div></div>
+                <div class="summary-card card-oran"><h4><i class="fas fa-hand-holding-usd" style="color:#f39c12; font-size:14px;"></i> Piyasa Alacağı</h4><div class="amount" id="sumAlacak" style="color:#e74c3c;">0.00 TL</div></div>
+                <div class="summary-card card-gider" style="border-left-color:#c0392b;"><h4><i class="fas fa-file-invoice" style="color:#c0392b; font-size:14px;"></i> Piyasa Borcu</h4><div class="amount" id="sumBorc" style="color:#c0392b;">0.00 TL</div></div>
+                <div class="summary-card card-kdv"><h4><i class="fas fa-balance-scale" style="color:#9b59b6; font-size:14px;"></i> Yıllık Ödenecek KDV</h4><div class="amount" id="sumKdv" style="color:#8e44ad;">0.00 TL</div></div>
+                <div class="summary-card card-stp"><h4><i class="fas fa-percent" style="color:#d35400; font-size:14px;"></i> Peşin Ödenen Stopaj</h4><div class="amount" id="sumStopaj" style="color:#d35400;">0.00 TL</div></div>
+                <div class="summary-card card-stpgid"><h4><i class="fas fa-receipt" style="color:#e67e22; font-size:14px;"></i> Ödenecek Stopaj (Gider)</h4><div class="amount" id="sumGiderStopaj" style="color:#e67e22;">0.00 TL</div></div>
+                <div class="summary-card card-kar"><h4><i class="fas fa-chart-line" style="color:#2ecc71; font-size:14px;"></i> Net Ofis Karlılığı</h4><div class="amount" id="sumKar">0.00 TL</div></div>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
