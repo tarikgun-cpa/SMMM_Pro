@@ -4461,7 +4461,10 @@
 
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık") return; // SMMM kendi iç projelerini de görsün
+                
+                // Mükellefin projesi var mı kontrol et. Eğer projesi yoksa ve "Sadece Danışmanlık" değilse atla.
+                let hasProject = danismanlikVeritabani[m.vkn] && danismanlikVeritabani[m.vkn].length > 0;
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık" && !hasProject) return;
                 
                 let projeler = danismanlikVeritabani[m.vkn] || [];
                 projeler.forEach(p => {
