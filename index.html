@@ -4486,14 +4486,15 @@
 
         // --- EXCEL FATURA TOPLU YÜKLEME ---
         function ornekFaturaExcelIndir() {
-            // Türkçe karakterleri bozmayan BOM (Byte Order Mark) eklenmiş CSV formatı
-            let csvIcerik = "VKN,Tarih (GG.AA.YYYY),Makbuz No,Brut Tutar\n11111111111,01.05.2026,GUN2026000000001,5000\n22222222222,05.05.2026,GUN2026000000002,12500";
-            let blob = new Blob(["\uFEFF"+csvIcerik], { type: 'text/csv;charset=utf-8;' });
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
-            a.href = url;
-            a.download = "Ornek_Fatura_Yukleme_Sablonu.csv";
-            a.click();
+            let ws_data = [
+                ["Fatura Tarihi", "Makbuz No", "Alıcı VKN/TCKN", "Alıcı Unvanı", "Matrah (Brüt)", "Hesaplanan KDV", "Tevkifat / Stopaj", "Ödenecek Tutar (Net)"],
+                ["01.07.2026", "GIB2026000000001", "11111111111", "Örnek Firma Ltd. Şti.", "10000.00", "2000.00", "2000.00", "10000.00"],
+                ["05.07.2026", "GIB2026000000002", "22222222222", "Test Şahıs Firması", "5000.00", "1000.00", "1000.00", "5000.00"]
+            ];
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Giden E-SMM");
+            XLSX.writeFile(wb, "SMMM_Entegrator_Uyumlu_Sablon.xlsx");
         }
 
         function triggerFaturaExcelYukle() { 
@@ -4503,81 +4504,153 @@
         function faturaExcelDosyaOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
+
             let reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     let data = new Uint8Array(e.target.result);
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
-                    let jsonSatirlar = XLSX.utils.sheet_to_json(sayfa);
 
-                    let eklenen = 0; let atlanan = 0;
-                    let kdvOran = (sistemAyarlari["KDV"] || 20) / 100;
-                    let stopajOran = (sistemAyarlari["STOPAJ"] || 20) / 100;
+                    // Başlık satırını otomatik bulmak için tüm veriyi dizi olarak okuyalım
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+                    
+                    let baslikSatirIndeksi = -1;
+                    let headers = [];
 
-                    jsonSatirlar.forEach(satir => {
-                        let vkn = satir["VKN"] || satir["TCKN"] || satir["VKN/TCKN"] || satir["Vergi No"];
-                        let tarih = satir["Tarih"] || satir["Tarih (GG.AA.YYYY)"] || satir["Belge Tarihi"];
-                        let makbuzNo = satir["Makbuz No"] || satir["Belge No"] || satir["Fatura No"] || satir["Açıklama"];
-                        let brut = parseFloat(satir["Brüt Tutar"] || satir["Brut Tutar"] || satir["Brüt"]);
-
-                        if(!vkn || !tarih || isNaN(brut)) { atlanan++; return; }
-                        vkn = String(vkn).trim();
-                        
-                        let m = mukellefler.find(x => x.vkn === vkn);
-                        if(!m) { atlanan++; return; } // Mükellef sistemde yoksa atla
-
-                        // Mükerrer Makbuz No Kontrolü
-                        if(m.hareketler.some(h => h.tur === "Makbuz" && h.aciklama === String(makbuzNo))) {
-                            atlanan++; return;
+                    // "VKN", "TCKN", "TARIH", "TUTAR" geçen satırı asıl başlık satırı kabul et (Üstteki gereksiz logoları atlar)
+                    for (let i = 0; i < tumSatirlar.length; i++) {
+                        let satirMetni = tumSatirlar[i].join(" ").toUpperCase();
+                        if (satirMetni.includes("VKN") || satirMetni.includes("TCKN") || satirMetni.includes("TUTAR") || satirMetni.includes("ÜCRET") || satirMetni.includes("UCRET")) {
+                            baslikSatirIndeksi = i;
+                            headers = tumSatirlar[i];
+                            break;
                         }
-
-                        // Tarihi GG.AA.YYYY formatından YYYY-AA-GG formatına çevirme (Input value ve sıralama için)
-                        let t = String(tarih).trim();
-                        let p = t.split(".");
-                        let tarihTR = t;
-                        let tarihDüzz = t;
-                        if(p.length === 3) {
-                            tarihTR = `${p[0]}.${p[1]}.${p[2]}`;
-                            tarihDüzz = `${p[2]}-${p[1]}-${p[0]}`;
-                        } else {
-                            tarihDüzz = new Date().toISOString().split('T')[0]; // Beklenmeyen format gelirse bugünü atar
-                        }
-
-                        // Eğer Excel'de KDV/Stopaj sütunu varsa onu kullan, yoksa sistem yüzdesinden hesapla
-                        let kdvTutar = satir["KDV"] !== undefined ? parseFloat(satir["KDV"]) : (brut * kdvOran);
-                        let stopajTutar = satir["Stopaj"] !== undefined ? parseFloat(satir["Stopaj"]) : (brut * stopajOran);
-                        let netCariBorc = brut + kdvTutar - stopajTutar;
-
-                        m.hareketler.push({
-                            id: "HRK_" + Date.now() + Math.floor(Math.random()*1000),
-                            tur: "Makbuz",
-                            tarih: tarihTR,
-                            tarihDüzz: tarihDüzz,
-                            aciklama: String(makbuzNo),
-                            brut: brut,
-                            kdv: kdvTutar,
-                            stopaj: stopajTutar,
-                            netTutar: netCariBorc,
-                            tutar: netCariBorc
-                        });
-                        m.makbuzToplami += netCariBorc;
-                        eklenen++;
-                    });
-
-                    if(eklenen > 0) {
-                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
-                        faturalariListele();
-                        if(typeof cariPanoCiz === "function") cariPanoCiz();
-                        alert(`İşlem Tamamlandı!\n🎉 ${eklenen} adet e-SMM makbuzu Cari Hesaplara işlendi.\n⚠️ ${atlanan} satır (Mükellef bulunamadığı veya makbuz numarası zaten kayıtlı olduğu için) atlandı.`);
-                    } else {
-                        alert("Yüklenecek geçerli makbuz bulunamadı. VKN'lerin sistemle eşleştiğinden ve şablona uyduğunuzdan emin olun.");
                     }
-                } catch(err) {
-                    console.error(err);
-                    alert("Excel okunurken hata oluştu. Lütfen dosyanın 'Örnek Şablon' ile aynı formatta olduğundan emin olun.");
+
+                    if (baslikSatirIndeksi === -1) {
+                        alert("Hata: Excel/CSV dosyasında geçerli bir başlık satırı (VKN, Tutar vb. kelimeler) bulunamadı.");
+                        event.target.value = "";
+                        return;
+                    }
+
+                    let eklenenSayac = 0;
+                    let atlananSayac = 0;
+
+                    // Başlık satırından sonraki asıl verileri işle
+                    for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
+                        let row = tumSatirlar[i];
+                        if (row.length === 0 || row.join("").trim() === "") continue; // Boş satırları atla
+
+                        // Akıllı (Dinamik) Sütun Eşleştirici
+                        let getVal = (keywords) => {
+                            for (let j = 0; j < headers.length; j++) {
+                                let baslik = String(headers[j]).toUpperCase().replace(/[^A-ZÇĞİÖŞÜ]/g, ""); // Boşluk ve simgeleri sil
+                                for (let kw of keywords) {
+                                    if (baslik.includes(kw)) return row[j];
+                                }
+                            }
+                            return null;
+                        };
+
+                        let unvan = getVal(["UNVAN", "ALICI", "MUSTER", "MÜŞTER"]);
+                        let vkn = getVal(["VKN", "TCKN", "VERGNO", "KIMLIK"]);
+                        let tarihRaw = getVal(["TARIH", "DÜZENLENME", "DUZENLENME"]);
+                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "BELGE", "FATURA"]);
+                        
+                        let brutRaw = getVal(["BRUT", "MATRAH", "BRÜT", "UCRET", "ÜCRET"]);
+                        let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
+                        let stopajRaw = getVal(["STOPAJ", "TEVKIFAT", "KESINTI", "GV"]);
+                        let netRaw = getVal(["NET", "ODENECEK", "ÖDENECEK", "TAHSIL", "TOPLAM"]);
+
+                        if (!unvan || !makbuzNo || !tarihRaw) {
+                            atlananSayac++;
+                            continue; // Gerekli veriler yoksa büyük ihtimalle "Alt Toplam" satırıdır
+                        }
+
+                        // Akıllı Sayı Temizleyici (1.250,50 TL veya 1250.50 formatlarını saf sayıya çevirir)
+                        let parseTutar = (val) => {
+                            if (!val && val !== 0) return 0;
+                            if (typeof val === 'number') return val;
+                            let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                            if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+                            else if (str.includes(',')) { str = str.replace(',', '.'); }
+                            let num = parseFloat(str);
+                            return isNaN(num) ? 0 : num;
+                        };
+
+                        let brut = parseTutar(brutRaw);
+                        let kdv = parseTutar(kdvRaw);
+                        let stopaj = parseTutar(stopajRaw);
+                        let net = parseTutar(netRaw);
+
+                        if (brut === 0 && net === 0) { atlananSayac++; continue; }
+
+                        // Akıllı Tarih Çevirici (GG.AA.YYYY formuna sabitler)
+                        let tarihTR = tarihRaw;
+                        if (typeof tarihRaw === 'number') {
+                            let dateObj = new Date(Math.round((tarihRaw - 25569) * 86400 * 1000));
+                            tarihTR = `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
+                        } else {
+                            tarihTR = String(tarihRaw).substring(0, 10).replace(/-/g, '.').replace(/\//g, '.');
+                            let p = tarihTR.split('.');
+                            if (p.length === 3 && p[0].length === 4) tarihTR = `${p[2]}.${p[1]}.${p[0]}`; // YYYY.MM.DD ise ters çevir
+                        }
+
+                        // Sisteme İşleme Mantığı
+                        vkn = String(vkn).trim();
+                        let m = mukellefler.find(x => x.vkn === vkn);
+                        
+                        let targetVkn = m ? m.vkn : vkn;
+                        let targetUnvan = m ? m.unvan : unvan;
+
+                        if (m) {
+                            // Makbuz mükerrerlik kontrolü
+                            let varMi = m.hareketler.find(h => h.aciklama === makbuzNo);
+                            if (!varMi) {
+                                let pT = tarihTR.split('.');
+                                let tarihDuzz = (pT.length === 3) ? `${pT[2]}-${pT[1]}-${pT[0]}` : tarihTR;
+                                
+                                m.hareketler.push({
+                                    id: "HRK_" + Date.now() + Math.floor(Math.random()*1000), 
+                                    tur: "Makbuz", tarih: tarihTR, tarihDüzz: tarihDuzz,
+                                    aciklama: makbuzNo, brut: brut, kdv: kdv, stopaj: stopaj, netTutar: net, tutar: net
+                                });
+                                m.makbuzToplami += net;
+                                eklenenSayac++;
+                            } else {
+                                atlananSayac++;
+                            }
+                        } else {
+                             // Eğer sistemde kayıtlı olmayan bir firmaya makbuz kesilmişse, otomatik geçici profil açar!
+                             let pT = tarihTR.split('.');
+                             let tarihDuzz = (pT.length === 3) ? `${pT[2]}-${pT[1]}-${pT[0]}` : tarihTR;
+                             let yeniM = {
+                                unvan: targetUnvan, vkn: targetVkn, durum: "Aktif", mukellefTuru: "Diğer", 
+                                hareketler: [{
+                                    id: "HRK_" + Date.now() + Math.floor(Math.random()*1000), tur: "Makbuz", tarih: tarihTR, tarihDüzz: tarihDuzz,
+                                    aciklama: makbuzNo, brut: brut, kdv: kdv, stopaj: stopaj, netTutar: net, tutar: net
+                                }],
+                                makbuzToplami: net, tahsilatToplami: 0, mutabakatlar: []
+                             };
+                             mukellefler.push(yeniM);
+                             eklenenSayac++;
+                        }
+                    }
+
+                    if (eklenenSayac > 0) {
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        if (typeof faturalariListele === "function") faturalariListele();
+                        if (typeof cariPanoCiz === "function") cariPanoCiz();
+                        alert(`İşlem Tamamlandı!\n🎉 ${eklenenSayac} adet e-SMM / Fatura başarıyla içeri aktarıldı.\n⚠️ ${atlananSayac} kayıt (mükerrer olanlar veya alt toplam satırları) atlandı.`);
+                    } else {
+                        alert("Yeni bir makbuz aktarılamadı. (Tüm makbuzlar zaten işlenmiş olabilir veya sütun başlıkları okunamadı)");
+                    }
+                    event.target.value = ""; 
+                } catch (error) {
+                    console.error(error);
+                    alert("Excel dosyası okunurken hata oluştu. Lütfen dosyanın bozuk olmadığından emin olun.");
                 }
-                event.target.value = ""; // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
             };
             reader.readAsArrayBuffer(dosya);
         }
