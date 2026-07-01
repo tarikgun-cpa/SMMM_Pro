@@ -4550,18 +4550,17 @@
                         let row = tumSatirlar[i];
                         if (row.length === 0 || row.join("").trim() === "") continue;
 
-                        // Akıllı ve Bozuk Karakter Korumalı Sütun Eşleştirici
                         // Akıllı, Bozuk Karakter ve Çakışma Korumalı Sütun Eşleştirici
                         let getVal = (keywords) => {
                             for (let j = 0; j < headers.length; j++) {
                                 if (!headers[j]) continue;
-                                // TÜRKÇE KARAKTERLERİ SİLMEYEN DÜZELTİLMİŞ KOD (ÇĞİÖŞÜ eklendi)
-                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
+                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-Z]/g, ""); 
                                 for (let kw of keywords) {
                                     if (b.includes(kw)) {
                                         let val = row[j];
-                                        // Eğer hücre boşsa "undefined" yazısı çıkmasını engeller
-                                        return (val === undefined || val === null) ? "" : String(val).replace(/^"|"$/g, '').trim();
+                                        if (val === undefined || val === null) return "";
+                                        // CSV formüllerindeki eşittir (=) ve tırnak işaretlerini tam temizler formati düzeltir
+                                        return String(val).replace(/^[="]+|[="]+$/g, '').trim();
                                     }
                                 }
                             }
@@ -4603,17 +4602,27 @@
                         if (brut === 0 && net === 0) { atlananSayac++; continue; }
 
                         let tarihTR = "";
-                        if (!tarihRaw) {
+                        let tStr = String(tarihRaw || "").replace(/^[="]+|[="]+$/g, '').trim();
+
+                        if (!tStr) {
                             let today = new Date();
                             tarihTR = `${today.getDate().toString().padStart(2,'0')}.${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getFullYear()}`;
-                        } else if (typeof tarihRaw === 'number') {
-                            let dateObj = new Date(Math.round((tarihRaw - 25569) * 86400 * 1000));
+                        } else if (!isNaN(tStr) && Number(tStr) > 20000 && Number(tStr) < 60000) {
+                            // Excel sayısal tarih formatının metne dönmüş halini ("46200" gibi) tam yakalar
+                            let dateObj = new Date(Math.round((Number(tStr) - 25569) * 86400 * 1000));
                             tarihTR = `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
                         } else {
-                            let temiz = String(tarihRaw).trim().split(" ")[0].replace(/[\/\-_]/g, '.');
+                            // "2026-07-01 22:00:00" veya "01/07/2026" gibi metinleri GG.AA.YYYY'ye çevirir
+                            let temiz = tStr.split(" ")[0].replace(/[\/\-_]/g, '.');
                             let p = temiz.split('.');
-                            if (p.length === 3 && p[0].length === 4) {
-                                tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
+                            if (p.length === 3) {
+                                if (p[0].length === 4) { // YYYY.MM.DD ise ters çevir
+                                    tarihTR = `${p[2].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[0]}`;
+                                } else if (p[2].length === 4) { // DD.MM.YYYY ise başına 0 ekle
+                                    tarihTR = `${p[0].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[2]}`;
+                                } else {
+                                    tarihTR = temiz;
+                                }
                             } else {
                                 tarihTR = temiz;
                             }
