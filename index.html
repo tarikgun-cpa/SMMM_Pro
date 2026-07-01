@@ -623,6 +623,7 @@
             <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')">💰 e-SMM Merkezi</a></li>
             <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">♻️ Cari Hesaplar</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">📅 Mali Takvim</a></li>
+            <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')">💳 Aylık Ödemeler</a></li>
             <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
             <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#24099f; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
         </ul>
@@ -1466,7 +1467,7 @@
                         <div style="font-size:13px; font-weight:bold; color:#e74c3c; margin-bottom:-5px; border-bottom:1px solid #eee; padding-bottom:5px;">Aylık / Dönemsel Vergiler</div>
                         <div id="lbl_Gorev_KDV1" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #3498db; margin-bottom:10px;">
                             <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; margin:0;">
-                                <input type="checkbox" id="chk_Gorev_KDV1" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>KDV 1 Beyannamesi</div>
+                                <input type="checkbox" id="chk_Gorev_KDV1" onchange="takvimCheckboxTetikle('KDV1', '1 Nolu KDV')" style="width:16px; height:16px;"> <div>KDV 1 Beyannamesi</div>
                             </label>
                             <label style="font-size:12px; color:#e74c3c; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; margin:0;">
                                 <input type="checkbox" id="chk_KDV1_Yok" onchange="takvimGorevKaydet()" style="width:14px; height:14px;"> Bu Ay İşlem Yok
@@ -1474,7 +1475,7 @@
                         </div>
                         <div id="lbl_Gorev_KDV2" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #2980b9; margin-bottom:10px;">
                             <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; margin:0;">
-                                <input type="checkbox" id="chk_Gorev_KDV2" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>KDV 2 Beyannamesi (Tevkifat)</div>
+                                <input type="checkbox" id="chk_Gorev_KDV2" onchange="takvimCheckboxTetikle('KDV2', '2 Nolu KDV (Tevkifat)')" style="width:16px; height:16px;"> <div>KDV 2 Beyannamesi (Tevkifat)</div>
                             </label>
                             <label style="font-size:12px; color:#e74c3c; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; margin:0;">
                                 <input type="checkbox" id="chk_KDV2_Yok" onchange="takvimGorevKaydet()" style="width:14px; height:14px;"> Bu Ay İşlem Yok
@@ -1482,14 +1483,14 @@
                         </div>
                         <div id="lbl_Gorev_MUHSGK" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #e67e22; margin-bottom:10px;">
                             <label style="display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; margin:0;">
-                                <input type="checkbox" id="chk_Gorev_MUHSGK" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>MUHSGK (Muhtasar ve Prim)</div>
+                                <input type="checkbox" id="chk_Gorev_MUHSGK" onchange="takvimCheckboxTetikle('MUHSGK', 'Muhtasar ve Prim (MUHSGK)')" style="width:16px; height:16px;"> <div>MUHSGK (Muhtasar ve Prim)</div>
                             </label>
                             <label style="font-size:12px; color:#e74c3c; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px; margin:0;">
                                 <input type="checkbox" id="chk_MUHSGK_Yok" onchange="takvimGorevKaydet()" style="width:14px; height:14px;"> Bu Ay İşlem Yok
                             </label>
                         </div>
                         <label id="lbl_Gorev_GECICI" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #d35400; cursor:pointer;">
-                            <input type="checkbox" id="chk_Gorev_GECICI" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>Geçici / Kurumlar / Yıllık Gelir</div>
+                            <input type="checkbox" id="chk_Gorev_GECICI" onchange="takvimCheckboxTetikle('GECICI', 'Geçici / Yıllık Gelir')" style="width:16px; height:16px;"> <div>Geçici / Kurumlar / Yıllık Gelir</div>
                         </label>
                         <label id="lbl_Gorev_BABS" style="display:flex; align-items:center; gap:10px; font-size:14px; background:#f8f9fa; padding:8px; border-radius:4px; border-left:4px solid #8e44ad; cursor:pointer;">
                             <input type="checkbox" id="chk_Gorev_BABS" onchange="takvimGorevKaydet()" style="width:16px; height:16px;"> <div>Ba / Bs Formları</div>
@@ -1519,7 +1520,62 @@
             </div>
         </div>
 
-        <!-- MÜKELLEF PROFİLİ GÖRÜNTÜLEME MODALI -->
+        <!-- MÜKELLEF PROFİLİ GÖRÜNTÜLEME MODALI --><div id="odemelerPaneli" class="view-section" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-file-invoice-dollar" style="color:#e67e22;"></i> Aylık Vergi Ödeme Merkezi</h1>
+                <input type="month" id="odemePaneliDonem" class="search-bar" style="max-width:200px; border:2px solid #e67e22; background:#fef9e7;" onchange="odemeleriListele()">
+            </div>
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #e67e22; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="odemeArama" class="search-bar" placeholder="Mükellef Ara..." oninput="odemeleriListele()" style="width: 100%;">
+            </div>
+            <div id="odemeKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        </div>
+
+        <div id="tahakkukGirisModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#e67e22;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-coins"></i> Tahakkuk / Ödeme Bilgisi Gir</h3>
+                    <button class="modal-close" onclick="modalKapat('tahakkukGirisModal')">X</button>
+                </div>
+                <div class="modal-body" style="padding:20px; background:#fdfbf7;">
+                    <h4 id="thkFirmaAd" style="color:#2c3e50; font-size:15px; margin-bottom:5px;">Firma Adı</h4>
+                    <p style="color:#e67e22; font-weight:bold; font-size:14px; margin-bottom:15px; border-bottom:1px solid #fad7a1; padding-bottom:5px;" id="thkBeyannameTurAd">Beyanname Türü</p>
+                    
+                    <input type="hidden" id="thkVkn"> <input type="hidden" id="thkDonem">
+                    <input type="hidden" id="thkTurKod"> <input type="hidden" id="thkTurAd">
+
+                    <div id="thkStandartAlan" style="display:none;">
+                        <div class="form-group mb-2"><label>Tahakkuk Fiş Numarası:</label><input type="text" id="thkStandartNo" class="search-bar" placeholder="Tahakkuk no..." style="width:100%;"></div>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Ödenecek Tutar (TL):</label><input type="number" id="thkStandartTutar" class="search-bar" placeholder="0.00" style="width:100%; font-weight:bold; color:#d35400;"></div>
+                            <div class="form-group"><label>Son Ödeme Tarihi:</label><input type="date" id="thkStandartVade" class="search-bar" style="width:100%;"></div>
+                        </div>
+                    </div>
+
+                    <div id="thkMuhsgkAlan" style="display:none;">
+                        <div style="background:#fff; border:1px solid #e1e8ed; padding:15px; border-radius:6px; margin-bottom:15px; border-left:4px solid #3498db;">
+                            <h5 style="color:#2980b9; margin-bottom:10px;"><i class="fas fa-file-contract"></i> Muhtasar Vergi Tahakkuku (Yoksa boş bırakın)</h5>
+                            <div class="form-group mb-2"><input type="text" id="thkMuhNo" class="search-bar" placeholder="Muhtasar Tahakkuk Fiş No..." style="width:100%; padding:6px;"></div>
+                            <div class="form-grid" style="margin-bottom:0;">
+                                <div class="form-group"><input type="number" id="thkMuhTutar" class="search-bar" placeholder="Tutar (TL)" style="width:100%; padding:6px;"></div>
+                                <div class="form-group"><input type="date" id="thkMuhVade" class="search-bar" style="width:100%; padding:6px;"></div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h5 style="color:#27ae60; margin:0;"><i class="fas fa-users"></i> SGK Primleri (Yoksa boş bırakın)</h5>
+                            <button class="action-btn" style="background:#27ae60; color:white; padding:4px 8px; font-size:11px;" onclick="thkSgkSatiriEkle()"><i class="fas fa-plus"></i> Şube/SGK Ekle</button>
+                        </div>
+                        <div id="thkSgkListesi"></div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#faebcc;">
+                    <button class="action-btn" onclick="modalKapat('tahakkukGirisModal')">Atla (Tutar Girme)</button>
+                    <button class="action-btn btn-primary" style="background:#d35400;" onclick="tahakkukKaydet()">Tahakkukları Kaydet</button>
+                </div>
+            </div>
+        </div>
+
         <div id="evrakModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
                 <div class="modal-header" style="background:#9b59b6;">
@@ -1988,7 +2044,7 @@
                                 giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
                                 sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
                                 takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
-                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),
+                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),
                                 teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
                                 sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                                 sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2020,6 +2076,7 @@
                         if(data.sistemAyarlari) { localStorage.setItem('sistemAyarlari', JSON.stringify(data.sistemAyarlari)); sistemAyarlari = data.sistemAyarlari; }
                         if(data.takvimVeritabanı) { localStorage.setItem('takvimVeritabanı', JSON.stringify(data.takvimVeritabanı)); takvimVeritabanı = data.takvimVeritabanı; }
                         if(data.danismanlikVeritabani) { localStorage.setItem('danismanlikVeritabani', JSON.stringify(data.danismanlikVeritabani)); danismanlikVeritabani = data.danismanlikVeritabani; }
+                        if(data.odemeVeritabani) { localStorage.setItem('odemeVeritabani', JSON.stringify(data.odemeVeritabani)); odemeVeritabani = data.odemeVeritabani; }
                         if(data.teklifler) { localStorage.setItem('teklifler', JSON.stringify(data.teklifler)); kayitliTeklifler = data.teklifler; }
                         if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
                         if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
@@ -2043,7 +2100,7 @@
                             giderKategorileri: giderKategorileri,
                             sistemAyarlari: sistemAyarlari,
                             takvimVeritabanı: takvimVeritabanı,
-                            danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),
+                            danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),
                             teklifler: kayitliTeklifler,
                             sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                             sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2808,6 +2865,7 @@
             let ayarlarPaneli = document.getElementById('ayarlarPaneli');
             let cariPaneli = document.getElementById('cariPaneli');
             let takvimPaneli = document.getElementById('takvimPaneli');
+            let odemelerPaneli = document.getElementById('odemelerPaneli');
 
             if(masterDash) masterDash.style.display = 'none';
             if(liste) liste.style.display = 'none'; 
@@ -2818,8 +2876,9 @@
             if(ayarlarPaneli) ayarlarPaneli.style.display = 'none'; 
             if(cariPaneli) cariPaneli.style.display = 'none';
             if(takvimPaneli) takvimPaneli.style.display = 'none';
-
             if(document.getElementById('menuMaster')) document.getElementById('menuMaster').classList.remove('active');
+            if(odemelerPaneli) odemelerPaneli.style.display = 'none';
+            if(document.getElementById('menuOdemeler')) document.getElementById('menuOdemeler').classList.remove('active');
             document.getElementById('menuMukellef').classList.remove('active');
             document.getElementById('menuSihirbaz').classList.remove('active');
             document.getElementById('menuTeklifler').classList.remove('active');
@@ -2852,10 +2911,16 @@
                 if(ayarlarPaneli) ayarlarPaneli.style.display = 'block'; document.getElementById('menuAyarlar').classList.add('active'); ayarlariYukle(); 
             }
             else if (hedefPaneli === 'cariPaneli') { 
-                if(cariPaneli) cariPaneli.style.display = 'block'; document.getElementById('menuCari').classList.add('active'); cariPanoCiz(); giderTabloyuGuncelle(); 
+                if(cariPaneli) cariPaneli.style.display = 'block'; document.getElementById('menuCari').classList.add('active'); cariPanoCiz(); 
             }
             else if (hedefPaneli === 'takvimPaneli') { 
                 if(takvimPaneli) takvimPaneli.style.display = 'block'; document.getElementById('menuTakvim').classList.add('active'); takvimCiz(); 
+            }
+            else if (hedefPaneli === 'odemelerPaneli') { 
+                if(odemelerPaneli) odemelerPaneli.style.display = 'block'; document.getElementById('menuOdemeler').classList.add('active');
+                let d = new Date(); let dStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                if(!document.getElementById("odemePaneliDonem").value) document.getElementById("odemePaneliDonem").value = dStr;
+                odemeleriListele(); 
             }
         }
 
@@ -5049,6 +5114,184 @@
                 giderMatrahHesapla();
             }
         });
+        // --- AYLIK ÖDEMELER VE TAHAKKUK BİLDİRİM MOTORU ---
+        let odemeVeritabani = JSON.parse(localStorage.getItem('odemeVeritabani')) || {};
+
+        function takvimCheckboxTetikle(kod, isim) {
+            takvimGorevKaydet(); // Önce takvim durumunu kaydet
+            let isChecked = document.getElementById("chk_Gorev_" + kod).checked;
+            
+            if(isChecked) {
+                let vkn = document.getElementById("mdlTakvimVkn").value;
+                let donem = document.getElementById("takvimDonem").value;
+                let unvan = document.getElementById("mdlTakvimFirmaAd").textContent;
+                
+                document.getElementById("thkVkn").value = vkn;
+                document.getElementById("thkDonem").value = donem;
+                document.getElementById("thkTurKod").value = kod;
+                document.getElementById("thkTurAd").value = isim;
+                document.getElementById("thkFirmaAd").textContent = unvan;
+                document.getElementById("thkBeyannameTurAd").textContent = isim;
+
+                // Alanları temizle
+                document.getElementById("thkStandartNo").value = "";
+                document.getElementById("thkStandartTutar").value = "";
+                document.getElementById("thkStandartVade").value = "";
+                document.getElementById("thkMuhNo").value = "";
+                document.getElementById("thkMuhTutar").value = "";
+                document.getElementById("thkMuhVade").value = "";
+                document.getElementById("thkSgkListesi").innerHTML = "";
+
+                if(kod === "MUHSGK") {
+                    document.getElementById("thkStandartAlan").style.display = "none";
+                    document.getElementById("thkMuhsgkAlan").style.display = "block";
+                    thkSgkSatiriEkle(); // Otomatik 1 boş SGK satırı aç
+                } else {
+                    document.getElementById("thkStandartAlan").style.display = "block";
+                    document.getElementById("thkMuhsgkAlan").style.display = "none";
+                }
+                modalAc('tahakkukGirisModal');
+            }
+        }
+
+        function thkSgkSatiriEkle() {
+            let container = document.getElementById("thkSgkListesi");
+            let html = `
+            <div class="thk-sgk-satir" style="background:#eafaf1; border:1px solid #2ecc71; padding:10px; border-radius:6px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <input type="text" class="sgk-tur search-bar" placeholder="Şube/Bildirge Adı (Örn: Merkez SGK)" style="width:75%; padding:4px; font-size:12px;">
+                    <button class="action-btn" style="background:#e74c3c; color:white; padding:2px 6px; font-size:11px; margin:0;" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="form-group mb-1"><input type="text" class="sgk-no search-bar" placeholder="SGK Tahakkuk No..." style="width:100%; padding:4px; font-size:12px;"></div>
+                <div style="display:flex; gap:5px;">
+                    <input type="number" class="sgk-tutar search-bar" placeholder="Tutar (TL)" style="flex:1; padding:4px; font-size:12px; font-weight:bold; color:#27ae60;">
+                    <input type="date" class="sgk-vade search-bar" style="flex:1; padding:4px; font-size:12px;">
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function tahakkukKaydet() {
+            let vkn = document.getElementById("thkVkn").value;
+            let donem = document.getElementById("thkDonem").value;
+            let kod = document.getElementById("thkTurKod").value;
+            let ad = document.getElementById("thkTurAd").value;
+
+            if(!odemeVeritabani[donem]) odemeVeritabani[donem] = {};
+            if(!odemeVeritabani[donem][vkn]) odemeVeritabani[donem][vkn] = [];
+
+            if(kod === "MUHSGK") {
+                let mNo = document.getElementById("thkMuhNo").value;
+                let mTutar = parseFloat(document.getElementById("thkMuhTutar").value);
+                let mVade = document.getElementById("thkMuhVade").value;
+                // Sadece tutar girildiyse kaydet (Tutar boşsa Muhtasar yok demektir)
+                if(mTutar > 0) {
+                    odemeVeritabani[donem][vkn].push({ tur: "Muhtasar Vergi", thkNo: mNo, tutar: mTutar, vade: mVade, ts: Date.now() });
+                }
+                
+                // SGK listesini dön, tutar girilenleri kaydet
+                document.querySelectorAll(".thk-sgk-satir").forEach(satir => {
+                    let sTur = satir.querySelector(".sgk-tur").value || "SGK Primi";
+                    let sNo = satir.querySelector(".sgk-no").value;
+                    let sTutar = parseFloat(satir.querySelector(".sgk-tutar").value);
+                    let sVade = satir.querySelector(".sgk-vade").value;
+                    
+                    if(sTutar > 0) odemeVeritabani[donem][vkn].push({ tur: sTur, thkNo: sNo, tutar: sTutar, vade: sVade, ts: Date.now() });
+                });
+            } else {
+                let no = document.getElementById("thkStandartNo").value;
+                let tutar = parseFloat(document.getElementById("thkStandartTutar").value);
+                let vade = document.getElementById("thkStandartVade").value;
+                if(tutar > 0) odemeVeritabani[donem][vkn].push({ tur: ad, thkNo: no, tutar: tutar, vade: vade, ts: Date.now() });
+            }
+
+            localStorage.setItem('odemeVeritabani', JSON.stringify(odemeVeritabani));
+            modalKapat('tahakkukGirisModal');
+            
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#2ecc71;"></i> Tahakkuk / Ödeme bilgisi kaydedildi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
+        }
+
+        function odemeleriListele() {
+            let donem = document.getElementById("odemePaneliDonem").value;
+            let arama = document.getElementById("odemeArama").value.toLowerCase().trim();
+            let container = document.getElementById("odemeKartlariAlani");
+            container.innerHTML = "";
+
+            if(!donem || !odemeVeritabani[donem]) {
+                container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Bu döneme ait girilmiş tahakkuk/ödeme kaydı bulunamadı.</div>`;
+                return;
+            }
+
+            let veriler = odemeVeritabani[donem];
+            let listelenenFirma = 0;
+
+            Object.keys(veriler).forEach(vkn => {
+                let m = mukellefler.find(x => x.vkn === vkn);
+                if(!m) return;
+                if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
+                
+                let odemeler = veriler[vkn];
+                if(odemeler.length === 0) return;
+                
+                listelenenFirma++;
+                let htmlOdemeler = "";
+                let toplamOdenec = 0;
+
+                // Müşteriye Gönderilecek Harika WhatsApp Metni Formatı
+                let wpMetin = `Sayın *${m.unvan}* yetkilisi,\n\n📊 *${donem}* Dönemine Ait Vergi ve SGK Ödeme Bilgileriniz Aşağıdadır:\n\n`;
+
+                odemeler.forEach(o => {
+                    toplamOdenec += o.tutar;
+                    let vGosterim = o.vade ? parseTR(o.vade) : "Belirtilmedi";
+                    let nGosterim = o.thkNo ? o.thkNo : "-";
+                    
+                    wpMetin += `📌 *${o.tur}*\nTahakkuk No: ${nGosterim}\nTutar: *${formatMoney(o.tutar)} TL*\nSon Ödeme: ${vGosterim}\n\n`;
+
+                    htmlOdemeler += `
+                    <div style="background:#fdfdfd; border:1px solid #eee; border-left:3px solid #e67e22; padding:10px; margin-bottom:8px; border-radius:4px; font-size:13px; position:relative;">
+                        <button onclick="odemeKaydiSil('${donem}', '${vkn}', ${o.ts})" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#e74c3c; cursor:pointer;" title="Sil"><i class="fas fa-times"></i></button>
+                        <div style="font-weight:bold; color:#2c3e50; margin-bottom:4px;">${o.tur}</div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#7f8c8d;">Fiş No:</span> <span>${nGosterim}</span></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#7f8c8d;">Son Ödeme:</span> <strong style="color:#c0392b;">${vGosterim}</strong></div>
+                        <div style="display:flex; justify-content:space-between; margin-top:5px; padding-top:5px; border-top:1px dashed #eee;"><span style="color:#7f8c8d;">Tutar:</span> <strong style="color:#27ae60; font-size:14px;">${formatMoney(o.tutar)} ₺</strong></div>
+                    </div>`;
+                });
+
+                wpMetin += `💰 TOPLAM ÖDENECEK: *${formatMoney(toplamOdenec)} TL*\n\nLütfen cezalı duruma düşmemek için son ödeme tarihlerini geçirmeyiniz. İyi çalışmalar dileriz.`;
+                let wpSafe = wpMetin.replace(/'/g, "\\'").replace(/\n/g, "\\n");
+
+                container.innerHTML += `
+                <div style="background:white; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(230, 126, 34, 0.08); border-top:4px solid #e67e22;">
+                    <div style="font-size:14px; font-weight:bold; color:#2c3e50; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</div>
+                    <div style="font-size:11px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px solid #f4f6f9; padding-bottom:10px;">VKN: ${m.vkn}</div>
+                    
+                    ${htmlOdemeler}
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; background:#fdf8e4; padding:10px; border-radius:6px; border:1px solid #fcf0ce;">
+                        <span style="font-weight:bold; color:#d35400; font-size:13px;">TOPLAM:</span>
+                        <strong style="color:#d35400; font-size:16px;">${formatMoney(toplamOdenec)} ₺</strong>
+                    </div>
+
+                    <button class="action-btn" style="width:100%; margin-top:15px; background:#27ae60; color:white; font-size:13px;" onclick="panoyaKopyala('${wpSafe}')">
+                        <i class="fab fa-whatsapp"></i> Müşteriye Kopyala
+                    </button>
+                </div>`;
+            });
+
+            if(listelenenFirma === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Bu döneme ait girilmiş tahakkuk/ödeme kaydı bulunamadı.</div>`;
+        }
+
+        function odemeKaydiSil(donem, vkn, ts) {
+            if(!confirm("Bu tahakkuk/ödeme kaydını silmek istediğinize emin misiniz?")) return;
+            odemeVeritabani[donem][vkn] = odemeVeritabani[donem][vkn].filter(o => o.ts !== ts);
+            if(odemeVeritabani[donem][vkn].length === 0) delete odemeVeritabani[donem][vkn];
+            localStorage.setItem('odemeVeritabani', JSON.stringify(odemeVeritabani));
+            odemeleriListele();
+        }
     </script>
 </body>
 </html>
