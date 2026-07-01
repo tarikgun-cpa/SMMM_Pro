@@ -4563,10 +4563,11 @@
                         };
 
                         // Bozuk CSV karakterleri için ekstra toleranslı anahtar kelimeler
-                        let unvan = getVal(["UNVAN", "ALICI", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADI"]);
-                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TC"]);
-                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME", "TARH"]);
-                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "BELGE", "FATURA", "EVRAK"]);
+                        // KELİME ÇAKIŞMASINI ÖNLEYEN YENİ HASSAS LİSTE
+                        let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADSOYAD", "MÜKELLEF", "ALICIUNVAN", "ALICI"]);
+                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TCNO", "VERGİNUMARASI", "VERGİ"]);
+                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "ZAMAN"]);
+                        let makbuzNo = getVal(["ETTN", "FATURANO", "MAKBUZNO", "BELGENO", "FATURA", "MAKBUZ", "BELGE", "FİŞNO", "FISNO"]);
                         
                         let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
@@ -4595,14 +4596,21 @@
 
                         if (brut === 0 && net === 0) { atlananSayac++; continue; }
 
-                        let tarihTR = tarihRaw;
-                        if (typeof tarihRaw === 'number') {
+                        let tarihTR = "";
+                        if (!tarihRaw) {
+                            let today = new Date();
+                            tarihTR = `${today.getDate().toString().padStart(2,'0')}.${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getFullYear()}`;
+                        } else if (typeof tarihRaw === 'number') {
                             let dateObj = new Date(Math.round((tarihRaw - 25569) * 86400 * 1000));
                             tarihTR = `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
                         } else {
-                            tarihTR = String(tarihRaw).substring(0, 10).replace(/-/g, '.').replace(/\//g, '.');
-                            let p = tarihTR.split('.');
-                            if (p.length === 3 && p[0].length === 4) tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
+                            let temiz = String(tarihRaw).trim().split(" ")[0].replace(/[\/\-_]/g, '.');
+                            let p = temiz.split('.');
+                            if (p.length === 3 && p[0].length === 4) {
+                                tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
+                            } else {
+                                tarihTR = temiz;
+                            }
                         }
 
                         vkn = String(vkn).trim();
