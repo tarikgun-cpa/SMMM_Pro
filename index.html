@@ -2392,31 +2392,41 @@
         // --- WHATSAPP VE EVRAK YÖNETİM FONKSİYONLARI ---
         // ... (Mevcut panoyaKopyala, evrakCetelesiAc vb.) ...
 
-        // --- YENİ YARDIMCI FONKSİYONLAR: TARİH DÖNÜŞTÜRME ---
+        // --- YENİ YARDIMCI FONKSİYONLAR: TARİH DÖNÜŞTÜRME (PANZER SÜRÜM) ---
         function excelTarihDönüştür(raw) {
             if (!raw) return null;
-            if (typeof raw === 'number') {
-                // Excel tarihi: 1 Ocak 1900'den beri geçen gün sayısı.
-                // JavaScript Date: 1 Ocak 1970 UTC'den beri geçen milisaniye sayısı.
-                // Aradaki fark: 25569 gün.
-                let dateObj = new Date((raw - 25569) * 24 * 60 * 60 * 1000);
-                return `${dateObj.getDate().toString().padStart(2, '0')}.${(dateObj.getMonth() + 1).toString().padStart(2, '0')}.${dateObj.getFullYear()}`;
-            } else if (typeof raw === 'string') {
-                raw = raw.trim().replace(/\s+/g, '');
-                // Yaygın metin formatlarını algıla
-                // GG.AA.YYYY veya GG-AA-YYYY
-                let regexTR = /^\d{1,2}[\.\-]\d{1,2}[\.\-]\d{4}$/;
-                // YYYY.AA.GG veya YYYY-AA-GG
-                let regexISO = /^\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}$/;
+            let str = String(raw).trim();
+            
+            // Bozuk veya boş verileri anında ele
+            if (str === "" || str === "NaN" || str === "undefined" || str === "null") return null;
 
-                if (regexTR.test(raw)) {
-                    let p = raw.split(/[\.\-]/);
-                    return `${p[0].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[2]}`;
-                } else if (regexISO.test(raw)) {
-                    let p = raw.split(/[\.\-]/);
+            // 1. Durum: Excel Seri Numarasıysa (Örn: "46200")
+            if (/^\d{5}$/.test(str) || typeof raw === 'number') {
+                let num = Number(str);
+                if(isNaN(num)) return null;
+                let dateObj = new Date(Math.round((num - 25569) * 86400 * 1000));
+                if (isNaN(dateObj.getTime())) return null;
+                return `${dateObj.getDate().toString().padStart(2, '0')}.${(dateObj.getMonth() + 1).toString().padStart(2, '0')}.${dateObj.getFullYear()}`;
+            }
+            
+            // 2. Durum: İçinde saat olan metin formatı (Örn: "01.07.2026 22:08:45" -> Sadece "01.07.2026"yı alır)
+            str = str.split(" ")[0].split("T")[0]; 
+            
+            // Eğik çizgi ve tireleri noktaya dönüştür
+            str = str.replace(/[\/\-_]/g, '.');
+            
+            let p = str.split('.');
+            if (p.length === 3) {
+                // Eğer YYYY.MM.DD ise ters çevir (Örn: 2026.07.01)
+                if (p[0].length === 4) {
                     return `${p[2].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[0]}`;
                 }
+                // Eğer DD.MM.YYYY ise direkt formatla
+                else if (p[2].length === 4) {
+                    return `${p[0].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[2]}`;
+                }
             }
+            
             return null;
         }
 
@@ -4682,7 +4692,7 @@
                         let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADSOYAD", "MÜKELLEF", "ALICIUNVAN"]);
                         let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TCNO", "VERGİNUMARASI"]);
                         let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME"]);
-                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "SİRANO", "SIRANO", "FİŞNO", "FISNO"]);
+                        let makbuzNo = getVal(["ETTN", "FATURANO", "MAKBUZNO", "BELGENO", "FİŞNO", "FISNO"]); // Sıra No çakışmayı önlemek için iptal edildi
                         
                         let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
