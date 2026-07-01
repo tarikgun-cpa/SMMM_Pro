@@ -624,7 +624,7 @@
             <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">♻️ Cari Hesaplar</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">📅 Mali Takvim</a></li>
             <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
-            <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#2110d6; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
+            <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#c0392b; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
         </ul>
     </div>
 
@@ -2447,25 +2447,32 @@
 
             let silmeText = document.getElementById("thSil_DogrulamaText").value;
             if (silmeText.toUpperCase() !== "SİL") {
-                alert("Lütfen silme işlemini onaylamak için 'SİL' yazın!");
-                return;
+                alert("Lütfen silme işlemini onaylamak için 'SİL' yazın!"); return;
             }
+
+            // Firebase Firestore'dan mükellefi sil
+            try {
+                await db.collection("mukellefler").doc(vkn).delete();
+                console.log("Mükellef Firestore'dan silindi.");
+            } catch (err) { console.error("Firestore'dan silinirken hata: ", err); }
+
+            // Firebase Realtime DB'den mükellef kaydını sil
+            try {
+                await realDb.ref('mukellefler/' + vkn).remove();
+                console.log("Mükellef Realtime DB'den silindi.");
+            } catch (err) { console.error("Realtime DB'den silinirken hata: ", err); }
 
             // Yerel diziden mükellefi sil
             mukellefler = mukellefler.filter(x => x.vkn !== vkn);
-            
-            // Lokale kaydet (Bu tetikleyici otomatik olarak Firebase Firestore ortak_veritabanı'nı günceller)
             localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
 
             listeyiYenile();
-            cariPanoCiz();
-            if(typeof takvimCiz === "function") takvimCiz();
             modalKapat('mukellefSilModal');
 
-            // Başarılı bildirim toast mesajı
+            // Başarılı bildirim
             let toast = document.getElementById("toast-mesaj");
             if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
-            toast.innerHTML = `<i class="fas fa-trash-alt" style="color:#e74c3c;"></i> Mükellef ve tüm hareketleri kalıcı olarak silindi.`;
+            toast.innerHTML = `<i class="fas fa-trash-alt" style="color:#e74c3c;"></i> Mükellef kalıcı olarak silindi.`;
             toast.className = "show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
@@ -4711,7 +4718,14 @@
 
                         if (brut === 0 && net === 0) { atlananSayac++; continue; }
 
-                       
+                        // Yeni tarih dönüştürme mantığını kullan.
+                        let tarihTR = excelTarihDönüştür(tarihRaw);
+                        if (!tarihTR) {
+                            // Tarih geçerli değilse bugün tarihini kullan veya atla
+                            // atlananSayac++; continue; // Veya atla
+                            let today = new Date();
+                            tarihTR = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+                        }
                         vkn = String(vkn).trim();
                         let m = mukellefler.find(x => x.vkn === vkn);
                         let targetVkn = m ? m.vkn : vkn;
