@@ -5253,8 +5253,11 @@
 
                     htmlOdemeler += `
                     <div style="background:#fdfdfd; border:1px solid #eee; border-left:3px solid #e67e22; padding:10px; margin-bottom:8px; border-radius:4px; font-size:13px; position:relative;">
-                        <button onclick="odemeKaydiSil('${donem}', '${vkn}', ${o.ts})" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#e74c3c; cursor:pointer;" title="Sil"><i class="fas fa-times"></i></button>
-                        <div style="font-weight:bold; color:#2c3e50; margin-bottom:4px;">${o.tur}</div>
+                        <div style="position:absolute; top:5px; right:5px; display:flex; gap:8px;">
+                            <button onclick="odemeKaydiDuzenle('${donem}', '${vkn}', ${o.ts})" style="background:none; border:none; color:#f39c12; cursor:pointer;" title="Düzenle"><i class="fas fa-edit"></i></button>
+                            <button onclick="odemeKaydiSil('${donem}', '${vkn}', ${o.ts})" style="background:none; border:none; color:#e74c3c; cursor:pointer;" title="Sil"><i class="fas fa-times"></i></button>
+                        </div>
+                        <div style="font-weight:bold; color:#2c3e50; margin-bottom:4px; padding-right:45px;">${o.tur}</div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#7f8c8d;">Fiş No:</span> <span>${nGosterim}</span></div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span style="color:#7f8c8d;">Son Ödeme:</span> <strong style="color:#c0392b;">${vGosterim}</strong></div>
                         <div style="display:flex; justify-content:space-between; margin-top:5px; padding-top:5px; border-top:1px dashed #eee;"><span style="color:#7f8c8d;">Tutar:</span> <strong style="color:#27ae60; font-size:14px;">${formatMoney(o.tutar)} ₺</strong></div>
@@ -5291,6 +5294,31 @@
             if(odemeVeritabani[donem][vkn].length === 0) delete odemeVeritabani[donem][vkn];
             localStorage.setItem('odemeVeritabani', JSON.stringify(odemeVeritabani));
             odemeleriListele();
+        }
+        function odemeKaydiDuzenle(donem, vkn, ts) {
+            let kayit = odemeVeritabani[donem][vkn].find(o => o.ts === ts);
+            if(!kayit) return;
+
+            let yTutar = prompt(`"${kayit.tur}" için yeni tutarı girin (TL):`, kayit.tutar);
+            if(yTutar === null || isNaN(parseFloat(yTutar))) return;
+
+            let yVade = prompt(`Son ödeme tarihini düzenleyin (YIL-AY-GÜN formatında):`, kayit.vade || "");
+            if(yVade === null) return;
+
+            // Değerleri güncelle
+            kayit.tutar = parseFloat(yTutar);
+            kayit.vade = yVade;
+
+            // Veritabanını kaydet ve panoyu yenile
+            localStorage.setItem('odemeVeritabani', JSON.stringify(odemeVeritabani));
+            odemeleriListele();
+            
+            // Başarılı uyarısı
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-edit" style="color:#f39c12;"></i> Kayıt başarıyla güncellendi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
     </script>
 </body>
