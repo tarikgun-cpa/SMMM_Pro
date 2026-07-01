@@ -4514,10 +4514,16 @@
 
                     let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
 
-                    // CSV Noktalı Virgül (;) Ayrıştırma Düzeltmesi (Entegratör CSV'leri için Hayati Kod)
-                    if (tumSatirlar.length > 0 && tumSatirlar[0].length === 1 && typeof tumSatirlar[0][0] === 'string' && tumSatirlar[0][0].includes(';')) {
+                    // Gelişmiş CSV Noktalı Virgül (;) Kontrolü (İlk 5 satırı tarar, başlıksız satırları aşar)
+                    let isSemicolonCSV = false;
+                    for(let k = 0; k < Math.min(5, tumSatirlar.length); k++) {
+                        if (tumSatirlar[k].length === 1 && typeof tumSatirlar[k][0] === 'string' && tumSatirlar[k][0].includes(';')) {
+                            isSemicolonCSV = true; break;
+                        }
+                    }
+                    if (isSemicolonCSV) {
                         tumSatirlar = tumSatirlar.map(row => {
-                            if (typeof row[0] === 'string') {
+                            if (row.length === 1 && typeof row[0] === 'string') {
                                 return row[0].split(';').map(val => String(val).replace(/^"|"$/g, '').trim());
                             }
                             return row;
@@ -4527,7 +4533,7 @@
                     let baslikSatirIndeksi = -1;
                     let headers = [];
 
-                    // Başlık satırını bul (Türkçe karakter bozulmalarına karşı ASCII varyasyonları da eklendi)
+                    // Başlık satırını bul 
                     for (let i = 0; i < tumSatirlar.length; i++) {
                         let satirMetni = tumSatirlar[i].join(" ").toUpperCase();
                         if (satirMetni.includes("VKN") || satirMetni.includes("TCKN") || satirMetni.includes("TUTAR") || satirMetni.includes("UCRET") || satirMetni.includes("ÜCRET") || satirMetni.includes("KIMLIK")) {
@@ -4539,8 +4545,7 @@
 
                     if (baslikSatirIndeksi === -1) {
                         alert("Hata: Excel/CSV dosyasında geçerli bir başlık satırı (VKN, Tutar vb.) bulunamadı.");
-                        event.target.value = "";
-                        return;
+                        event.target.value = ""; return;
                     }
 
                     let eklenenSayac = 0;
@@ -4550,23 +4555,27 @@
                         let row = tumSatirlar[i];
                         if (row.length === 0 || row.join("").trim() === "") continue;
 
-                        // Akıllı ve Bozuk Karakter Korumalı Sütun Eşleştirici
+                        // Akıllı, Bozuk Karakter ve Çakışma Korumalı Sütun Eşleştirici
                         let getVal = (keywords) => {
                             for (let j = 0; j < headers.length; j++) {
                                 if (!headers[j]) continue;
                                 let baslik = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
                                 for (let kw of keywords) {
-                                    if (baslik.includes(kw)) return String(row[j]).replace(/^"|"$/g, '').trim();
+                                    if (baslik.includes(kw)) {
+                                        let val = row[j];
+                                        // Eğer hücre boşsa "undefined" yazısı çıkmasını engeller
+                                        return (val === undefined || val === null) ? "" : String(val).replace(/^"|"$/g, '').trim();
+                                    }
                                 }
                             }
                             return null;
                         };
 
-                        // Bozuk CSV karakterleri için ekstra toleranslı anahtar kelimeler
-                        let unvan = getVal(["UNVAN", "ALICI", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADI"]);
-                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TC"]);
-                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME", "TARH"]);
-                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "BELGE", "FATURA", "EVRAK"]);
+                        // KELİME ÇAKIŞMASINI ÖNLEYEN YENİ HASSAS LİSTE
+                        let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADSOYAD", "MÜKELLEF", "ALICIUNVAN"]);
+                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TCNO", "VERGİNUMARASI"]);
+                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME"]);
+                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "SİRANO", "SIRANO", "FİŞNO", "FISNO"]);
                         
                         let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
