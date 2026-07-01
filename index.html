@@ -1560,6 +1560,32 @@
             </div>
         </div>
 
+        </div>
+        </div>
+
+        <div id="mukellefSilModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#e74c3c;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-trash-alt"></i> DİKKAT! Veri Kaybı Riski</h3>
+                    <button class="modal-close" onclick="modalKapat('mukellefSilModal')">X</button>
+                </div>
+                <div class="modal-body" style="text-align:center;">
+                    <input type="hidden" id="thSil_Vkn">
+                    <p style="font-size:14px; color:#c0392b; font-weight:600; background:#fdf2f2; padding:15px; border-radius:8px; border:1px solid #f5c6cb; margin-bottom:20px;">
+                        <i class="fas fa-exclamation-triangle"></i> <b id="thSil_FirmaAd"></b> mükellefini silerseniz, bu mükellefe ait tüm cari hesap hareketleri (makbuzlar, tahsilatlar) ve diğer tüm bilgiler kalıcı olarak silinecektir.<br>Bu işlem geri alınamaz.
+                    </p>
+                    
+                    <p style="font-size:14px; color:#2c3e50; margin-bottom:10px;">Lütfen işlemi onaylamak için aşağıdaki alana <b>"SİL"</b> yazın.</p>
+                    <input type="text" id="thSil_DogrulamaText" placeholder='Lütfen "SİL" yazın' style="font-weight:bold; text-transform:uppercase; font-size:16px; width:100%; text-align:center; height:45px;" oninput="mukellefSilModalDogrula()">
+                </div>
+                <div class="modal-footer" style="display:flex; gap:10px;">
+                    <button class="action-btn btn-secondary" onclick="modalKapat('mukellefSilModal')" style="flex:1;">İptal Et</button>
+                    <button class="action-btn btn-danger" style="flex:1; height:42px;" onclick="mukellefSil()" disabled id="btnKalıcıSil">KALICI OLARAK SİL</button>
+                </div>
+            </div>
+        </div>
+        <div id="profilModal" class="modal-overlay">
+
         <div id="profilModal" class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-header" style="background:#2980b9;">
@@ -2326,7 +2352,7 @@
                         <button type="button" class="table-btn btn-primary" style="background:#3498db; padding:6px 10px;" onclick="mukellefGoruntule('${m.vkn}')" title="Profili & Şifreleri Görüntüle"><i class="fas fa-eye"></i></button>
                         <button type="button" class="table-btn" style="background:#9b59b6; color:white; padding:6px 10px;" onclick="evrakCetelesiAc('${m.vkn}', '${m.unvan.replace(/'/g, "\\'")}')" title="Evrak & Teslimat Çetelesi"><i class="fas fa-file-archive"></i></button>
                         <button type="button" class="table-btn btn-edit" style="padding:6px 10px;" onclick="mukellefDuzenle('${m.vkn}')" title="Düzenle"><i class="fas fa-edit"></i></button>
-                        <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSil('${m.vkn}')" title="Sil"><i class="fas fa-trash"></i></button>
+                        <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSilAcModal('${m.vkn}')" title="Sil"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -2361,6 +2387,87 @@
             
             evrakAyiGetir();
             modalAc('evrakModal');
+        }
+
+        // --- WHATSAPP VE EVRAK YÖNETİM FONKSİYONLARI ---
+        // ... (Mevcut panoyaKopyala, evrakCetelesiAc vb.) ...
+
+        // --- YENİ YARDIMCI FONKSİYONLAR: TARİH DÖNÜŞTÜRME ---
+        function excelTarihDönüştür(raw) {
+            if (!raw) return null;
+            if (typeof raw === 'number') {
+                // Excel tarihi: 1 Ocak 1900'den beri geçen gün sayısı.
+                // JavaScript Date: 1 Ocak 1970 UTC'den beri geçen milisaniye sayısı.
+                // Aradaki fark: 25569 gün.
+                let dateObj = new Date((raw - 25569) * 24 * 60 * 60 * 1000);
+                return `${dateObj.getDate().toString().padStart(2, '0')}.${(dateObj.getMonth() + 1).toString().padStart(2, '0')}.${dateObj.getFullYear()}`;
+            } else if (typeof raw === 'string') {
+                raw = raw.trim().replace(/\s+/g, '');
+                // Yaygın metin formatlarını algıla
+                // GG.AA.YYYY veya GG-AA-YYYY
+                let regexTR = /^\d{1,2}[\.\-]\d{1,2}[\.\-]\d{4}$/;
+                // YYYY.AA.GG veya YYYY-AA-GG
+                let regexISO = /^\d{4}[\.\-]\d{1,2}[\.\-]\d{1,2}$/;
+
+                if (regexTR.test(raw)) {
+                    let p = raw.split(/[\.\-]/);
+                    return `${p[0].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[2]}`;
+                } else if (regexISO.test(raw)) {
+                    let p = raw.split(/[\.\-]/);
+                    return `${p[2].padStart(2, '0')}.${p[1].padStart(2, '0')}.${p[0]}`;
+                }
+            }
+            return null;
+        }
+
+        // --- MÜKELLEF SİLME ONAY MOTORU ---
+        function mukellefSilModalDogrula() {
+            let text = document.getElementById("thSil_DogrulamaText").value;
+            let btnSil = document.getElementById("btnKalıcıSil");
+            if (text.toUpperCase() === "SİL") {
+                btnSil.disabled = false;
+            } else {
+                btnSil.disabled = true;
+            }
+        }
+
+        function mukellefSilAcModal(vkn) {
+            let m = mukellefler.find(x => x.vkn === vkn);
+            if (!m) return;
+            document.getElementById("thSil_Vkn").value = vkn;
+            document.getElementById("thSil_FirmaAd").textContent = m.unvan;
+            document.getElementById("thSil_DogrulamaText").value = "";
+            document.getElementById("btnKalıcıSil").disabled = true;
+            modalAc('mukellefSilModal');
+        }
+
+        async function mukellefSil() {
+            let vkn = document.getElementById("thSil_Vkn").value;
+            if (!vkn) return;
+
+            let silmeText = document.getElementById("thSil_DogrulamaText").value;
+            if (silmeText.toUpperCase() !== "SİL") {
+                alert("Lütfen silme işlemini onaylamak için 'SİL' yazın!");
+                return;
+            }
+
+            // Yerel diziden mükellefi sil
+            mukellefler = mukellefler.filter(x => x.vkn !== vkn);
+            
+            // Lokale kaydet (Bu tetikleyici otomatik olarak Firebase Firestore ortak_veritabanı'nı günceller)
+            localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+
+            listeyiYenile();
+            cariPanoCiz();
+            if(typeof takvimCiz === "function") takvimCiz();
+            modalKapat('mukellefSilModal');
+
+            // Başarılı bildirim toast mesajı
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-trash-alt" style="color:#e74c3c;"></i> Mükellef ve tüm hareketleri kalıcı olarak silindi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
 
         function evrakAyiGetir() {
@@ -4604,16 +4711,7 @@
 
                         if (brut === 0 && net === 0) { atlananSayac++; continue; }
 
-                        let tarihTR = tarihRaw;
-                        if (typeof tarihRaw === 'number') {
-                            let dateObj = new Date(Math.round((tarihRaw - 25569) * 86400 * 1000));
-                            tarihTR = `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
-                        } else {
-                            tarihTR = String(tarihRaw).substring(0, 10).replace(/-/g, '.').replace(/\//g, '.');
-                            let p = tarihTR.split('.');
-                            if (p.length === 3 && p[0].length === 4) tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
-                        }
-
+                       
                         vkn = String(vkn).trim();
                         let m = mukellefler.find(x => x.vkn === vkn);
                         let targetVkn = m ? m.vkn : vkn;
