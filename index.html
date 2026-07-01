@@ -4602,6 +4602,100 @@
         }
 
         // --- EXCEL FATURA TOPLU YÜKLEME ---
+        function triggerFaturaExcelYukle() {
+            document.getElementById('faturaDosyaInput').click();
+        }
+
+        function faturalariListele() {
+            let listeAlan = document.getElementById("kesilenFaturalarListesi");
+            if(!listeAlan) return;
+            
+            let arama = (document.getElementById("faturaArama").value || "").toLowerCase();
+            let html = "";
+            let tumMakbuzlar = [];
+            
+            // Tüm mükelleflerin içinden sadece Makbuzları topla
+            mukellefler.forEach(m => {
+                if(m.hareketler) {
+                    m.hareketler.forEach(h => {
+                        if(h.tur === "Makbuz") {
+                            tumMakbuzlar.push({
+                                vkn: m.vkn,
+                                unvan: m.unvan,
+                                makbuzNo: h.aciklama,
+                                tarih: h.tarih,
+                                tarihDuzz: h.tarihDüzz,
+                                brut: h.brut || 0,
+                                kdv: h.kdv || 0,
+                                stopaj: h.stopaj || 0,
+                                net: h.netTutar || h.tutar || 0,
+                                id: h.id
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // Tarihe göre en yeniden en eskiye sırala
+            tumMakbuzlar.sort((a,b) => {
+                let dA = new Date(a.tarihDuzz || a.tarih.split('.').reverse().join('-'));
+                let dB = new Date(b.tarihDuzz || b.tarih.split('.').reverse().join('-'));
+                return dB - dA;
+            });
+            
+            tumMakbuzlar.forEach(f => {
+                let aramaMetni = `${f.makbuzNo} ${f.unvan} ${f.vkn}`.toLowerCase();
+                if(aramaMetni.includes(arama)) {
+                    html += `
+                        <tr style="transition: all 0.2s ease;">
+                            <td>${f.tarih}</td>
+                            <td>
+                                <div style="font-weight:600; color:#2c3e50; font-size:13px;">${f.unvan}</div>
+                                <div style="font-size:11px; color:#7f8c8d;">VKN: ${f.vkn}</div>
+                            </td>
+                            <td style="font-size:13px; color:#7f8c8d; font-weight:500;">${f.makbuzNo || '-'}</td>
+                            <td style="font-weight:600; color:#34495e;">${formatMoney(f.brut)} ₺</td>
+                            <td style="color:#27ae60; font-weight:600;">${formatMoney(f.kdv)} ₺</td>
+                            <td style="color:#d35400; font-weight:600;">${formatMoney(f.stopaj)} ₺</td>
+                            <td style="color:#2c3e50; font-weight:bold; font-size:14px;">${formatMoney(f.net)} ₺</td>
+                            <td style="white-space: nowrap;">
+                                <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="faturaSil('${f.vkn}', '${f.id}')" title="Makbuzu Sil"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            if(html === "") {
+                listeAlan.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:#95a5a6; font-size:14px;"><i class="fas fa-folder-open" style="font-size:24px; color:#bdc3c7; margin-bottom:10px; display:block;"></i> Gösterilecek e-SMM / Fatura bulunamadı.<br>Üstteki butonu kullanarak Excel'den içe aktarabilirsiniz.</td></tr>`;
+            } else {
+                listeAlan.innerHTML = html;
+            }
+        }
+
+        function faturaSil(vkn, id) {
+            if(!confirm("Bu makbuzu silmek istediğinize emin misiniz? (Cari hesaptan da düşülecektir)")) return;
+            
+            let m = mukellefler.find(x => x.vkn === vkn);
+            if(m && m.hareketler) {
+                let makbuz = m.hareketler.find(h => h.id === id);
+                if(makbuz) {
+                    m.makbuzToplami -= (makbuz.netTutar || makbuz.tutar || 0);
+                    m.hareketler = m.hareketler.filter(h => h.id !== id);
+                    localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                    
+                    faturalariListele(); // Listeyi anında tazele
+                    if(typeof cariPanoCiz === "function") cariPanoCiz(); // Finans panelini anında tazele
+                    
+                    let toast = document.getElementById("toast-mesaj");
+                    if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+                    toast.innerHTML = `<i class="fas fa-trash" style="color:#e74c3c;"></i> Makbuz başarıyla silindi.`;
+                    toast.className = "show";
+                    setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
+                }
+            }
+        }
+        
         function ornekFaturaExcelIndir() {
             let ws_data = [
                 ["Fatura Tarihi", "Makbuz No", "Alıcı VKN/TCKN", "Alıcı Unvanı", "Matrah (Brüt)", "Hesaplanan KDV", "Tevkifat / Stopaj", "Ödenecek Tutar (Net)"],
