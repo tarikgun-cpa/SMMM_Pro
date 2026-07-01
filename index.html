@@ -4571,7 +4571,8 @@
                         let unvan = getVal(["UNVAN", "MÜŞTERİ", "ALICI"]) || row[3];
                         let vkn = getVal(["VKN", "TCKN", "VERGİ", "KİMLİK"]) || row[2];
                         let tarihRaw = getVal(["TARİH", "DÜZENLENME", "ZAMAN"]) || row[0];
-                        let makbuzNo = getVal(["SIRA", "ETTN", "FATURA", "MAKBUZ", "BELGE", "FİŞ"]) || row[1];
+                        // Tarih sütunlarıyla kelime çakışmasını önlemek için sadece "NO" bitişikli kelimeler aranır
+                        let makbuzNo = getVal(["ETTN", "FATURANO", "MAKBUZNO", "BELGENO", "FİŞNO", "SIRANO"]) || row[1];
 
                         let brutRaw = getVal(["BRÜT", "MATRAH", "ÜCRET", "TUTAR"]) || row[4];
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]) || row[5];
