@@ -4512,16 +4512,25 @@
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
 
-                    // Başlık satırını otomatik bulmak için tüm veriyi dizi olarak okuyalım
                     let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
-                    
+
+                    // CSV Noktalı Virgül (;) Ayrıştırma Düzeltmesi (Entegratör CSV'leri için Hayati Kod)
+                    if (tumSatirlar.length > 0 && tumSatirlar[0].length === 1 && typeof tumSatirlar[0][0] === 'string' && tumSatirlar[0][0].includes(';')) {
+                        tumSatirlar = tumSatirlar.map(row => {
+                            if (typeof row[0] === 'string') {
+                                return row[0].split(';').map(val => String(val).replace(/^"|"$/g, '').trim());
+                            }
+                            return row;
+                        });
+                    }
+
                     let baslikSatirIndeksi = -1;
                     let headers = [];
 
-                    // "VKN", "TCKN", "TARIH", "TUTAR" geçen satırı asıl başlık satırı kabul et (Üstteki gereksiz logoları atlar)
+                    // Başlık satırını bul (Türkçe karakter bozulmalarına karşı ASCII varyasyonları da eklendi)
                     for (let i = 0; i < tumSatirlar.length; i++) {
                         let satirMetni = tumSatirlar[i].join(" ").toUpperCase();
-                        if (satirMetni.includes("VKN") || satirMetni.includes("TCKN") || satirMetni.includes("TUTAR") || satirMetni.includes("ÜCRET") || satirMetni.includes("UCRET")) {
+                        if (satirMetni.includes("VKN") || satirMetni.includes("TCKN") || satirMetni.includes("TUTAR") || satirMetni.includes("UCRET") || satirMetni.includes("ÜCRET") || satirMetni.includes("KIMLIK")) {
                             baslikSatirIndeksi = i;
                             headers = tumSatirlar[i];
                             break;
@@ -4529,7 +4538,7 @@
                     }
 
                     if (baslikSatirIndeksi === -1) {
-                        alert("Hata: Excel/CSV dosyasında geçerli bir başlık satırı (VKN, Tutar vb. kelimeler) bulunamadı.");
+                        alert("Hata: Excel/CSV dosyasında geçerli bir başlık satırı (VKN, Tutar vb.) bulunamadı.");
                         event.target.value = "";
                         return;
                     }
@@ -4537,38 +4546,38 @@
                     let eklenenSayac = 0;
                     let atlananSayac = 0;
 
-                    // Başlık satırından sonraki asıl verileri işle
                     for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
                         let row = tumSatirlar[i];
-                        if (row.length === 0 || row.join("").trim() === "") continue; // Boş satırları atla
+                        if (row.length === 0 || row.join("").trim() === "") continue;
 
-                        // Akıllı (Dinamik) Sütun Eşleştirici
+                        // Akıllı ve Bozuk Karakter Korumalı Sütun Eşleştirici
                         let getVal = (keywords) => {
                             for (let j = 0; j < headers.length; j++) {
-                                let baslik = String(headers[j]).toUpperCase().replace(/[^A-ZÇĞİÖŞÜ]/g, ""); // Boşluk ve simgeleri sil
+                                if (!headers[j]) continue;
+                                let baslik = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
                                 for (let kw of keywords) {
-                                    if (baslik.includes(kw)) return row[j];
+                                    if (baslik.includes(kw)) return String(row[j]).replace(/^"|"$/g, '').trim();
                                 }
                             }
                             return null;
                         };
 
-                        let unvan = getVal(["UNVAN", "ALICI", "MUSTER", "MÜŞTER"]);
-                        let vkn = getVal(["VKN", "TCKN", "VERGNO", "KIMLIK"]);
-                        let tarihRaw = getVal(["TARIH", "DÜZENLENME", "DUZENLENME"]);
-                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "BELGE", "FATURA"]);
+                        // Bozuk CSV karakterleri için ekstra toleranslı anahtar kelimeler
+                        let unvan = getVal(["UNVAN", "ALICI", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADI"]);
+                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TC"]);
+                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME", "TARH"]);
+                        let makbuzNo = getVal(["BELGENO", "MAKBUZNO", "FATURANO", "ETTN", "BELGE", "FATURA", "EVRAK"]);
                         
-                        let brutRaw = getVal(["BRUT", "MATRAH", "BRÜT", "UCRET", "ÜCRET"]);
+                        let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
-                        let stopajRaw = getVal(["STOPAJ", "TEVKIFAT", "KESINTI", "GV"]);
-                        let netRaw = getVal(["NET", "ODENECEK", "ÖDENECEK", "TAHSIL", "TOPLAM"]);
+                        let stopajRaw = getVal(["STOPAJ", "TEVKİFAT", "TEVKIFAT", "KESİNTİ", "KESINTI", "GV"]);
+                        let netRaw = getVal(["NET", "ÖDENECEK", "ODENECEK", "DENECEK", "TAHSİL", "TAHSIL", "TOPLAM"]);
 
                         if (!unvan || !makbuzNo || !tarihRaw) {
                             atlananSayac++;
-                            continue; // Gerekli veriler yoksa büyük ihtimalle "Alt Toplam" satırıdır
+                            continue;
                         }
 
-                        // Akıllı Sayı Temizleyici (1.250,50 TL veya 1250.50 formatlarını saf sayıya çevirir)
                         let parseTutar = (val) => {
                             if (!val && val !== 0) return 0;
                             if (typeof val === 'number') return val;
@@ -4586,7 +4595,6 @@
 
                         if (brut === 0 && net === 0) { atlananSayac++; continue; }
 
-                        // Akıllı Tarih Çevirici (GG.AA.YYYY formuna sabitler)
                         let tarihTR = tarihRaw;
                         if (typeof tarihRaw === 'number') {
                             let dateObj = new Date(Math.round((tarihRaw - 25569) * 86400 * 1000));
@@ -4594,18 +4602,15 @@
                         } else {
                             tarihTR = String(tarihRaw).substring(0, 10).replace(/-/g, '.').replace(/\//g, '.');
                             let p = tarihTR.split('.');
-                            if (p.length === 3 && p[0].length === 4) tarihTR = `${p[2]}.${p[1]}.${p[0]}`; // YYYY.MM.DD ise ters çevir
+                            if (p.length === 3 && p[0].length === 4) tarihTR = `${p[2]}.${p[1]}.${p[0]}`;
                         }
 
-                        // Sisteme İşleme Mantığı
                         vkn = String(vkn).trim();
                         let m = mukellefler.find(x => x.vkn === vkn);
-                        
                         let targetVkn = m ? m.vkn : vkn;
                         let targetUnvan = m ? m.unvan : unvan;
 
                         if (m) {
-                            // Makbuz mükerrerlik kontrolü
                             let varMi = m.hareketler.find(h => h.aciklama === makbuzNo);
                             if (!varMi) {
                                 let pT = tarihTR.split('.');
@@ -4622,7 +4627,6 @@
                                 atlananSayac++;
                             }
                         } else {
-                             // Eğer sistemde kayıtlı olmayan bir firmaya makbuz kesilmişse, otomatik geçici profil açar!
                              let pT = tarihTR.split('.');
                              let tarihDuzz = (pT.length === 3) ? `${pT[2]}-${pT[1]}-${pT[0]}` : tarihTR;
                              let yeniM = {
@@ -4642,7 +4646,7 @@
                         localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
                         if (typeof faturalariListele === "function") faturalariListele();
                         if (typeof cariPanoCiz === "function") cariPanoCiz();
-                        alert(`İşlem Tamamlandı!\n🎉 ${eklenenSayac} adet e-SMM / Fatura başarıyla içeri aktarıldı.\n⚠️ ${atlananSayac} kayıt (mükerrer olanlar veya alt toplam satırları) atlandı.`);
+                        alert(`İşlem Tamamlandı!\n🎉 ${eklenenSayac} adet e-SMM / Fatura başarıyla içeri aktarıldı.\n⚠️ ${atlananSayac} kayıt (mükerrer veya hatalı satır) atlandı.`);
                     } else {
                         alert("Yeni bir makbuz aktarılamadı. (Tüm makbuzlar zaten işlenmiş olabilir veya sütun başlıkları okunamadı)");
                     }
@@ -4654,7 +4658,6 @@
             };
             reader.readAsArrayBuffer(dosya);
         }
-
         // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
         function masterDashboardCiz() {
             let bugun = new Date();
