@@ -4551,12 +4551,18 @@
                         if (row.length === 0 || row.join("").trim() === "") continue;
 
                         // Akıllı ve Bozuk Karakter Korumalı Sütun Eşleştirici
+                        // Akıllı, Bozuk Karakter ve Çakışma Korumalı Sütun Eşleştirici
                         let getVal = (keywords) => {
                             for (let j = 0; j < headers.length; j++) {
                                 if (!headers[j]) continue;
-                                let baslik = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
+                                // TÜRKÇE KARAKTERLERİ SİLMEYEN DÜZELTİLMİŞ KOD (ÇĞİÖŞÜ eklendi)
+                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
                                 for (let kw of keywords) {
-                                    if (baslik.includes(kw)) return String(row[j]).replace(/^"|"$/g, '').trim();
+                                    if (b.includes(kw)) {
+                                        let val = row[j];
+                                        // Eğer hücre boşsa "undefined" yazısı çıkmasını engeller
+                                        return (val === undefined || val === null) ? "" : String(val).replace(/^"|"$/g, '').trim();
+                                    }
                                 }
                             }
                             return null;
