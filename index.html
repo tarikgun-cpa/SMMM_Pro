@@ -5186,7 +5186,7 @@
                 let mVade = document.getElementById("thkMuhVade").value;
                 // Sadece tutar girildiyse kaydet (Tutar boşsa Muhtasar yok demektir)
                 if(mTutar > 0) {
-                    odemeVeritabani[donem][vkn].push({ tur: "Muhtasar Vergi", thkNo: mNo, tutar: mTutar, vade: mVade, ts: Date.now() });
+                    odemeVeritabani[donem][vkn].push({ tur: "Muhtasar Vergi", thkNo: mNo, tutar: mTutar, vade: mVade, ts: Date.now() + Math.random() });
                 }
                 
                 // SGK listesini dön, tutar girilenleri kaydet
@@ -5196,13 +5196,13 @@
                     let sTutar = parseFloat(satir.querySelector(".sgk-tutar").value);
                     let sVade = satir.querySelector(".sgk-vade").value;
                     
-                    if(sTutar > 0) odemeVeritabani[donem][vkn].push({ tur: sTur, thkNo: sNo, tutar: sTutar, vade: sVade, ts: Date.now() });
+                    if(sTutar > 0) odemeVeritabani[donem][vkn].push({ tur: sTur, thkNo: sNo, tutar: sTutar, vade: sVade, ts: Date.now() + Math.random() });
                 });
             } else {
                 let no = document.getElementById("thkStandartNo").value;
                 let tutar = parseFloat(document.getElementById("thkStandartTutar").value);
                 let vade = document.getElementById("thkStandartVade").value;
-                if(tutar > 0) odemeVeritabani[donem][vkn].push({ tur: ad, thkNo: no, tutar: tutar, vade: vade, ts: Date.now() });
+                if(tutar > 0) odemeVeritabani[donem][vkn].push({ tur: ad, thkNo: no, tutar: tutar, vade: vade, ts: Date.now() + Math.random() });
             }
 
             localStorage.setItem('odemeVeritabani', JSON.stringify(odemeVeritabani));
