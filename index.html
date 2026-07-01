@@ -3017,7 +3017,8 @@
             if(!analizKutusu) {
                 analizKutusu = document.createElement("div");
                 analizKutusu.id = "aiAnalizMotoru";
-                analizKutusu.style = "grid-column: 1 / -1; background:linear-gradient(135deg, #2c3e50, #34495e); border-radius:10px; padding:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1); margin-top:10px; color:white;";
+                // YENİ BEYAZ, FERAH VE MODERN TASARIM (Menü rengi kaldırıldı)
+                analizKutusu.style = "grid-column: 1 / -1; background: white; border-radius:12px; padding:25px; box-shadow:0 8px 25px rgba(142, 68, 173, 0.08); margin-top:20px; border: 1px solid #f4ecf7;";
                 document.getElementById('aylikOzetDonemi').parentElement.parentElement.nextElementSibling.appendChild(analizKutusu);
             }
 
@@ -3025,13 +3026,13 @@
             musteriGelirleri.slice(0,5).forEach(mg => {
                 let yuzde = gBrut > 0 ? ((mg.tutar / gBrut) * 100).toFixed(1) : 0;
                 gelirAnalizHtml += `
-                <div style="margin-bottom:8px; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
-                        <span style="color:#bdc3c7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${mg.unvan}</span>
-                        <strong style="color:#2ecc71;">%${yuzde}</strong>
+                <div style="margin-bottom:12px; font-size:13px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color:#2c3e50; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:75%;">${mg.unvan}</span>
+                        <strong style="color:#27ae60;">%${yuzde}</strong>
                     </div>
-                    <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
-                        <div style="width:${yuzde}%; background:#2ecc71; height:100%;"></div>
+                    <div style="width:100%; background:#eafaf1; height:8px; border-radius:4px; overflow:hidden;">
+                        <div style="width:${yuzde}%; background:linear-gradient(90deg, #2ecc71, #27ae60); height:100%; border-radius:4px;"></div>
                     </div>
                 </div>`;
             });
@@ -3040,13 +3041,13 @@
             ofisGiderleri.slice(0,5).forEach(og => {
                 let yuzde = dBrut > 0 ? ((og.tutar / dBrut) * 100).toFixed(1) : 0;
                 giderAnalizHtml += `
-                <div style="margin-bottom:8px; font-size:12px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
-                        <span style="color:#bdc3c7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${og.kategori}</span>
+                <div style="margin-bottom:12px; font-size:13px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color:#2c3e50; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:75%;">${og.kategori}</span>
                         <strong style="color:#e74c3c;">%${yuzde}</strong>
                     </div>
-                    <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
-                        <div style="width:${yuzde}%; background:#e74c3c; height:100%;"></div>
+                    <div style="width:100%; background:#fdf2f2; height:8px; border-radius:4px; overflow:hidden;">
+                        <div style="width:${yuzde}%; background:linear-gradient(90deg, #e74c3c, #c0392b); height:100%; border-radius:4px;"></div>
                     </div>
                 </div>`;
             });
@@ -3060,22 +3061,27 @@
             else aiYorum = "DİKKAT: Ofis bu ay zarar etmiş görünüyor. Acilen gider/gelir analizi yapılmalı!";
 
             analizKutusu.innerHTML = `
-                <h3 style="color:#f1c40f; margin-bottom:15px; font-size:16px; border-bottom:1px dashed #7f8c8d; padding-bottom:10px;"><i class="fas fa-robot"></i> Yapay Zeka Finansal Değerlendirme Raporu</h3>
-                
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                    <div>
-                        <h4 style="color:#2ecc71; margin-bottom:10px; font-size:13px;"><i class="fas fa-arrow-down"></i> En Çok Gelir Getiren 5 Müşteri</h4>
-                        ${gelirAnalizHtml || "<span style='color:#7f8c8d; font-size:12px;'>Kayıt yok.</span>"}
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px dashed #e1e8ed; padding-bottom:15px;">
+                    <div style="background:linear-gradient(135deg, #8e44ad, #3498db); width:38px; height:38px; border-radius:10px; display:flex; justify-content:center; align-items:center; color:white; font-size:18px; box-shadow:0 4px 10px rgba(142,68,173,0.2);">
+                        <i class="fas fa-robot"></i>
                     </div>
-                    <div>
-                        <h4 style="color:#e74c3c; margin-bottom:10px; font-size:13px;"><i class="fas fa-arrow-up"></i> En Yüksek Gider Kalemleri</h4>
-                        ${giderAnalizHtml || "<span style='color:#7f8c8d; font-size:12px;'>Kayıt yok.</span>"}
+                    <h3 style="margin:0; font-size:17px; color:#2c3e50; font-weight:700;">Yapay Zeka Finansal Değerlendirme Raporu</h3>
+                </div>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:25px;">
+                    <div style="background:#fcfbfc; border:1px solid #f4ecf7; padding:20px; border-radius:10px;">
+                        <h4 style="color:#27ae60; margin-bottom:15px; font-size:14px; display:flex; align-items:center; gap:8px;"><i class="fas fa-arrow-circle-down"></i> En Çok Gelir Getiren 5 Müşteri</h4>
+                        ${gelirAnalizHtml || "<span style='color:#7f8c8d; font-size:13px;'>Kayıt yok.</span>"}
+                    </div>
+                    <div style="background:#fffcfc; border:1px solid #fdf2f2; padding:20px; border-radius:10px;">
+                        <h4 style="color:#c0392b; margin-bottom:15px; font-size:14px; display:flex; align-items:center; gap:8px;"><i class="fas fa-arrow-circle-up"></i> En Yüksek Gider Kalemleri</h4>
+                        ${giderAnalizHtml || "<span style='color:#7f8c8d; font-size:13px;'>Kayıt yok.</span>"}
                     </div>
                 </div>
 
-                <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin-top:20px; border-left:4px solid #f1c40f;">
-                    <div style="color:#bdc3c7; font-size:12px; margin-bottom:5px;">Sistem Yorumu:</div>
-                    <div style="font-weight:bold; font-size:14px; color:#fff;">Bu ay Kâr Marjınız: <span style="color:${ticariKar >= 0 ? '#2ecc71' : '#e74c3c'};">%${karYuzdesi}</span>. ${aiYorum}</div>
+                <div style="background:linear-gradient(to right, #fef9e7, #ffffff); padding:15px 20px; border-radius:8px; margin-top:25px; border-left:4px solid #f39c12; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.05);">
+                    <div style="color:#d35400; font-size:11px; font-weight:800; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px;"><i class="fas fa-magic"></i> Sistem Yorumu</div>
+                    <div style="font-weight:700; font-size:15px; color:#2c3e50;">Bu Ayki Kâr Marjınız: <span style="color:${ticariKar >= 0 ? '#27ae60' : '#e74c3c'}; font-size:17px;">%${karYuzdesi}</span> <span style="color:#bdc3c7; margin:0 5px;">|</span> <span style="font-weight:500; color:#555;">${aiYorum}</span></div>
                 </div>
             `;
         }
