@@ -4550,16 +4550,16 @@
                         let row = tumSatirlar[i];
                         if (row.length === 0 || row.join("").trim() === "") continue;
 
-                        // Akıllı, Bozuk Karakter ve Çakışma Korumalı Sütun Eşleştirici
+                        // Akıllı ve Türkçe Karakter (ÇĞİÖŞÜ) Korumalı Sütun Eşleştirici
                         let getVal = (keywords) => {
                             for (let j = 0; j < headers.length; j++) {
                                 if (!headers[j]) continue;
-                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-Z]/g, ""); 
+                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
                                 for (let kw of keywords) {
-                                    if (b.includes(kw)) {
+                                    let cleanKw = kw.toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, "");
+                                    if (b.includes(cleanKw)) {
                                         let val = row[j];
                                         if (val === undefined || val === null) return "";
-                                        // CSV formüllerindeki eşittir (=) ve tırnak işaretlerini tam temizler formati düzeltir
                                         return String(val).replace(/^[="]+|[="]+$/g, '').trim();
                                     }
                                 }
@@ -4567,17 +4567,16 @@
                             return null;
                         };
 
-                        // Bozuk CSV karakterleri için ekstra toleranslı anahtar kelimeler
-                        // KELİME ÇAKIŞMASINI ÖNLEYEN YENİ HASSAS LİSTE
-                        let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADSOYAD", "MÜKELLEF", "ALICIUNVAN", "ALICI"]);
-                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TCNO", "VERGİNUMARASI", "VERGİ"]);
-                        let tarihRaw = getVal(["TARİH", "TARIH", "Fatura Tarihi", "ZAMAN"]);
-                        let makbuzNo = getVal(["ETTN", "FATURANO", "Makbuz No", "BELGENO", "FATURA", "MAKBUZ", "BELGE", "FİŞNO", "FISNO"]);
-                        
-                        let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
-                        let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
-                        let stopajRaw = getVal(["STOPAJ", "TEVKİFAT", "TEVKIFAT", "KESİNTİ", "KESINTI", "GV"]);
-                        let netRaw = getVal(["NET", "ÖDENECEK", "ODENECEK", "DENECEK", "TAHSİL", "TAHSIL", "TOPLAM"]);
+                        // Kelimeyi bulamazsa gözü kapalı sütun sırasından alır (Tutarlar dahil tüm liste)
+                        let unvan = getVal(["UNVAN", "MÜŞTERİ", "ALICI"]) || row[3];
+                        let vkn = getVal(["VKN", "TCKN", "VERGİ", "KİMLİK"]) || row[2];
+                        let tarihRaw = getVal(["TARİH", "DÜZENLENME", "ZAMAN"]) || row[0];
+                        let makbuzNo = getVal(["SIRA", "ETTN", "FATURA", "MAKBUZ", "BELGE", "FİŞ"]) || row[1];
+
+                        let brutRaw = getVal(["BRÜT", "MATRAH", "ÜCRET", "TUTAR"]) || row[4];
+                        let kdvRaw = getVal(["KDV", "HESAPLANAN"]) || row[5];
+                        let stopajRaw = getVal(["STOPAJ", "TEVKİFAT", "KESİNTİ"]) || row[6];
+                        let netRaw = getVal(["NET", "ÖDENECEK", "TAHSİL", "TOPLAM"]) || row[7];
 
                         if (!unvan || !makbuzNo || !tarihRaw) {
                             atlananSayac++;
