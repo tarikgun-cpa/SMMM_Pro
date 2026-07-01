@@ -2400,8 +2400,8 @@
             // Bozuk veya boş verileri anında ele
             if (str === "" || str === "NaN" || str === "undefined" || str === "null") return null;
 
-            // 1. Durum: Excel Seri Numarasıysa (Örn: "46200")
-            if (/^\d{5}$/.test(str) || typeof raw === 'number') {
+            // 1. Durum: Excel Seri Numarasıysa ve Saati Varsa (Örn: "46200" veya "46200.5")
+            if ((!isNaN(str) && Number(str) > 20000 && Number(str) < 60000) || typeof raw === 'number') {
                 let num = Number(str);
                 if(isNaN(num)) return null;
                 let dateObj = new Date(Math.round((num - 25569) * 86400 * 1000));
@@ -4688,11 +4688,12 @@
                             return null;
                         };
 
-                        // KELİME ÇAKIŞMASINI ÖNLEYEN YENİ HASSAS LİSTE
-                        let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "MSTER", "ADISOYADI", "ADSOYAD", "MÜKELLEF", "ALICIUNVAN"]);
-                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİNO", "VERGINO", "TCNO", "VERGİNUMARASI"]);
-                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "DUZENLENME"]);
-                        let makbuzNo = getVal(["ETTN", "FATURANO", "MAKBUZNO", "BELGENO", "FİŞNO", "FISNO"]); // Sıra No çakışmayı önlemek için iptal edildi
+                        // KELİME ÇAKIŞMASINI ÖNLEYEN YENİ HASSAS LİSTE (GENİŞLETİLDİ)
+                        let unvan = getVal(["UNVAN", "ÜNVAN", "MÜŞTERİ", "MUSTERI", "ADISOYADI", "ADSOYAD", "ALICI"]);
+                        let vkn = getVal(["VKN", "TCKN", "KİMLİK", "KIMLIK", "VERGİ", "VERGI", "TCNO", "TC"]);
+                        let tarihRaw = getVal(["TARİH", "TARIH", "DÜZENLENME", "ZAMAN"]);
+                        // Sadece kök kelimeleri verdik (Fatura Numarası yazsa bile içindeki FATURA'yı yakalar, Sıra No ile karışmaz)
+                        let makbuzNo = getVal(["ETTN", "FATURA", "MAKBUZ", "BELGE", "FİŞ", "FIS", "EVRAK"]);
                         
                         let brutRaw = getVal(["BRÜT", "BRUT", "MATRAH", "ÜCRET", "UCRET", "TUTAR"]);
                         let kdvRaw = getVal(["KDV", "HESAPLANAN"]);
