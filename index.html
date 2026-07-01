@@ -3067,75 +3067,63 @@
         }
 
         function cariPanoCiz() {
+            let pano = document.getElementById("cariPanoAlani");
+            if (!pano) return;
             try {
-                let pano = document.getElementById("cariPanoAlani");
-                if(!pano) return;
-                
                 let html = "";
                 let tGelir=0, tGider=0, tAlacak=0, tBorc=0, tKdv=0, tStp=0, tStpGid=0;
-                let arama = (document.getElementById("cariArama") ? document.getElementById("cariArama").value : "").toLowerCase();
+                let cizilenKart = 0;
 
-                let cizilenKartSayisi = 0;
+                let aramaInput = document.getElementById("cariArama");
+                let arama = aramaInput ? String(aramaInput.value).toLowerCase() : "";
+
+                // Kusursuz Sayı Dönüştürücü
+                let nSafe = (v) => { let n = parseFloat(String(v).replace(/[^0-9.-]/g, '')); return isNaN(n) ? 0 : n; };
 
                 (mukellefler || []).forEach(m => {
-                    if(!m || m.mukellefTuru === "SMMM" || m.durum === "Pasif") return; 
+                    if (!m || m.mukellefTuru === "SMMM" || m.durum === "Pasif") return;
 
-                    let sonIslemTarihi = "-";
-                    let sonTahsilatTarihi = "-";
-
+                    let sonMkb = "-", sonThs = "-";
                     if (Array.isArray(m.hareketler)) {
-                        let makbuzlar = m.hareketler.filter(h => h && h.tur === "Makbuz");
-                        if (makbuzlar.length > 0) sonIslemTarihi = makbuzlar[makbuzlar.length - 1].tarih || "-";
-
-                        let tahsilatlar = m.hareketler.filter(h => h && h.tur === "Tahsilat");
-                        if (tahsilatlar.length > 0) sonTahsilatTarihi = tahsilatlar[tahsilatlar.length - 1].tarih || "-";
+                        let mkbs = m.hareketler.filter(h => h && h.tur === "Makbuz");
+                        if (mkbs.length > 0) sonMkb = mkbs[mkbs.length - 1].tarih || "-";
+                        let thss = m.hareketler.filter(h => h && h.tur === "Tahsilat");
+                        if (thss.length > 0) sonThs = thss[thss.length - 1].tarih || "-";
                     }
 
-                    let devir = Number(m.oncekiYilDevri) || 0;
-                    let makbuzTop = Number(m.makbuzToplami) || 0;
-                    let tahsilatTop = Number(m.tahsilatToplami) || 0;
-                    let bakiye = makbuzTop - tahsilatTop + devir;
-                    
-                    let kdvOrani = (tahsilatTop > 0) ? (tahsilatTop * 0.2) : 0; 
-                    let stopajOrani = (tahsilatTop > 0) ? (tahsilatTop * 0.2) : 0;
+                    let devir = nSafe(m.oncekiYilDevri);
+                    let mTop = nSafe(m.makbuzToplami);
+                    let tTop = nSafe(m.tahsilatToplami);
+                    let bakiye = mTop - tTop + devir;
 
-                    tGelir += makbuzTop;
-                    if(bakiye > 0) tAlacak += bakiye;
-                    if(bakiye < 0) tBorc += Math.abs(bakiye);
-                    tKdv += kdvOrani;
-                    tStp += stopajOrani;
+                    tGelir += mTop;
+                    if (bakiye > 0) tAlacak += bakiye;
+                    if (bakiye < 0) tBorc += Math.abs(bakiye);
+                    tKdv += (tTop > 0 ? tTop * 0.2 : 0);
+                    tStp += (tTop > 0 ? tTop * 0.2 : 0);
 
-                    let aramaText = `${m.unvan || ''} ${m.vkn || ''}`.toLowerCase();
-                    
-                    if(aramaText.includes(arama)) {
-                        cizilenKartSayisi++;
+                    let mUnvan = String(m.unvan || '').toLowerCase();
+                    let mVkn = String(m.vkn || '').toLowerCase();
+
+                    if (mUnvan.includes(arama) || mVkn.includes(arama)) {
+                        cizilenKart++;
                         html += `
                             <div class="cari-card" style="position:relative;">
-                                <h3 style="font-size: 14px; margin-bottom: 5px; color:#2c3e50;">${m.unvan || 'İsimsiz Firma'}</h3>
+                                <h3 style="font-size: 14px; margin-bottom: 5px; color:#2c3e50;">${m.unvan || 'İsimsiz'}</h3>
                                 <p style="font-size: 11px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #eee; padding-bottom:10px;">VKN: ${m.vkn || '-'}</p>
-                                
                                 <div class="cari-bakiye ${bakiye >= 0 ? 'pozitif' : 'negatif'}">${formatMoney(Math.abs(bakiye))} ₺</div>
-                                
-                                <div style="font-size:11px; color:#e67e22; margin-bottom:15px; font-weight:bold;">
-                                    <i class="fas fa-history"></i> Önceki Yıl Devri: ${formatMoney(devir)} ₺
-                                </div>
-
+                                <div style="font-size:11px; color:#e67e22; margin-bottom:15px; font-weight:bold;">Önceki Yıl Devri: ${formatMoney(devir)} ₺</div>
                                 <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                                    <span style="color:#7f8c8d;">Toplam Makbuz (Borç):</span> 
-                                    <strong style="color:#2c3e50;">${formatMoney(makbuzTop)} ₺</strong>
+                                    <span style="color:#7f8c8d;">Toplam Makbuz:</span> <strong style="color:#2c3e50;">${formatMoney(mTop)} ₺</strong>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
-                                    <span style="color:#7f8c8d;">Toplam Tahsilat (Alacak):</span> 
-                                    <strong style="color:#27ae60;">${formatMoney(tahsilatTop)} ₺</strong>
+                                    <span style="color:#7f8c8d;">Toplam Tahsilat:</span> <strong style="color:#27ae60;">${formatMoney(tTop)} ₺</strong>
                                 </div>
-
                                 <div style="display:flex; justify-content:space-between; font-size:10px; color:#bdc3c7;">
-                                    <span><i class="fas fa-file-invoice"></i> Son Makbuz: ${sonIslemTarihi}</span>
-                                    <span><i class="fas fa-lira-sign"></i> Son Tahsilat: ${sonTahsilatTarihi}</span>
+                                    <span>Son Mkb: ${sonMkb}</span><span>Son Ths: ${sonThs}</span>
                                 </div>
-
                                 <div style="display:flex; gap:10px; margin-top:15px;">
-                                    <button class="action-btn btn-primary" style="flex:1; padding:8px; font-size:12px;" onclick="acCariIslemModal('${m.vkn}', 'Tahsilat')">Tahsilat Gir</button>
+                                    <button class="action-btn btn-primary" style="flex:1; padding:8px; font-size:12px;" onclick="acCariIslemModal('${m.vkn}', 'Tahsilat')">Tahsilat</button>
                                     <button class="action-btn btn-secondary" style="flex:1; padding:8px; font-size:12px;" onclick="acCariEkstreModal('${m.vkn}')">Ekstre</button>
                                 </div>
                             </div>
@@ -3143,57 +3131,28 @@
                     }
                 });
 
-                if(cizilenKartSayisi === 0) {
-                    pano.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:#95a5a6; font-size:15px; background:white; border-radius:8px;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px; display:block;"></i> Müşteri cari kaydı bulunamadı.</div>`;
-                } else {
-                    pano.innerHTML = html;
-                }
+                pano.innerHTML = cizilenKart === 0 ? `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#95a5a6;"><i class="fas fa-box-open" style="font-size:30px; margin-bottom:10px; display:block;"></i> Müşteri cari kaydı bulunamadı.</div>` : html;
 
                 (typeof giderIslemler !== 'undefined' ? giderIslemler : []).forEach(g => {
-                    let netGid = Number(g.net || g.tutar || 0);
-                    tGider += netGid;
-                    tKdv -= (Number(g.kdv) || 0);
-                    tStpGid += (Number(g.stopaj) || 0);
+                    tGider += nSafe(g.net || g.tutar);
+                    tKdv -= nSafe(g.kdv);
+                    tStpGid += nSafe(g.stopaj);
                 });
 
-                let tKar = tGelir - tGider;
+                let setTxt = (id, val, color) => { 
+                    let el = document.getElementById(id); 
+                    if(el) { el.textContent = formatMoney(val) + " ₺"; if(color) el.style.color = color; }
+                };
 
-                if(document.getElementById("sumGelir")) document.getElementById("sumGelir").textContent = formatMoney(tGelir) + " ₺";
-                if(document.getElementById("sumGider")) document.getElementById("sumGider").textContent = formatMoney(tGider) + " ₺";
-                if(document.getElementById("sumAlacak")) document.getElementById("sumAlacak").textContent = formatMoney(tAlacak) + " ₺";
-                if(document.getElementById("sumBorc")) document.getElementById("sumBorc").textContent = formatMoney(tBorc) + " ₺";
-                if(document.getElementById("sumKar")) document.getElementById("sumKar").textContent = formatMoney(tKar) + " ₺";
-                
-                if(document.getElementById("sumKdv")) {
-                    document.getElementById("sumKdv").textContent = formatMoney(Math.abs(tKdv)) + " ₺";
-                    document.getElementById("sumKdv").style.color = tKdv >= 0 ? "#8e44ad" : "#27ae60";
-                }
-                if(document.getElementById("sumStopaj")) document.getElementById("sumStopaj").textContent = formatMoney(tStp) + " ₺";
-                if(document.getElementById("sumGiderStopaj")) document.getElementById("sumGiderStopaj").textContent = formatMoney(tStpGid) + " ₺";
+                setTxt("sumGelir", tGelir); setTxt("sumGider", tGider); setTxt("sumAlacak", tAlacak);
+                setTxt("sumBorc", tBorc); setTxt("sumKar", tGelir - tGider);
+                setTxt("sumKdv", Math.abs(tKdv), tKdv >= 0 ? "#8e44ad" : "#27ae60");
+                setTxt("sumStopaj", tStp); setTxt("sumGiderStopaj", tStpGid);
+
             } catch (err) {
-                console.error("Cari pano yüklenirken hata oluştu: ", err);
+                pano.innerHTML = `<div style="color:red; font-weight:bold; padding:20px;">Sistem Hatası (Lütfen Bildirin): ${err.message}</div>`;
+                console.error(err);
             }
-        }
-
-        function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
-        function modalKapat(id) { document.getElementById(id).style.display = 'none'; kutuKapat('tahsilatKutu'); kutuKapat('mutabakatKutu'); kutuKapat('giderOdemeKutu'); }
-        function kutuAc(id) { document.getElementById(id).style.display = 'block'; }
-        function kutuKapat(id) { document.getElementById(id).style.display = 'none'; }
-
-        // --- GELİR MAKBUZ MOTORU ---
-        function acMakbuzModal() {
-            let select = document.getElementById("makMusteri");
-            select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
-            mukellefler.forEach(m => { if(m.unvan) select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; });
-            
-            let kdvEl = document.getElementById("lblKdvOran"); if(kdvEl) kdvEl.textContent = sistemAyarlari["KDV"] || 20;
-            let stpEl = document.getElementById("lblStopajOran"); if(stpEl) stpEl.textContent = sistemAyarlari["STOPAJ"] || 20;
-            
-            document.getElementById("makTarih").valueAsDate = new Date();
-            document.getElementById("makBrut").value = "";
-            document.getElementById("makAciklama").value = "";
-            makbuzMatrahHesapla();
-            modalAc('makbuzModal');
         }
 
         function makbuzMatrahHesapla() {
@@ -4418,67 +4377,52 @@
 
         // --- FATURA MERKEZİ VE EXCEL AKTARIM MOTORU ---
         function faturalariListele() {
+            let listeAlan = document.getElementById("kesilenFaturalarListesi");
+            if (!listeAlan) return;
             try {
-                let listeAlan = document.getElementById("kesilenFaturalarListesi");
-                if(!listeAlan) return;
-                
-                let arama = (document.getElementById("faturaArama") ? document.getElementById("faturaArama").value : "").toLowerCase();
                 let html = "";
-                let tumMakbuzlar = [];
-                
+                let aramaInput = document.getElementById("faturaArama");
+                let arama = aramaInput ? String(aramaInput.value).toLowerCase() : "";
+                let tm = [];
+
                 (mukellefler || []).forEach(m => {
-                    if(m && Array.isArray(m.hareketler)) {
+                    if (m && Array.isArray(m.hareketler)) {
                         m.hareketler.forEach(h => {
-                            if(h && h.tur === "Makbuz") {
-                                tumMakbuzlar.push({
-                                    vkn: m.vkn, unvan: m.unvan || '', makbuzNo: h.aciklama || '', 
-                                    tarih: h.tarih || '', tarihDuzz: h.tarihDüzz || '',
+                            if (h && h.tur === "Makbuz") {
+                                tm.push({
+                                    vkn: m.vkn || '', unvan: m.unvan || '', makbuzNo: h.aciklama || '',
+                                    tarih: h.tarih || '', tarihDuzz: h.tarihDüzz || '2000-01-01',
                                     brut: h.brut || 0, kdv: h.kdv || 0, stopaj: h.stopaj || 0, net: h.netTutar || h.tutar || 0, id: h.id
                                 });
                             }
                         });
                     }
                 });
-                
-                // HATA KORUMALI, ÇÖKMEZ TARİH SIRALAMASI
-                tumMakbuzlar.sort((a,b) => {
-                    let dateA = new Date(a.tarihDuzz || "2000-01-01").getTime();
-                    let dateB = new Date(b.tarihDuzz || "2000-01-01").getTime();
-                    if(isNaN(dateA)) dateA = 0;
-                    if(isNaN(dateB)) dateB = 0;
-                    return dateB - dateA;
+
+                tm.sort((a, b) => {
+                    let dA = new Date(a.tarihDuzz).getTime(); let dB = new Date(b.tarihDuzz).getTime();
+                    return (isNaN(dB) ? 0 : dB) - (isNaN(dA) ? 0 : dA);
                 });
-                
-                tumMakbuzlar.forEach(f => {
-                    let aramaMetni = `${f.makbuzNo} ${f.unvan} ${f.vkn}`.toLowerCase();
-                    if(aramaMetni.includes(arama)) {
+
+                tm.forEach(f => {
+                    if (`${f.makbuzNo} ${f.unvan} ${f.vkn}`.toLowerCase().includes(arama)) {
                         html += `
-                            <tr style="transition: all 0.2s ease;">
+                            <tr>
                                 <td>${f.tarih}</td>
-                                <td>
-                                    <div style="font-weight:600; color:#2c3e50; font-size:13px;">${f.unvan}</div>
-                                    <div style="font-size:11px; color:#7f8c8d;">VKN: ${f.vkn}</div>
-                                </td>
-                                <td style="font-size:13px; color:#7f8c8d; font-weight:500;">${f.makbuzNo || '-'}</td>
-                                <td style="font-weight:600; color:#34495e;">${formatMoney(f.brut)} ₺</td>
-                                <td style="color:#27ae60; font-weight:600;">${formatMoney(f.kdv)} ₺</td>
-                                <td style="color:#d35400; font-weight:600;">${formatMoney(f.stopaj)} ₺</td>
-                                <td style="color:#2c3e50; font-weight:bold; font-size:14px;">${formatMoney(f.net)} ₺</td>
-                                <td style="white-space: nowrap;">
-                                    <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="faturaSil('${f.vkn}', '${f.id}')" title="Makbuzu Sil"><i class="fas fa-trash"></i></button>
-                                </td>
+                                <td><div style="font-weight:600; color:#2c3e50; font-size:13px;">${f.unvan}</div><div style="font-size:11px; color:#7f8c8d;">VKN: ${f.vkn}</div></td>
+                                <td style="color:#7f8c8d; font-weight:500;">${f.makbuzNo || '-'}</td>
+                                <td>${formatMoney(f.brut)} ₺</td><td style="color:#27ae60;">${formatMoney(f.kdv)} ₺</td>
+                                <td style="color:#d35400;">${formatMoney(f.stopaj)} ₺</td><td style="color:#2c3e50; font-weight:bold;">${formatMoney(f.net)} ₺</td>
+                                <td><button type="button" class="table-btn btn-delete" onclick="faturaSil('${f.vkn}', '${f.id}')"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     }
                 });
-                
-                if(html === "") {
-                    listeAlan.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:#95a5a6; font-size:14px;"><i class="fas fa-folder-open" style="font-size:24px; color:#bdc3c7; margin-bottom:10px; display:block;"></i> Gösterilecek e-SMM / Fatura bulunamadı.</td></tr>`;
-                } else {
-                    listeAlan.innerHTML = html;
-                }
-            } catch(err) {
-                console.error("Faturalar listelenirken hata oluştu:", err);
+
+                listeAlan.innerHTML = html === "" ? `<tr><td colspan="8" style="text-align:center; padding:40px; color:#95a5a6;">Gösterilecek e-SMM bulunamadı.</td></tr>` : html;
+            } catch (err) {
+                listeAlan.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:20px;">Hata oluştu: ${err.message}</td></tr>`;
+                console.error(err);
             }
         }
         // Fatura Düzenleme Modalı
