@@ -617,14 +617,14 @@
         <h2>SMMM Yönetim</h2>
         <ul>
             <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-th-large"></i> Yönetici Özeti</a></li>
-            <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')">🧑🏻‍💼 Mükellef Bilgileri</a></li>
+            <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')"> 💼 Mükellef Bilgileri</a></li>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')">💲 Ücret Hesaplama</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')">🧾 Kayıtlı Teklifler</a></li>
             <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')">💰 e-SMM Merkezi</a></li>
             <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">♻️ Cari Hesaplar</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">📅 Mali Takvim</a></li>
             <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
-            <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#c0392b; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
+            <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#24099f; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
         </ul>
     </div>
 
@@ -1560,6 +1560,30 @@
             </div>
         </div>
 
+        <div id="mukellefSilModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#e74c3c;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-exclamation-triangle"></i> DİKKAT: Kalıcı Silme İşlemi!</h3>
+                    <button class="modal-close" onclick="modalKapat('mukellefSilModal')">X</button>
+                </div>
+                <div class="modal-body" style="text-align:center; padding:30px;">
+                    <input type="hidden" id="thSil_Vkn">
+                    <i class="fas fa-trash-alt" style="font-size:50px; color:#e74c3c; margin-bottom:15px;"></i>
+                    <h3 style="color:#c0392b; margin-bottom:10px;">Bu mükellefi silmek istediğinize emin misiniz?</h3>
+                    <p style="color:#7f8c8d; font-size:14px; margin-bottom:20px;">Mükellef silindiğinde; <b>cari hesaptaki tüm makbuzları, ödemeleri, şifreleri ve beyanname geçmişi</b> kalıcı olarak yok olacaktır!</p>
+                    
+                    <div style="background:#fdf2f2; padding:15px; border-radius:5px; border:1px solid #fadbd8; margin-bottom:20px;">
+                        <label style="color:#c0392b; font-weight:bold; font-size:13px; display:block; margin-bottom:10px;">Onaylamak için aşağıdaki kutuya büyük harflerle "SİL" yazın:</label>
+                        <input type="text" id="thSil_DogrulamaText" class="search-bar" style="text-align:center; font-weight:bold; font-size:18px; width:150px; text-transform:uppercase;" autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer" style="justify-content:center; gap:15px;">
+                    <button class="action-btn btn-secondary" onclick="modalKapat('mukellefSilModal')" style="width:150px; margin:0;">Vazgeç</button>
+                    <button class="action-btn btn-danger" onclick="mukellefSil()" style="width:150px; background:#e74c3c;">Kalıcı Olarak Sil</button>
+                </div>
+            </div>
+        </div>
+
         <div id="profilModal" class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-header" style="background:#2980b9;">
@@ -2326,7 +2350,7 @@
                         <button type="button" class="table-btn btn-primary" style="background:#3498db; padding:6px 10px;" onclick="mukellefGoruntule('${m.vkn}')" title="Profili & Şifreleri Görüntüle"><i class="fas fa-eye"></i></button>
                         <button type="button" class="table-btn" style="background:#9b59b6; color:white; padding:6px 10px;" onclick="evrakCetelesiAc('${m.vkn}', '${m.unvan.replace(/'/g, "\\'")}')" title="Evrak & Teslimat Çetelesi"><i class="fas fa-file-archive"></i></button>
                         <button type="button" class="table-btn btn-edit" style="padding:6px 10px;" onclick="mukellefDuzenle('${m.vkn}')" title="Düzenle"><i class="fas fa-edit"></i></button>
-                        <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSil('${m.vkn}')" title="Sil"><i class="fas fa-trash"></i></button>
+                        <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSilAcModal('${m.vkn}')" title="Kalıcı Sil"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -2498,12 +2522,36 @@
         }
 
         // Sil butonuna tıklandığında
-        function mukellefSil(vkn) {
-            if (confirm("Bu mükellefe ait tüm veriler ve şifreler silinecektir. Emin misiniz?")) {
-                mukellefler = mukellefler.filter(m => m.vkn !== vkn);
-                localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
-                listeyiYenile();
+        // --- MÜKELLEF SİLME ONAY MOTORU ---
+        function mukellefSilAcModal(vkn) {
+            document.getElementById("thSil_Vkn").value = vkn;
+            document.getElementById("thSil_DogrulamaText").value = "";
+            modalAc('mukellefSilModal');
+        }
+
+        async function mukellefSil() {
+            let vkn = document.getElementById("thSil_Vkn").value;
+            if (!vkn) return;
+
+            let silmeText = document.getElementById("thSil_DogrulamaText").value;
+            if (silmeText.toUpperCase() !== "SİL") {
+                alert("Lütfen silme işlemini onaylamak için 'SİL' yazın!");
+                return;
             }
+
+            mukellefler = mukellefler.filter(m => m.vkn !== vkn);
+            localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+            
+            listeyiYenile();
+            cariPanoCiz();
+            if(typeof takvimCiz === "function") takvimCiz();
+            modalKapat('mukellefSilModal');
+
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-trash-alt" style="color:#e74c3c;"></i> Mükellef ve tüm hareketleri kalıcı olarak silindi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
 
         // Canlı Arama Motoru (Arama çubuğuna yazıldıkça tetiklenir)
@@ -2891,39 +2939,54 @@
                 document.getElementById('aylikOzetDonemi').value = donemInput;
             }
 
-            let gBrut = 0, gKdv = 0, gStopaj = 0, gNet = 0; // Gelir Değişkenleri
-            let dBrut = 0, dKdv = 0, dStopaj = 0, dNet = 0; // Gider Değişkenleri
+            let gBrut = 0, gKdv = 0, gStopaj = 0, gNet = 0; 
+            let dBrut = 0, dKdv = 0, dStopaj = 0, dNet = 0; 
+            
+            // AI Analiz Dizileri
+            let musteriGelirleri = [];
+            let ofisGiderleri = [];
 
             // 1. O Aya Ait Tüm Makbuzları Tara
             mukellefler.forEach(m => {
-                if(m.mukellefTuru === "SMMM") return; // Kendi firmamızı gelir tablosuna dahil etmiyoruz
+                if(m.mukellefTuru === "SMMM") return; 
+                let mGelir = 0;
                 if(m.hareketler) {
                     m.hareketler.forEach(h => {
-                        // TarihDüzz YYYY-MM-DD formatındadır. startsWith ile YYYY-MM kısmını eşleştiriyoruz
                         if(h.tur === "Makbuz" && h.tarihDüzz && h.tarihDüzz.startsWith(donemInput)) {
-                            gBrut += (h.brut || 0);
+                            let brutTutar = (h.brut || 0);
+                            gBrut += brutTutar;
                             gKdv += (h.kdv || 0);
                             gStopaj += (h.stopaj || 0);
                             gNet += (h.netTutar || h.tutar || 0);
+                            mGelir += brutTutar;
                         }
                     });
                 }
+                if(mGelir > 0) musteriGelirleri.push({unvan: m.unvan, tutar: mGelir});
             });
 
             // 2. O Aya Ait Tüm Ofis Giderlerini Tara
             giderIslemler.forEach(g => {
-                // "Ödeme" işlemleri borcu düşürür ama gider tablosuna yansımaz. Bize Fiş/Fatura lazım.
                 if(g.islemTipi !== "Ödeme" && g.tarihDüzz && g.tarihDüzz.startsWith(donemInput)) {
-                    dBrut += (g.brut || g.tutar || 0); // Eski kayıtlarda brut olmayabilir diye tutar fallback'i
+                    let gBrutTutar = (g.brut || g.tutar || 0);
+                    dBrut += gBrutTutar; 
                     dKdv += (g.kdv || 0);
                     dStopaj += (g.stopaj || 0);
                     dNet += (g.net || g.tutar || 0);
+                    
+                    // Kategoriye göre topla
+                    let mevcut = ofisGiderleri.find(x => x.kategori === g.tur);
+                    if(mevcut) mevcut.tutar += gBrutTutar;
+                    else ofisGiderleri.push({kategori: g.tur, tutar: gBrutTutar});
                 }
             });
 
-            // 3. Analitik Hesaplamalar (AI Yorumlama)
+            // Sıralamalar
+            musteriGelirleri.sort((a,b) => b.tutar - a.tutar);
+            ofisGiderleri.sort((a,b) => b.tutar - a.tutar);
+
             let odenecekKdv = gKdv - dKdv;
-            let ticariKar = gBrut - dBrut; // Net ticari kâr, KDV hariç brüt tutarlar üzerinden ölçülür
+            let ticariKar = gBrut - dBrut; 
 
             // 4. Arayüzü (UI) Güncelleme
             document.getElementById('aylikGelirBrut').textContent = formatMoney(gBrut) + " ₺";
@@ -2938,11 +3001,9 @@
 
             let kdvDurumEl = document.getElementById('aylikKdvDurum');
             if(odenecekKdv > 0) { 
-                kdvDurumEl.textContent = formatMoney(odenecekKdv) + " ₺ (Ödenecek)"; 
-                kdvDurumEl.style.color = "#8e44ad"; 
+                kdvDurumEl.textContent = formatMoney(odenecekKdv) + " ₺ (Ödenecek)"; kdvDurumEl.style.color = "#8e44ad"; 
             } else { 
-                kdvDurumEl.textContent = formatMoney(Math.abs(odenecekKdv)) + " ₺ (Devreden)"; 
-                kdvDurumEl.style.color = "#27ae60"; 
+                kdvDurumEl.textContent = formatMoney(Math.abs(odenecekKdv)) + " ₺ (Devreden)"; kdvDurumEl.style.color = "#27ae60"; 
             }
 
             document.getElementById('aylikStopajAlacagi').textContent = formatMoney(gStopaj) + " ₺";
@@ -2950,6 +3011,73 @@
             let ticariKarEl = document.getElementById('aylikTicariKar');
             ticariKarEl.textContent = formatMoney(ticariKar) + " ₺";
             ticariKarEl.style.color = ticariKar >= 0 ? "#27ae60" : "#c0392b";
+
+            // --- AI ANALİZ MOTORU ÇİZİMİ ---
+            let analizKutusu = document.getElementById("aiAnalizMotoru");
+            if(!analizKutusu) {
+                analizKutusu = document.createElement("div");
+                analizKutusu.id = "aiAnalizMotoru";
+                analizKutusu.style = "grid-column: 1 / -1; background:linear-gradient(135deg, #2c3e50, #34495e); border-radius:10px; padding:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1); margin-top:10px; color:white;";
+                document.getElementById('aylikOzetDonemi').parentElement.parentElement.nextElementSibling.appendChild(analizKutusu);
+            }
+
+            let gelirAnalizHtml = "";
+            musteriGelirleri.slice(0,5).forEach(mg => {
+                let yuzde = gBrut > 0 ? ((mg.tutar / gBrut) * 100).toFixed(1) : 0;
+                gelirAnalizHtml += `
+                <div style="margin-bottom:8px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <span style="color:#bdc3c7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${mg.unvan}</span>
+                        <strong style="color:#2ecc71;">%${yuzde}</strong>
+                    </div>
+                    <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                        <div style="width:${yuzde}%; background:#2ecc71; height:100%;"></div>
+                    </div>
+                </div>`;
+            });
+
+            let giderAnalizHtml = "";
+            ofisGiderleri.slice(0,5).forEach(og => {
+                let yuzde = dBrut > 0 ? ((og.tutar / dBrut) * 100).toFixed(1) : 0;
+                giderAnalizHtml += `
+                <div style="margin-bottom:8px; font-size:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <span style="color:#bdc3c7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${og.kategori}</span>
+                        <strong style="color:#e74c3c;">%${yuzde}</strong>
+                    </div>
+                    <div style="width:100%; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                        <div style="width:${yuzde}%; background:#e74c3c; height:100%;"></div>
+                    </div>
+                </div>`;
+            });
+
+            // AI Yorumu
+            let karYuzdesi = gBrut > 0 ? ((ticariKar / gBrut) * 100).toFixed(1) : 0;
+            let aiYorum = "";
+            if (karYuzdesi > 40) aiYorum = "Ofis mükemmel bir kârlılık oranına sahip. Giderler çok iyi kontrol ediliyor.";
+            else if (karYuzdesi > 20) aiYorum = "Kârlılık makul seviyede ancak gider kalemleri optimize edilerek artırılabilir.";
+            else if (karYuzdesi > 0) aiYorum = "Kritik kârlılık! Giderler gelire çok yakın. Tasarruf tedbirleri alınmalı.";
+            else aiYorum = "DİKKAT: Ofis bu ay zarar etmiş görünüyor. Acilen gider/gelir analizi yapılmalı!";
+
+            analizKutusu.innerHTML = `
+                <h3 style="color:#f1c40f; margin-bottom:15px; font-size:16px; border-bottom:1px dashed #7f8c8d; padding-bottom:10px;"><i class="fas fa-robot"></i> Yapay Zeka Finansal Değerlendirme Raporu</h3>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+                    <div>
+                        <h4 style="color:#2ecc71; margin-bottom:10px; font-size:13px;"><i class="fas fa-arrow-down"></i> En Çok Gelir Getiren 5 Müşteri</h4>
+                        ${gelirAnalizHtml || "<span style='color:#7f8c8d; font-size:12px;'>Kayıt yok.</span>"}
+                    </div>
+                    <div>
+                        <h4 style="color:#e74c3c; margin-bottom:10px; font-size:13px;"><i class="fas fa-arrow-up"></i> En Yüksek Gider Kalemleri</h4>
+                        ${giderAnalizHtml || "<span style='color:#7f8c8d; font-size:12px;'>Kayıt yok.</span>"}
+                    </div>
+                </div>
+
+                <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; margin-top:20px; border-left:4px solid #f1c40f;">
+                    <div style="color:#bdc3c7; font-size:12px; margin-bottom:5px;">Sistem Yorumu:</div>
+                    <div style="font-weight:bold; font-size:14px; color:#fff;">Bu ay Kâr Marjınız: <span style="color:${ticariKar >= 0 ? '#2ecc71' : '#e74c3c'};">%${karYuzdesi}</span>. ${aiYorum}</div>
+                </div>
+            `;
         }
 
         function cariPanoCiz() {
