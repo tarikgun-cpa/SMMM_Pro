@@ -402,7 +402,8 @@
             }
 
             /* Modalleri kağıt düzenine sok (Kaydırma ve Tek Sayfa Kesilme Sorunlarını Çözer) */
-            .modal-overlay { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
+            .modal-overlay[style*="display: none"] { display: none !important; }
+            .modal-overlay:not([style*="display: none"]) { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
             .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; }
             .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
 
