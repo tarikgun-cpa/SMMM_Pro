@@ -1469,10 +1469,17 @@
                                 <div class="form-group"><label>İletişim (Tel/E-Posta):</label><input type="text" id="kurIletisim" class="search-bar"></div>
                             </div>
                         </div>
-                        <div style="background:#fef9e7; border-left:4px solid #f1c40f; padding:15px; border-radius:6px;">
-                            <h4 style="color:#d35400; margin-bottom:10px; font-size:14px;"><i class="fas fa-file-signature"></i> Kocaeli Ticaret Odası (KOTO) Otomatik Dilekçe</h4>
-                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:10px;">Yukarıdaki bilgileri doldurduktan sonra tek tuşla KOTO Tescil dilekçenizi oluşturup kopyalayabilirsiniz.</p>
-                            <button class="action-btn" style="background:#f39c12; color:white; width:100%;" onclick="kotoDilekceKopyala()"><i class="fas fa-copy"></i> KOTO Tescil Dilekçesini Hazırla ve Kopyala</button>
+                        <div style="background:linear-gradient(to right, #f8f9fa, #ffffff); border:1px solid #e1e8ed; border-left:4px solid #8e44ad; padding:20px; border-radius:8px; margin-top:20px;">
+                            <h4 style="color:#2c3e50; margin-bottom:5px; font-size:15px; display:flex; align-items:center; gap:8px;"><i class="fas fa-print" style="color:#8e44ad;"></i> KOTO & Sicil Evrak Matbaası</h4>
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #eee; padding-bottom:10px;">Yukarıdaki bilgileri doldurduğunuzda aşağıdaki resmi evraklar otomatik olarak Word (.doc) formatında hazırlanır ve indirilir.</p>
+                            
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+                                <button class="action-btn" style="background:#2c3e50; color:white; font-size:12px; margin:0;" onclick="kotoEvrakIndir('sicil_tescil')"><i class="fas fa-file-word" style="color:#3498db;"></i> 1. Sicil Tescil Dilekçesi</button>
+                                <button class="action-btn" style="background:#2c3e50; color:white; font-size:12px; margin:0;" onclick="kotoEvrakIndir('koto_kayit')"><i class="fas fa-file-word" style="color:#2ecc71;"></i> 2. KOTO Kayıt Dilekçesi</button>
+                                <button class="action-btn" style="background:#2c3e50; color:white; font-size:12px; margin:0;" onclick="kotoEvrakIndir('taahhutname')"><i class="fas fa-file-word" style="color:#f1c40f;"></i> 3. Taahhütname (Madde 24)</button>
+                                <button class="action-btn" style="background:#2c3e50; color:white; font-size:12px; margin:0;" onclick="kotoEvrakIndir('oda_beyanname')"><i class="fas fa-file-word" style="color:#e67e22;"></i> 4. Oda Kayıt Beyannamesi</button>
+                                <button class="action-btn" style="background:#2c3e50; color:white; font-size:12px; margin:0;" onclick="kotoEvrakIndir('kimlik_kart')"><i class="fas fa-file-word" style="color:#e74c3c;"></i> 5. Üye Kimlik Kartı Talebi</button>
+                            </div>
                         </div>
                     </div>
 
@@ -5605,20 +5612,117 @@
             if(listelenen === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Kayıtlı kuruluş süreci bulunamadı. Yukarıdan yeni başlatabilirsiniz.</div>`;
         }
 
-        function kotoDilekceKopyala() {
-            let unvan = document.getElementById("kurUnvan").value || "..................................................";
+        // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU ---
+        function kotoEvrakIndir(belgeTuru) {
+            let unvan = document.getElementById("kurUnvan").value || ".............................................................";
             let sermaye = document.getElementById("kurSermaye").value || "...................";
-            let adres = document.getElementById("kurAdres").value || "..................................................";
+            let adres = document.getElementById("kurAdres").value || ".............................................................";
             let faaliyet = document.getElementById("kurFaaliyet").value || "...................";
+            let ortaklar = document.getElementById("kurOrtaklar").value || "...................";
+            let iletisim = document.getElementById("kurIletisim").value || "...................";
             let tarih = new Date().toLocaleDateString('tr-TR');
 
-            let dilekceMetni = `KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA\n\nOdakule / İZMİT\n\nOdanızın yetki sınırları içerisinde faaliyet göstermek üzere aşağıda unvanı ve bilgileri yazılı şirketimizin kuruluş belgeleri ekte sunulmuştur.\n\nŞirketimizin Türk Ticaret Kanunu ve ilgili mevzuat hükümleri çerçevesinde Ticaret Siciline Tescil ve Odanıza Kayıt işlemlerinin yapılmasını arz ederiz.\n\nSaygılarımızla,\n\nTarih: ${tarih}\n\nŞİRKET BİLGİLERİ:\nUnvanı: ${unvan}\nSermayesi: ${sermaye} TL\nMerkez Adresi: ${adres}\nFaaliyet Konusu (NACE): ${faaliyet}\n\nEKLER:\n1- Şirket Ana Sözleşmesi\n2- Kurucuların Nüfus Cüzdanı Suretleri\n3- Oda Kayıt Beyannamesi\n4- Rekabet Kurumu Payı Dekontu`;
+            // Word Dosyası İçin Gerekli HTML İskeleti
+            let htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><style>
+                body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; }
+                h3 { text-align: center; font-size: 14pt; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th, td { border: 1px solid black; padding: 8px; text-align: left; }
+                .right { text-align: right; }
+                .center { text-align: center; }
+            </style></head><body>`;
 
-            navigator.clipboard.writeText(dilekceMetni).then(() => {
-                alert("KOTO Tescil Dilekçesi panoya kopyalandı! Word'e veya WhatsApp'a yapıştırıp çıktı alabilirsiniz.");
-            }).catch(err => {
-                alert("Kopyalama başarısız oldu. Lütfen yetkileri kontrol edin.");
-            });
+            // Seçilen Belgeye Göre İçerik Oluşturma
+            if (belgeTuru === 'sicil_tescil') {
+                htmlContent += `
+                    <p class="right"><b>TARİH:</b> ${tarih}</p><br>
+                    <h3>KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜ'NE<br>KOCAELİ</h3><br>
+                    <p>Kocaeli ili dahilinde, <b>${adres}</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p>
+                    <p>Kuruluş tescili için gerekli evraklar ektedir. Türk Ticaret Kanunu ve ilgili kanun ve diğer hükümler çerçevesinde kuruluşumuzun tescil ve ilanını arz ederiz.</p>
+                    <br><p>Saygılarımızla,</p><br>
+                    <p><b>UNVAN:</b> ${unvan}</p>
+                    <p><b>İMZA:</b></p><br><br><br>
+                    <p><b>VERGİ DAİRESİ:</b> ...................................</p>
+                    <p><b>ADRES:</b> ${adres}</p>
+                    <p><b>TELEFON:</b> ${iletisim}</p>
+                `;
+            } 
+            else if (belgeTuru === 'koto_kayit') {
+                htmlContent += `
+                    <p class="right"><b>TARİH:</b> ${tarih}</p><br>
+                    <h3>KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA<br>KOCAELİ</h3><br>
+                    <p>Kocaeli ili dahilinde, <b>${adres}</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p>
+                    <p>Yapmakta olduğum işlerden ağırlıklı iş konumuz <b>${faaliyet}</b> işi olup, ağırlıklı iş koluma karşılık gelen NACE KODU ......................... dır. Odanıza kaydımın yapılmasını rica ederim.</p>
+                    <br><p>Saygılarımızla,</p><br>
+                    <p><b>UNVAN:</b> ${unvan}</p>
+                    <p><b>İMZA:</b></p><br><br><br>
+                    <p><b>VERGİ DAİRESİ:</b> ...................................</p>
+                    <p><b>ADRES:</b> ${adres}</p>
+                    <p><b>TELEFON:</b> ${iletisim}</p>
+                `;
+            }
+            else if (belgeTuru === 'taahhutname') {
+                htmlContent += `
+                    <h3>TAAHHÜTNAME<br><span style="font-size:11pt;">(TİCARET SİCİLİ YÖNETMELİĞİNİN 24. MADDESİ GEREĞİNCE)</span></h3>
+                    <h3>KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜ'NE</h3><br>
+                    <table>
+                        <tr><td width="30%"><b>İŞYERİ SAHİBİ / ŞİRKET UNVANI:</b></td><td>${unvan}</td></tr>
+                        <tr><td><b>İŞYERİNİN AÇIK ADRESİ:</b></td><td>${adres}</td></tr>
+                        <tr><td><b>SERMAYESİ:</b></td><td>${sermaye} TL</td></tr>
+                        <tr><td><b>İŞLETMENİN AÇILIŞ TARİHİ:</b></td><td>${tarih}</td></tr>
+                        <tr><td><b>FAALİYET KONUSU VE NACE:</b></td><td>${faaliyet}</td></tr>
+                        <tr><td><b>TELEFON VE E-POSTA:</b></td><td>${iletisim}</td></tr>
+                    </table>
+                    <br>
+                    <p>TİCARET SİCİLİ YÖNETMELİĞİNİN 24. MADDESİ'NİN BİRİNCİ FIKRASINA UYGUN OLARAK DÜZENLENEN BU TAAHHÜTNAMEDEKİ BİLGİLERİN DOĞRU OLDUĞUNU, YAPILACAK İNCELEME SONUCUNDA AKSİNE TESPİT YAPILMASI DURUMUNDA SORUMLULUĞU KABUL ETTİĞİMİ/ETTİĞİMİZİ BEYAN VE TAAHHÜT EDERİM/EDERİZ.</p>
+                    <br><br>
+                    <p class="right" style="padding-right: 50px;"><b>İMZA</b></p>
+                `;
+            }
+            else if (belgeTuru === 'oda_beyanname') {
+                htmlContent += `
+                    <h3>ODA KAYIT BEYANNAMESİ</h3>
+                    <p>Aşağıda yazılı bilgilerin gerçeğe uygun olduğunu beyan eder, ilgili yönetmelik hükümleri dahilinde Odaya kaydedilmemizi rica ederiz.</p>
+                    <p class="right"><b>TARİH:</b> ${tarih}</p>
+                    <p class="right" style="margin-bottom:30px;"><b>KAŞE VE İMZA:</b> ...................................</p>
+                    <table>
+                        <tr><td width="30%"><b>Ticaret Unvanı:</b></td><td>${unvan}</td></tr>
+                        <tr><td><b>Ticari İkametgahı:</b></td><td>${adres}</td></tr>
+                        <tr><td><b>Sermayesi:</b></td><td>${sermaye} TL</td></tr>
+                        <tr><td><b>Esas İştigal Konusu (NACE):</b></td><td>${faaliyet}</td></tr>
+                        <tr><td><b>İletişim Bilgileri:</b></td><td>${iletisim}</td></tr>
+                        <tr><td><b>Ortaklar ve Yetkililer:</b></td><td>${ortaklar}</td></tr>
+                    </table>
+                `;
+            }
+            else if (belgeTuru === 'kimlik_kart') {
+                htmlContent += `
+                    <p class="right"><b>TARİH:</b> ${tarih}</p><br>
+                    <h3>KİMLİK KARTI TALEP DİLEKÇESİ<br>KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA</h3><br>
+                    <p>Kocaeli Ticaret Odası üyeleri ile tüzel kişi ortak ve yetkilileri için düzenlenen kimlik kartları, gerçek kişilerin Odaya kayıtlı firmaları ile ilişkilerini gösterilmesi maksadıyla hazırlanmış olup, bu amaç dışındaki kullanımdan doğan sorumluluk kişilerin kendisine aittir.</p>
+                    <p>Yukarıda yazılı şartları okuduğumu ve kabul ettiğimi beyan eder, Kocaeli Ticaret Odası tarafından <b>${unvan}</b> firması ile ilgili olarak adıma kimlik kartı düzenlenmesini rica ederim.</p>
+                    <br><br>
+                    <table style="border:none;">
+                        <tr style="border:none;">
+                            <td style="border:none; width:50%; text-align:center;"><b>İSİM SOYİSİM</b><br>...................................</td>
+                            <td style="border:none; width:50%; text-align:center;"><b>İMZA</b><br>...................................</td>
+                        </tr>
+                    </table>
+                `;
+            }
+
+            htmlContent += `</body></html>`;
+
+            // HTML'i Microsoft Word'ün anlayacağı DOC Blob'una Çevirme
+            let blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement('a');
+            link.href = url;
+            link.download = belgeTuru + '_' + unvan.substring(0, 15) + '.doc';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
