@@ -699,6 +699,7 @@
             <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">♻️ Cari Hesaplar</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">📅 Mali Takvim</a></li>
             <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')">💳 Aylık Ödemeler</a></li>
+            <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')">🚀 Şirket Kuruluşu</a></li>
             <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
             <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#24099f; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
         </ul>
@@ -1430,6 +1431,67 @@
             </table>
         </div>
 
+        <div id="kurulusPaneli" class="view-section" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-rocket" style="color:#e74c3c;"></i> Şirket Kuruluş Merkezi</h1>
+                <button class="action-btn btn-primary" style="background:#e74c3c; margin:0;" onclick="yeniKurulusBaslat()"><i class="fas fa-plus"></i> Yeni Kuruluş Süreci Başlat</button>
+            </div>
+            
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="kurulusArama" class="search-bar" placeholder="Kurulmakta olan şirket ara..." oninput="kuruluslariListele()" style="width: 100%;">
+            </div>
+            
+            <div id="kurulusKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
+        </div>
+
+        <div id="kurulusYonetimModal" class="modal-overlay">
+            <div class="modal-box" style="max-width:800px;">
+                <div class="modal-header" style="background:#e74c3c;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-cogs"></i> Kuruluş Asistanı: <span id="mdlKurulusUnvan">Yeni Şirket</span></h3>
+                    <button class="modal-close" onclick="modalKapat('kurulusYonetimModal')">X</button>
+                </div>
+                <div class="modal-body" style="background:#f9fbfc; padding:20px;">
+                    <input type="hidden" id="kurulusId">
+                    
+                    <div class="cari-tabs" style="margin-bottom:15px;">
+                        <button class="cari-tab-btn active" id="btnKurTab1" onclick="kurulusSekmeSec('kurBilgiTab')"><i class="fas fa-info-circle"></i> Temel Bilgiler & KOTO</button>
+                        <button class="cari-tab-btn" id="btnKurTab2" onclick="kurulusSekmeSec('kurAdimTab')"><i class="fas fa-tasks"></i> Kuruluş Sonrası 15 Adım</button>
+                    </div>
+
+                    <div id="kurBilgiTab" style="display:block;">
+                        <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px;">
+                            <div class="form-grid">
+                                <div class="form-group full-width"><label>Planlanan Şirket Unvanı:</label><input type="text" id="kurUnvan" class="search-bar" placeholder="Örn: ABC Lojistik San. ve Tic. Ltd. Şti."></div>
+                                <div class="form-group"><label>Sermaye Tutarı (TL):</label><input type="text" id="kurSermaye" class="search-bar"></div>
+                                <div class="form-group"><label>Ortaklar ve Payları:</label><input type="text" id="kurOrtaklar" class="search-bar" placeholder="Örn: Ali Yılmaz (%50), Ayşe Demir (%50)"></div>
+                                <div class="form-group full-width"><label>Şirket Adresi:</label><textarea id="kurAdres" class="search-bar" rows="2"></textarea></div>
+                                <div class="form-group"><label>Faaliyet Konusu (NACE):</label><input type="text" id="kurFaaliyet" class="search-bar"></div>
+                                <div class="form-group"><label>İletişim (Tel/E-Posta):</label><input type="text" id="kurIletisim" class="search-bar"></div>
+                            </div>
+                        </div>
+                        <div style="background:#fef9e7; border-left:4px solid #f1c40f; padding:15px; border-radius:6px;">
+                            <h4 style="color:#d35400; margin-bottom:10px; font-size:14px;"><i class="fas fa-file-signature"></i> Kocaeli Ticaret Odası (KOTO) Otomatik Dilekçe</h4>
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:10px;">Yukarıdaki bilgileri doldurduktan sonra tek tuşla KOTO Tescil dilekçenizi oluşturup kopyalayabilirsiniz.</p>
+                            <button class="action-btn" style="background:#f39c12; color:white; width:100%;" onclick="kotoDilekceKopyala()"><i class="fas fa-copy"></i> KOTO Tescil Dilekçesini Hazırla ve Kopyala</button>
+                        </div>
+                    </div>
+
+                    <div id="kurAdimTab" style="display:none;">
+                        <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
+                            <p style="font-size:12px; color:#c0392b; font-weight:bold; margin-bottom:15px; border-bottom:1px dashed #fadbd8; padding-bottom:10px;">Şirket tescil edildikten sonra yapılması zorunlu yasal işlemler:</p>
+                            <div id="kurulusChecklist" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer" style="justify-content:space-between;">
+                    <button class="action-btn btn-danger" style="background:none; color:#e74c3c; border:1px solid #e74c3c;" onclick="kurulusSil()"><i class="fas fa-trash"></i> Süreci Sil</button>
+                    <button class="action-btn btn-primary" style="background:#e74c3c;" onclick="kurulusKaydet()">Bilgileri ve Adımları Kaydet</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ========================================== -->
         <!-- MALİ TAKVİM VE BEYANNAME MATRIX DASHBOARD -->
         <!-- ========================================== -->
@@ -2119,7 +2181,7 @@
                                 giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
                                 sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
                                 takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
-                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),
+                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),kurulusVeritabani: JSON.parse(localStorage.getItem('kurulusVeritabani') || "{}"),
                                 teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
                                 sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                                 sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2132,7 +2194,7 @@
 
         // Kullanıcı Giriş Kontrolü ve Buluttan SESSİZ Veri Çekme İşlemi
         auth.onAuthStateChanged(user => {
-            if (user) {
+                    if (user) {
                 let loginKutu = document.querySelector('.login-box');
                 if(loginKutu) {
                     document.getElementById('loginEkran').style.display = 'flex';
@@ -2152,6 +2214,7 @@
                         if(data.takvimVeritabanı) { localStorage.setItem('takvimVeritabanı', JSON.stringify(data.takvimVeritabanı)); takvimVeritabanı = data.takvimVeritabanı; }
                         if(data.danismanlikVeritabani) { localStorage.setItem('danismanlikVeritabani', JSON.stringify(data.danismanlikVeritabani)); danismanlikVeritabani = data.danismanlikVeritabani; }
                         if(data.odemeVeritabani) { localStorage.setItem('odemeVeritabani', JSON.stringify(data.odemeVeritabani)); odemeVeritabani = data.odemeVeritabani; }
+                        if(data.kurulusVeritabani) { localStorage.setItem('kurulusVeritabani', JSON.stringify(data.kurulusVeritabani)); kurulusVeritabani = data.kurulusVeritabani; }
                         if(data.teklifler) { localStorage.setItem('teklifler', JSON.stringify(data.teklifler)); kayitliTeklifler = data.teklifler; }
                         if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
                         if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
@@ -2175,7 +2238,7 @@
                             giderKategorileri: giderKategorileri,
                             sistemAyarlari: sistemAyarlari,
                             takvimVeritabanı: takvimVeritabanı,
-                            danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),
+                            danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),kurulusVeritabani: JSON.parse(localStorage.getItem('kurulusVeritabani') || "{}"),
                             teklifler: kayitliTeklifler,
                             sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                             sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2941,6 +3004,7 @@
             let cariPaneli = document.getElementById('cariPaneli');
             let takvimPaneli = document.getElementById('takvimPaneli');
             let odemelerPaneli = document.getElementById('odemelerPaneli');
+            let kurulusPaneli = document.getElementById('kurulusPaneli');
 
             if(masterDash) masterDash.style.display = 'none';
             if(liste) liste.style.display = 'none'; 
@@ -2954,6 +3018,8 @@
             if(document.getElementById('menuMaster')) document.getElementById('menuMaster').classList.remove('active');
             if(odemelerPaneli) odemelerPaneli.style.display = 'none';
             if(document.getElementById('menuOdemeler')) document.getElementById('menuOdemeler').classList.remove('active');
+            if(kurulusPaneli) kurulusPaneli.style.display = 'none';
+            if(document.getElementById('menuKurulus')) document.getElementById('menuKurulus').classList.remove('active');
             document.getElementById('menuMukellef').classList.remove('active');
             document.getElementById('menuSihirbaz').classList.remove('active');
             document.getElementById('menuTeklifler').classList.remove('active');
@@ -2996,6 +3062,10 @@
                 let d = new Date(); let dStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                 if(!document.getElementById("odemePaneliDonem").value) document.getElementById("odemePaneliDonem").value = dStr;
                 odemeleriListele(); 
+            }
+
+            else if (hedefPaneli === 'kurulusPaneli') { 
+                if(kurulusPaneli) kurulusPaneli.style.display = 'block'; document.getElementById('menuKurulus').classList.add('active'); kuruluslariListele(); 
             }
         }
 
@@ -5394,6 +5464,161 @@
             toast.innerHTML = `<i class="fas fa-edit" style="color:#f39c12;"></i> Kayıt başarıyla güncellendi.`;
             toast.className = "show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
+        }
+        // --- ŞİRKET KURULUŞ & KOTO ASİSTAN MOTORU ---
+        let kurulusVeritabani = JSON.parse(localStorage.getItem('kurulusVeritabani')) || {};
+
+        const kurulusAdimlariListe = [
+            "1. Türmob ve GİB Sözleşmelerinin Yapılması",
+            "2. İmza Sirküleri Çıkartılması",
+            "3. Dijital Vergi Dairesi Şifresi Alınması",
+            "4. Vergi Levhasının Oluşturulması",
+            "5. E-Tebligat Başvuru Formu (15 Gün)",
+            "6. Gerçek Faydalanıcı Bilgi Formu (1 Ay)",
+            "7. E-Defter Başvurusu",
+            "8. Mali Mühür Başvurusu",
+            "9. Kira Kontratı & Damga Vergisi Beyannamesi",
+            "10. UETS Aktivasyonu",
+            "11. KEP Adresi Alınması",
+            "12. SGK Tebligat Başvurusu",
+            "13. E-Fatura Başvurusu",
+            "14. Karar Defterleri İçin Ortaklara E-İmza",
+            "15. SGK Dosya Açılışı ve Şifre (Personel varsa)"
+        ];
+
+        function kurulusSekmeSec(tabId) {
+            document.getElementById('kurBilgiTab').style.display = 'none';
+            document.getElementById('kurAdimTab').style.display = 'none';
+            document.getElementById('btnKurTab1').classList.remove('active');
+            document.getElementById('btnKurTab1').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab1').style.color = '#333';
+            document.getElementById('btnKurTab2').classList.remove('active');
+            document.getElementById('btnKurTab2').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab2').style.color = '#333';
+
+            document.getElementById(tabId).style.display = 'block';
+            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : 'btnKurTab2';
+            document.getElementById(btn).classList.add('active');
+            document.getElementById(btn).style.background = '#e74c3c';
+            document.getElementById(btn).style.color = 'white';
+        }
+
+        function yeniKurulusBaslat() {
+            let id = "KUR_" + Date.now();
+            kurulusVeritabani[id] = {
+                id: id, unvan: "", sermaye: "", ortaklar: "", adres: "", faaliyet: "", iletisim: "",
+                adımlar: {}, olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
+            };
+            kurulusModalAc(id);
+        }
+
+        function kurulusModalAc(id) {
+            let k = kurulusVeritabani[id];
+            document.getElementById("kurulusId").value = id;
+            document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
+            document.getElementById("kurUnvan").value = k.unvan || "";
+            document.getElementById("kurSermaye").value = k.sermaye || "";
+            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
+            document.getElementById("kurAdres").value = k.adres || "";
+            document.getElementById("kurFaaliyet").value = k.faaliyet || "";
+            document.getElementById("kurIletisim").value = k.iletisim || "";
+
+            let chkHtml = "";
+            kurulusAdimlariListe.forEach((adim, index) => {
+                let isChecked = k.adımlar["adim_"+index] ? "checked" : "";
+                let bg = isChecked ? "#eafaf1" : "#f8f9fa";
+                let border = isChecked ? "#2ecc71" : "#ddd";
+                chkHtml += `
+                <label style="display:flex; align-items:flex-start; gap:8px; font-size:13px; background:${bg}; padding:10px; border-radius:6px; border:1px solid ${border}; cursor:pointer; transition:0.2s;">
+                    <input type="checkbox" id="kurChk_${index}" ${isChecked} style="width:18px; height:18px; margin-top:2px;">
+                    <div style="color:#2c3e50; font-weight:${isChecked ? 'bold' : 'normal'};">${adim}</div>
+                </label>`;
+            });
+            document.getElementById("kurulusChecklist").innerHTML = chkHtml;
+
+            kurulusSekmeSec('kurBilgiTab');
+            modalAc('kurulusYonetimModal');
+        }
+
+        function kurulusKaydet() {
+            let id = document.getElementById("kurulusId").value;
+            let k = kurulusVeritabani[id];
+            
+            k.unvan = document.getElementById("kurUnvan").value;
+            k.sermaye = document.getElementById("kurSermaye").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.adres = document.getElementById("kurAdres").value;
+            k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.iletisim = document.getElementById("kurIletisim").value;
+
+            kurulusAdimlariListe.forEach((adim, index) => {
+                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+            });
+
+            localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
+            modalKapat('kurulusYonetimModal');
+            kuruluslariListele();
+        }
+
+        function kurulusSil() {
+            let id = document.getElementById("kurulusId").value;
+            if(confirm("Bu kuruluş sürecini tamamen silmek istediğinize emin misiniz?")) {
+                delete kurulusVeritabani[id];
+                localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
+                modalKapat('kurulusYonetimModal');
+                kuruluslariListele();
+            }
+        }
+
+        function kuruluslariListele() {
+            let arama = document.getElementById("kurulusArama").value.toLowerCase().trim();
+            let container = document.getElementById("kurulusKartlariAlani");
+            container.innerHTML = "";
+
+            let listelenen = 0;
+            Object.values(kurulusVeritabani).forEach(k => {
+                let unvanLabel = k.unvan || "İsimsiz Şirket Taslağı";
+                if(arama && unvanLabel.toLowerCase().indexOf(arama) === -1) return;
+                
+                listelenen++;
+                let tamamlananAdim = 0;
+                kurulusAdimlariListe.forEach((adim, i) => { if(k.adımlar["adim_"+i]) tamamlananAdim++; });
+                let yuzde = Math.round((tamamlananAdim / 15) * 100);
+                
+                let barRenk = yuzde === 100 ? "#27ae60" : (yuzde > 0 ? "#e74c3c" : "#95a5a6");
+
+                container.innerHTML += `
+                <div class="company-badge" onclick="kurulusModalAc('${k.id}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
+                    <div style="font-weight:bold; color:#2c3e50; font-size:14px; margin-bottom:5px;">${unvanLabel}</div>
+                    <div style="font-size:11px; color:#7f8c8d; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Dosya Açılış: ${k.olusturmaTarihi}</div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed #f4f6f9;">
+                        <span style="font-size:11px; color:#555;">Kuruluş Süreci: <b>${tamamlananAdim}/15 Adım</b></span>
+                        <span style="font-size:12px; font-weight:bold; color:${barRenk};">%${yuzde} Tamam</span>
+                    </div>
+                    <div style="width:100%; background:#fcf2f2; height:6px; border-radius:3px; margin-top:8px; overflow:hidden;">
+                        <div style="width:${yuzde}%; background:${barRenk}; height:100%; transition: 0.4s;"></div>
+                    </div>
+                </div>`;
+            });
+
+            if(listelenen === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Kayıtlı kuruluş süreci bulunamadı. Yukarıdan yeni başlatabilirsiniz.</div>`;
+        }
+
+        function kotoDilekceKopyala() {
+            let unvan = document.getElementById("kurUnvan").value || "..................................................";
+            let sermaye = document.getElementById("kurSermaye").value || "...................";
+            let adres = document.getElementById("kurAdres").value || "..................................................";
+            let faaliyet = document.getElementById("kurFaaliyet").value || "...................";
+            let tarih = new Date().toLocaleDateString('tr-TR');
+
+            let dilekceMetni = `KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA\n\nOdakule / İZMİT\n\nOdanızın yetki sınırları içerisinde faaliyet göstermek üzere aşağıda unvanı ve bilgileri yazılı şirketimizin kuruluş belgeleri ekte sunulmuştur.\n\nŞirketimizin Türk Ticaret Kanunu ve ilgili mevzuat hükümleri çerçevesinde Ticaret Siciline Tescil ve Odanıza Kayıt işlemlerinin yapılmasını arz ederiz.\n\nSaygılarımızla,\n\nTarih: ${tarih}\n\nŞİRKET BİLGİLERİ:\nUnvanı: ${unvan}\nSermayesi: ${sermaye} TL\nMerkez Adresi: ${adres}\nFaaliyet Konusu (NACE): ${faaliyet}\n\nEKLER:\n1- Şirket Ana Sözleşmesi\n2- Kurucuların Nüfus Cüzdanı Suretleri\n3- Oda Kayıt Beyannamesi\n4- Rekabet Kurumu Payı Dekontu`;
+
+            navigator.clipboard.writeText(dilekceMetni).then(() => {
+                alert("KOTO Tescil Dilekçesi panoya kopyalandı! Word'e veya WhatsApp'a yapıştırıp çıktı alabilirsiniz.");
+            }).catch(err => {
+                alert("Kopyalama başarısız oldu. Lütfen yetkileri kontrol edin.");
+            });
         }
     </script>
 </body>
