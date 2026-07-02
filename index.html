@@ -584,6 +584,72 @@
         /* Ücret Sihirbazı Fişini Daraltma */
         .receipt-card { width: 320px !important; padding: 15px 20px; }
         .receipt-item { font-size: 13px; margin-bottom: 6px; }
+
+        /* ========================================= */
+        /* --- YENİ: CEP TELEFONU (MOBİL) CİLALARI --- */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            /* 1. PC'de yan yana (3'lü, 2'li) dizilen kutuları telefonda alt alta al */
+            div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* (İstisna: Cari pano ve takvim özet kartları telefonda 2'li kalsın) */
+            #cariPaneli .summary-cards, #takvimPaneli .summary-cards { 
+                grid-template-columns: repeat(2, 1fr) !important; 
+            }
+
+            /* 2. PC'de yan yana duran buton gruplarını ve filtreleri alt alta yay */
+            .list-header-actions > div[style*="display: flex"],
+            .list-header-actions > div[style*="display:flex"],
+            div[style*="justify-content:space-between"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+            }
+
+            /* 3. Butonları parmakla dokunması kolay olsun diye %100 genişliğe çıkar */
+            .action-btn {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-bottom: 5px !important;
+                justify-content: center !important;
+            }
+
+            /* 4. Modalleri (Açılır pencereleri) telefonda tam ekran (Uygulama gibi) yap */
+            .modal-box {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 100vh !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .modal-body {
+                flex: 1;
+                overflow-y: auto !important;
+            }
+
+            /* 5. Ekran kenarındaki boşlukları azaltarak alanı genişlet */
+            .main-content {
+                padding: 10px !important;
+            }
+
+            /* 6. Arama çubuklarını ve Inputları %100 yap */
+            .search-bar, input[type="month"] {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            
+            /* 7. Takvim Checkbox alanlarını düzenle */
+            label[style*="display:flex; align-items:center; gap:10px;"] {
+                white-space: normal !important;
+                font-size: 13px !important;
+            }
+        }
+
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
