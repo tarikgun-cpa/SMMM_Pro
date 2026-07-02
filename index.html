@@ -379,6 +379,9 @@
 
         @media print {
             @page { margin: 1cm; size: A4; } /* A4 kağıt ve kenar boşluğu */
+            
+            /* (SORUN 2 VE 3'ÜN ÇÖZÜMÜ) Sayfa Kesilmelerini ve Boş Sayfaları Önleyen Temel Ayar */
+            html, body { height: auto !important; overflow: visible !important; background: white !important; }
 
             /* Ana iskeleti, mobil menüyü ve arka planları tamamen gizle */
             .sidebar, .mobile-header, #loginEkran, .main-content > *:not(.modal-overlay) { display: none !important; }
@@ -398,10 +401,10 @@
                 background: white;
             }
 
-            /* Modalleri kağıt düzenine sok (Kaydırma sorunlarını çözer) */
-            .modal-overlay { position: absolute !important; top: 0 !important; left: 0 !important; background: transparent !important; align-items: flex-start !important; padding: 0 !important; }
-            .modal-box { box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; overflow: visible !important; }
-            .modal-body { overflow: visible !important; padding: 0 !important; }
+            /* Modalleri kağıt düzenine sok (Kaydırma ve Tek Sayfa Kesilme Sorunlarını Çözer) */
+            .modal-overlay { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
+            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+            .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
 
             /* Ekranda görünen gereksiz butonları ve arama kutularını gizle */
             .modal-header, .modal-footer, .no-print, button, #tahsilatKutu, #mutabakatKutu, #giderOdemeKutu { display: none !important; }
@@ -409,6 +412,7 @@
             /* Kağıt üst bilgisini (Antetli Kısım) aktif et */
             .print-header { 
                 display: flex !important; 
+                flex-direction: row !important;
                 align-items: center; 
                 border-bottom: 3px solid #2c3e50; 
                 padding-bottom: 15px; 
@@ -426,8 +430,13 @@
             tr { page-break-inside: avoid !important; page-break-after: auto; }
             th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; white-space: normal !important; }
             
-            /* Üstteki özet bilgi kutularını yazdırırken flex düzenine sok */
-            #printEkstreAlan > div:first-child, #printGiderEkstreAlan > div:first-child { display: flex !important; }
+            /* (SORUN 1'İN ÇÖZÜMÜ) Üstteki özet bilgi kutularını yazdırırken zorla yan yana (row) diz */
+            #printEkstreAlan > div:nth-child(2), #printGiderEkstreAlan > div:nth-child(2), 
+            div[style*="justify-content:space-between"] { 
+                display: flex !important; 
+                flex-direction: row !important; 
+                justify-content: space-between !important; 
+            }
         }
 
         /* --- LOGİN (GİRİŞ) EKRANI STİLLERİ --- */
