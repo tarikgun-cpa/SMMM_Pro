@@ -915,10 +915,7 @@
                             <label>Ticaret Sicil No / Dosya No:</label>
                             <input type="text" id="ticaretSicilNo">
                         </div>
-                        <div class="form-group">
-                            <label>KEP Adresi (Varsa):</label>
-                            <input type="text" id="kepAdresi">
-                        </div>
+                        
                     </div>
                 </div>
 
@@ -1083,14 +1080,32 @@
                                     <input type="text" id="kepEntegrator" placeholder="Örn: PTT KEP, Türkkep vb.">
                                 </div>
                                 <div class="form-group">
+                                    <label>KEP Adresi:</label>
+                                    <input type="text" id="kepAdresi" placeholder="Örn: firma@hs01.kep.tr">
+                                </div>
+                                <div class="form-group full-width">
                                     <label>Kullanıcı Adı / T.C.:</label>
                                     <input type="text" id="kepKullanici">
                                 </div>
-                                <div class="form-group password-group full-width">
+                                <div class="form-group password-group">
                                     <label>Şifre:</label>
                                     <div class="password-wrapper">
                                         <input type="password" id="kepSifre">
                                         <button type="button" class="toggle-pwd" onclick="togglePassword('kepSifre')">Göster</button>
+                                    </div>
+                                </div>
+                                <div class="form-group password-group">
+                                    <label>Parola:</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" id="kepParola">
+                                        <button type="button" class="toggle-pwd" onclick="togglePassword('kepParola')">Göster</button>
+                                    </div>
+                                </div>
+                                <div class="form-group password-group full-width">
+                                    <label>Güvenlik Sözcüğü:</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" id="kepGuvenlik">
+                                        <button type="button" class="toggle-pwd" onclick="togglePassword('kepGuvenlik')">Göster</button>
                                     </div>
                                 </div>
                             </div>
@@ -2732,7 +2747,9 @@
                     <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">Mali Mühür, KEP & E-Fatura</th></tr>
                     <tr><th>Mühür Bitiş / Entegratör:</th><td>Bitiş: ${m.muhurBitis ? parseTR(m.muhurBitis) : '-'}${btnCopy(m.muhurBitis)} | Ent: ${m.eimzaEntegrator || '-'}${btnCopy(m.eimzaEntegrator)}</td></tr>
                     <tr><th>Mali Mühür PIN / PUK:</th><td>PIN: ${m.muhurPin || '-'}${btnCopy(m.muhurPin)} | PUK: ${m.muhurGuvenlik || '-'}${btnCopy(m.muhurGuvenlik)}</td></tr>
-                    <tr><th>KEP Ent. / Kul. / Şifre:</th><td>${m.kepEntegrator || '-'} | Kul: ${m.kepKullanici || '-'}${btnCopy(m.kepKullanici)} | Şifre: ${m.kepSifre || '-'}${btnCopy(m.kepSifre)}</td></tr>
+                    <tr><th>KEP Ent. / Adresi:</th><td>Ent: ${m.kepEntegrator || '-'} | Adres: ${m.kepAdresi || '-'}${btnCopy(m.kepAdresi)}</td></tr>
+                    <tr><th>KEP Kul. / Şifre / Parola:</th><td>Kul: ${m.kepKullanici || '-'}${btnCopy(m.kepKullanici)} | Şifre: ${m.kepSifre || '-'}${btnCopy(m.kepSifre)} | Parola: ${m.kepParola || '-'}${btnCopy(m.kepParola)}</td></tr>
+                    <tr><th>KEP Güvenlik Sözcüğü:</th><td>${m.kepGuvenlik || '-'}${btnCopy(m.kepGuvenlik)}</td></tr>
                     <tr><th>E-Fatura Ent. / Kul. / Şifre:</th><td>${m.efaturaEntegrator || '-'} | Kul: ${m.efaturaKullanici || '-'}${btnCopy(m.efaturaKullanici)} | Şifre: ${m.efaturaSifre || '-'}${btnCopy(m.efaturaSifre)}</td></tr>
                     
                     <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">E-Devlet Portalı</th></tr>
