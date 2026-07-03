@@ -1056,7 +1056,7 @@
                             <div class="form-grid">
                                 <div class="form-group full-width">
                                     <label>Kullanıcı T.C. Kimlik No:</label>
-                                    <input type="text" id="sgkTcNo" maxlength="11">
+                                    <input type="text" id="sgkTcNo" placeholder="Örn: 12345678901-1">
                                 </div>
                                 <div class="form-group password-group">
                                     <label>Sistem Şifresi:</label>
@@ -2723,9 +2723,20 @@
                     <tr><th colspan="2" style="background:#ffe6cc; text-align:center; color:#d35400;">D. PORTAL ŞİFRELERİ</th></tr>
                     <tr><th>E-Beyanname Kullanıcı:</th><td>${m.gibKullaniciKodu || '-'}${btnCopy(m.gibKullaniciKodu)}</td></tr>
                     <tr><th>E-Beyanname Şifre/Parola:</th><td>Şifre: ${m.gibSifre || '-'}${btnCopy(m.gibSifre)} | Parola: ${m.gibParola || '-'}${btnCopy(m.gibParola)}</td></tr>
-                    <tr><th>SGK TCKN / Sistem Şifresi:</th><td>${m.sgkTcNo || '-'}${btnCopy(m.sgkTcNo)} | Sistem: ${m.sgkSistemSifre || '-'}${btnCopy(m.sgkSistemSifre)}</td></tr>
+                    
+                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">SGK & İŞKUR Portalları</th></tr>
+                    <tr><th>SGK Kul.Kodu / Sistem Şifresi:</th><td>${m.sgkTcNo || '-'}${btnCopy(m.sgkTcNo)} | Sistem: ${m.sgkSistemSifre || '-'}${btnCopy(m.sgkSistemSifre)}</td></tr>
                     <tr><th>SGK İşyeri Şifresi:</th><td>${m.sgkIsyeriSifre || '-'}${btnCopy(m.sgkIsyeriSifre)}</td></tr>
+                    <tr><th>İŞKUR Kullanıcı / Şifre:</th><td>Kul: ${m.iskurKullanici || '-'}${btnCopy(m.iskurKullanici)} | Şifre: ${m.iskurSifre || '-'}${btnCopy(m.iskurSifre)}</td></tr>
+                    
+                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">Mali Mühür, KEP & E-Fatura</th></tr>
+                    <tr><th>Mühür Bitiş / Entegratör:</th><td>Bitiş: ${m.muhurBitis ? parseTR(m.muhurBitis) : '-'}${btnCopy(m.muhurBitis)} | Ent: ${m.eimzaEntegrator || '-'}${btnCopy(m.eimzaEntegrator)}</td></tr>
                     <tr><th>Mali Mühür PIN / PUK:</th><td>PIN: ${m.muhurPin || '-'}${btnCopy(m.muhurPin)} | PUK: ${m.muhurGuvenlik || '-'}${btnCopy(m.muhurGuvenlik)}</td></tr>
+                    <tr><th>KEP Ent. / Kul. / Şifre:</th><td>${m.kepEntegrator || '-'} | Kul: ${m.kepKullanici || '-'}${btnCopy(m.kepKullanici)} | Şifre: ${m.kepSifre || '-'}${btnCopy(m.kepSifre)}</td></tr>
+                    <tr><th>E-Fatura Ent. / Kul. / Şifre:</th><td>${m.efaturaEntegrator || '-'} | Kul: ${m.efaturaKullanici || '-'}${btnCopy(m.efaturaKullanici)} | Şifre: ${m.efaturaSifre || '-'}${btnCopy(m.efaturaSifre)}</td></tr>
+                    
+                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">E-Devlet Portalı</th></tr>
+                    <tr><th>E-Devlet T.C. / Şifre:</th><td>TC: ${m.edevletTc || '-'}${btnCopy(m.edevletTc)} | Şifre: ${m.edevletSifre || '-'}${btnCopy(m.edevletSifre)}</td></tr>
                     ${dinamikSifrelerHtml}
 
                     <tr><th colspan="2" style="background:#f8cecc; text-align:center;">E. NOTLAR VE İSTİSNALAR</th></tr>
