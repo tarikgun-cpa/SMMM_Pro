@@ -457,10 +457,14 @@
             /* Tablo arka plan renklerini zorla bas */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            /* Tabloların sayfa ortasında bölünmesini engelle */
-            table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; margin-bottom: 20px !important;}
+            /* Lüks Rapor Tablosu ve Sayfa Kesilme Önlemi */
+            table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; margin-bottom: 30px !important; border: 1px solid #bdc3c7 !important; }
             tr { page-break-inside: avoid !important; page-break-after: auto; }
-            th, td { border: 1px solid #ccc !important; padding: 8px !important; font-size: 12px !important; white-space: normal !important; }
+            th { border: 1px solid #bdc3c7 !important; padding: 10px 12px !important; font-size: 11pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; width: 35% !important; background-color: #f4f6f9 !important; }
+            td { border: 1px solid #bdc3c7 !important; padding: 10px 12px !important; font-size: 11pt !important; color: #34495e !important; width: 65% !important; }
+            
+            /* Kategori Başlık Satırları (A. Temel Bilgiler vb.) */
+            tr.kategori-baslik th { text-align: center !important; font-size: 12pt !important; letter-spacing: 1px !important; padding: 12px !important; background-color: #2c3e50 !important; color: white !important; border-bottom: 2px solid #34495e !important; }
             
             /* (SORUN 1'İN ÇÖZÜMÜ) Üstteki özet bilgi kutularını yazdırırken zorla yan yana (row) diz */
             #printEkstreAlan > div:nth-child(2), #printGiderEkstreAlan > div:nth-child(2), 
@@ -2801,62 +2805,63 @@
                     <img src="SMMM Logo.png" alt="Logo">
                     <div class="print-header-text">
                         <h2>Tarık GÜN</h2>
-                        <p>Serbest Muhasebeci Mali Müşavir | Mükellef Bilgi Formu</p>
+                        <p>Serbest Muhasebeci Mali Müşavir | Mükellef Kurumsal Bilgi Formu</p>
                     </div>
                 </div>
 
-                <h2 style="text-align:center; color:#2c3e50; border-bottom:2px solid #3498db; padding-bottom:10px; margin-top:0;">${m.unvan || 'Belirtilmedi'}</h2>
+                <h2 style="text-align:center; color:#2c3e50; border-bottom:3px double #3498db; padding-bottom:15px; margin-bottom:20px; margin-top:0; font-size:16pt;">${m.unvan || 'Belirtilmedi'}</h2>
                 
                 <table>
-                    <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">A. TEMEL BİLGİLER</th></tr>
-                    <tr><th>VKN / TCKN:</th><td>${m.vkn || '-'}${btnCopy(m.vkn)}</td></tr>
+                    <tr class="kategori-baslik"><th colspan="2">A. KURUMSAL TEMEL BİLGİLER</th></tr>
+                    <tr><th>VKN / TCKN:</th><td><strong style="font-size:13pt; letter-spacing:1px;">${m.vkn || '-'}</strong>${btnCopy(m.vkn)}</td></tr>
                     <tr><th>Vergi Dairesi:</th><td>${m.vergiDairesi || '-'}</td></tr>
                     <tr><th>Mükellef Türü:</th><td>${m.mukellefTuru || '-'}</td></tr>
                     <tr><th>Faaliyet (NACE):</th><td>${m.naceKodu || '-'}</td></tr>
-                    <tr><th>İşe Başlama:</th><td>${m.iseBaslama ? parseTR(m.iseBaslama) : '-'}</td></tr>
+                    <tr><th>İşe Başlama Tarihi:</th><td>${m.iseBaslama ? parseTR(m.iseBaslama) : '-'}</td></tr>
                     <tr><th>Muhasebe Sistemi:</th><td>${m.muhasebeSistemi || '-'}</td></tr>
                     
-                    <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">B. İLETİŞİM & TEMSİLCİ BİLGİLERİ</th></tr>
+                    <tr class="kategori-baslik"><th colspan="2">B. İLETİŞİM & TEMSİLCİ BİLGİLERİ</th></tr>
+                    <tr><th>Şirket Adresi:</th><td>${m.adres || '-'}</td></tr>
                     <tr><th>Telefon:</th><td>${m.telefon || '-'}${btnCopy(m.telefon)}</td></tr>
-                    <tr><th>E-Posta:</th><td>${m.eposta || '-'}${btnCopy(m.eposta)}</td></tr>
-                    <tr><th>Adres:</th><td>${m.adres || '-'}</td></tr>
-                    <tr><th>Ticaret Sicil No:</th><td>${m.ticaretSicilNo || '-'}${btnCopy(m.ticaretSicilNo)}</td></tr>
+                    <tr><th>E-Posta Adresi:</th><td>${m.eposta || '-'}${btnCopy(m.eposta)}</td></tr>
+                    <tr><th>Ticaret Sicil / Dosya No:</th><td>${m.ticaretSicilNo || '-'}${btnCopy(m.ticaretSicilNo)}</td></tr>
                     <tr><th>MERSİS No:</th><td>${m.mersisNo || '-'}${btnCopy(m.mersisNo)}</td></tr>
-                    <tr><th>Temsilci Adı:</th><td>${m.temsilciAd || '-'}</td></tr>
+                    <tr><th>Yetkili / Temsilci Adı:</th><td>${m.temsilciAd || '-'}</td></tr>
                     <tr><th>Temsilci TCKN:</th><td>${m.temsilciTc || '-'}${btnCopy(m.temsilciTc)}</td></tr>
-                    <tr><th>Temsilci Tel:</th><td>${m.temsilciTel || '-'}${btnCopy(m.temsilciTel)}</td></tr>
+                    <tr><th>Temsilci Telefonu:</th><td>${m.temsilciTel || '-'}${btnCopy(m.temsilciTel)}</td></tr>
 
-                    <tr><th colspan="2" style="background:#d5e8d4; text-align:center;">C. E-BELGE & BİLDİRİM BİLGİLERİ</th></tr>
+                    <tr class="kategori-baslik"><th colspan="2">C. E-BELGE & SİCİL BİLGİLERİ</th></tr>
                     <tr><th>E-Fatura Mükellefiyeti:</th><td>${m.eFaturaDurum || '-'}</td></tr>
                     <tr><th>E-Defter Mükellefiyeti:</th><td>${m.eDefterDurum || '-'}</td></tr>
-                    <tr><th>E-Arşiv Durumu:</th><td>${m.eArsivDurum || '-'}</td></tr>
-                    <tr><th>SGK Sicil No:</th><td>${m.sgkSicil || '-'}${btnCopy(m.sgkSicil)}</td></tr>
+                    <tr><th>E-Arşiv Fatura:</th><td>${m.eArsivDurum || '-'}</td></tr>
+                    <tr><th>SGK İşyeri Sicil No:</th><td>${m.sgkSicil || '-'}${btnCopy(m.sgkSicil)}</td></tr>
                     
-                    <tr><th colspan="2" style="background:#ffe6cc; text-align:center; color:#d35400;">D. PORTAL ŞİFRELERİ</th></tr>
-                    <tr><th>E-Beyanname Kullanıcı:</th><td>${m.gibKullaniciKodu || '-'}${btnCopy(m.gibKullaniciKodu)}</td></tr>
-                    <tr><th>E-Beyanname Şifre/Parola:</th><td>Şifre: ${m.gibSifre || '-'}${btnCopy(m.gibSifre)} | Parola: ${m.gibParola || '-'}${btnCopy(m.gibParola)}</td></tr>
+                    <tr class="kategori-baslik"><th colspan="2">D. SİSTEM & PORTAL ŞİFRELERİ</th></tr>
+                    <tr><td colspan="2" style="background:#f9fbfc; padding:5px; border-bottom:1px solid #ccc; font-weight:bold; color:#d35400; text-align:center;">GİB / E-Beyanname Şifreleri</td></tr>
+                    <tr><th>Kullanıcı Kodu:</th><td>${m.gibKullaniciKodu || '-'}${btnCopy(m.gibKullaniciKodu)}</td></tr>
+                    <tr><th>Şifre / Parola:</th><td><strong>Ş:</strong> ${m.gibSifre || '-'} ${btnCopy(m.gibSifre)} &nbsp;|&nbsp; <strong>P:</strong> ${m.gibParola || '-'} ${btnCopy(m.gibParola)}</td></tr>
                     
-                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">SGK & İŞKUR Portalları</th></tr>
-                    <tr><th>SGK Kul.Kodu / Sistem Şifresi:</th><td>${m.sgkTcNo || '-'}${btnCopy(m.sgkTcNo)} | Sistem: ${m.sgkSistemSifre || '-'}${btnCopy(m.sgkSistemSifre)}</td></tr>
+                    <tr><td colspan="2" style="background:#f9fbfc; padding:5px; border-bottom:1px solid #ccc; font-weight:bold; color:#27ae60; text-align:center;">SGK & İŞKUR Şifreleri</td></tr>
+                    <tr><th>SGK Kodu / Sistem Şifresi:</th><td><strong>Kod:</strong> ${m.sgkTcNo || '-'} ${btnCopy(m.sgkTcNo)} &nbsp;|&nbsp; <strong>Sistem Ş:</strong> ${m.sgkSistemSifre || '-'} ${btnCopy(m.sgkSistemSifre)}</td></tr>
                     <tr><th>SGK İşyeri Şifresi:</th><td>${m.sgkIsyeriSifre || '-'}${btnCopy(m.sgkIsyeriSifre)}</td></tr>
-                    <tr><th>İŞKUR Kullanıcı / Şifre:</th><td>Kul: ${m.iskurKullanici || '-'}${btnCopy(m.iskurKullanici)} | Şifre: ${m.iskurSifre || '-'}${btnCopy(m.iskurSifre)}</td></tr>
+                    <tr><th>İŞKUR Kullanıcı / Şifre:</th><td><strong>Kul:</strong> ${m.iskurKullanici || '-'} ${btnCopy(m.iskurKullanici)} &nbsp;|&nbsp; <strong>Ş:</strong> ${m.iskurSifre || '-'} ${btnCopy(m.iskurSifre)}</td></tr>
                     
-                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">Mali Mühür, KEP & E-Fatura</th></tr>
-                    <tr><th>Mühür Bitiş / Entegratör:</th><td>Bitiş: ${m.muhurBitis ? parseTR(m.muhurBitis) : '-'}${btnCopy(m.muhurBitis)} | Ent: ${m.eimzaEntegrator || '-'}${btnCopy(m.eimzaEntegrator)}</td></tr>
-                    <tr><th>Mali Mühür PIN / PUK:</th><td>PIN: ${m.muhurPin || '-'}${btnCopy(m.muhurPin)} | PUK: ${m.muhurGuvenlik || '-'}${btnCopy(m.muhurGuvenlik)}</td></tr>
-                    <tr><th>KEP Ent. / Adresi:</th><td>Ent: ${m.kepEntegrator || '-'} | Adres: ${m.kepAdresi || '-'}${btnCopy(m.kepAdresi)}</td></tr>
-                    <tr><th>KEP Kul. / Şifre / Parola:</th><td>Kul: ${m.kepKullanici || '-'}${btnCopy(m.kepKullanici)} | Şifre: ${m.kepSifre || '-'}${btnCopy(m.kepSifre)} | Parola: ${m.kepParola || '-'}${btnCopy(m.kepParola)}</td></tr>
+                    <tr><td colspan="2" style="background:#f9fbfc; padding:5px; border-bottom:1px solid #ccc; font-weight:bold; color:#8e44ad; text-align:center;">Mali Mühür, KEP & E-Fatura Şifreleri</td></tr>
+                    <tr><th>Mühür Bitiş / Entegratör:</th><td><strong>Bitiş:</strong> <span style="color:#c0392b; font-weight:bold;">${m.muhurBitis ? parseTR(m.muhurBitis) : '-'}</span> ${btnCopy(m.muhurBitis)} &nbsp;|&nbsp; <strong>Ent:</strong> ${m.eimzaEntegrator || '-'}${btnCopy(m.eimzaEntegrator)}</td></tr>
+                    <tr><th>Mali Mühür PIN / PUK:</th><td><strong>PIN:</strong> ${m.muhurPin || '-'} ${btnCopy(m.muhurPin)} &nbsp;|&nbsp; <strong>PUK:</strong> ${m.muhurGuvenlik || '-'} ${btnCopy(m.muhurGuvenlik)}</td></tr>
+                    <tr><th>KEP Ent. / Adresi:</th><td><strong>Ent:</strong> ${m.kepEntegrator || '-'} &nbsp;|&nbsp; <strong>Adres:</strong> ${m.kepAdresi || '-'}${btnCopy(m.kepAdresi)}</td></tr>
+                    <tr><th>KEP Kul. / Şifre / Parola:</th><td><strong>Kul:</strong> ${m.kepKullanici || '-'} ${btnCopy(m.kepKullanici)} &nbsp;|&nbsp; <strong>Ş:</strong> ${m.kepSifre || '-'} ${btnCopy(m.kepSifre)} &nbsp;|&nbsp; <strong>P:</strong> ${m.kepParola || '-'}${btnCopy(m.kepParola)}</td></tr>
                     <tr><th>KEP Güvenlik Sözcüğü:</th><td>${m.kepGuvenlik || '-'}${btnCopy(m.kepGuvenlik)}</td></tr>
-                    <tr><th>E-Fatura Ent. / Kul. / Şifre:</th><td>${m.efaturaEntegrator || '-'} | Kul: ${m.efaturaKullanici || '-'}${btnCopy(m.efaturaKullanici)} | Şifre: ${m.efaturaSifre || '-'}${btnCopy(m.efaturaSifre)}</td></tr>
+                    <tr><th>E-Fatura Ent. / Kul. / Şifre:</th><td><strong>Ent:</strong> ${m.efaturaEntegrator || '-'} &nbsp;|&nbsp; <strong>Kul:</strong> ${m.efaturaKullanici || '-'} ${btnCopy(m.efaturaKullanici)} &nbsp;|&nbsp; <strong>Ş:</strong> ${m.efaturaSifre || '-'}${btnCopy(m.efaturaSifre)}</td></tr>
                     
-                    <tr><th colspan="2" style="background:#fcf3cf; text-align:center;">E-Devlet Portalı</th></tr>
-                    <tr><th>E-Devlet T.C. / Şifre:</th><td>TC: ${m.edevletTc || '-'}${btnCopy(m.edevletTc)} | Şifre: ${m.edevletSifre || '-'}${btnCopy(m.edevletSifre)}</td></tr>
+                    <tr><td colspan="2" style="background:#f9fbfc; padding:5px; border-bottom:1px solid #ccc; font-weight:bold; color:#2c3e50; text-align:center;">E-Devlet Portalı</td></tr>
+                    <tr><th>E-Devlet T.C. / Şifre:</th><td><strong>TC:</strong> ${m.edevletTc || '-'} ${btnCopy(m.edevletTc)} &nbsp;|&nbsp; <strong>Ş:</strong> ${m.edevletSifre || '-'} ${btnCopy(m.edevletSifre)}</td></tr>
                     ${dinamikSifrelerHtml}
 
-                    <tr><th colspan="2" style="background:#f8cecc; text-align:center;">E. NOTLAR VE İSTİSNALAR</th></tr>
+                    <tr class="kategori-baslik"><th colspan="2">E. İSTİSNA, NOTLAR & VEKALET</th></tr>
                     <tr><th>Özel Durumlar:</th><td>${m.ozelDurumlar || '-'}</td></tr>
                     <tr><th>Geçmiş Dönem Notları:</th><td>${m.gecmisDonemNot || '-'}</td></tr>
-                    <tr><th>Vekaletname:</th><td>${m.vekaletDurum || '-'} (Tarih: ${m.vekaletTarih ? parseTR(m.vekaletTarih) : '-'})</td></tr>
+                    <tr><th>Vekaletname Durumu:</th><td><strong>${m.vekaletDurum || '-'}</strong> (Tarih: ${m.vekaletTarih ? parseTR(m.vekaletTarih) : '-'})</td></tr>
                 </table>
                 <div class="print-footer">Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli &nbsp; | &nbsp; 📞 0542 323 74 77 &nbsp; | &nbsp; 📧 tarikgun@cpa-ftc.com</div>
             `;
