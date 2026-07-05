@@ -26,51 +26,82 @@
             height: 100vh;
         }
 
-        /* Sol Menü Tasarımı */
+        /* Sol Menü Tasarımı (Premium Holding Konsepti) */
         .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
+            width: 260px;
+            background-color: #0f172a; /* Lüks Antrasit/Gece Mavisi */
             color: white;
             padding: 20px;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
+
+        /* Menü İçi İnce Kaydırma Çubuğu */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
         .sidebar-logo {
             width: 100%;
             max-width: 140px;
             display: block;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
             border-radius: 8px;
             background-color: white;
-            padding: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .sidebar h2 {
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 20px;
+            margin-bottom: 25px;
+            font-size: 16px;
+            color: #f8fafc;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
-        .sidebar ul {
-            list-style: none;
-        }
+        .sidebar ul { list-style: none; padding-bottom: 20px; }
 
-        .sidebar ul li {
-            margin-bottom: 15px;
-        }
+        .sidebar ul li { margin-bottom: 6px; }
 
         .sidebar ul li a {
-            color: #bdc3c7;
+            color: #94a3b8;
             text-decoration: none;
-            display: block;
-            padding: 10px;
-            border-radius: 5px;
-            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
         }
 
-        .sidebar ul li:hover a, .sidebar ul li.active a {
-            background-color: #34495e;
-            color: white;
+        .sidebar ul li:hover a {
+            background-color: #1e293b;
+            color: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        .sidebar ul li.active a {
+            background-color: #1e293b;
+            color: #38bdf8; /* Lüks Elektrik Mavisi Vurgu */
+            border-left: 4px solid #38bdf8;
+            padding-left: 11px; /* Çizgi gelince metin kaymasın diye */
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Yeni: Menü Kategori Başlıkları */
+        .menu-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin: 25px 0 10px 10px;
         }
 
         /* Ana İçerik Alanı */
@@ -692,17 +723,29 @@
         <img src="SMMM Logo.png" alt="Tarık GÜN SMMM" class="sidebar-logo">
         <h2>SMMM Yönetim</h2>
         <ul>
-            <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-th-large"></i> Yönetici Özeti</a></li>
-            <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')"> 💼 Mükellef Bilgileri</a></li>
-            <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')">💲 Ücret Hesaplama</a></li>
-            <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')">🧾 Kayıtlı Teklifler</a></li>
-            <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')">💰 e-SMM Merkezi</a></li>
-            <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')">♻️ Cari Hesaplar</a></li>
-            <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')">📅 Mali Takvim</a></li>
-            <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')">💳 Aylık Ödemeler</a></li>
-            <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')">🚀 Şirket Kuruluşu</a></li>
-            <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')">⚙️ Ayarlar</a></li>
-            <li style="margin-top: 30px;"><a href="#" onclick="sistemdenCikisYap()" style="background:#24099f; color:white; text-align:center; padding:12px; border-radius:5px;"><i class="fas fa-sign-out-alt"></i> Güvenli Çıkış Yap</a></li>
+            <div class="menu-label" style="margin-top: 5px;">Genel Bakış</div>
+            <li id="menuMaster" class="active"><a href="#" onclick="sayfaDegistir('masterDashboardPaneli')"><i class="fas fa-chart-pie" style="width:20px; text-align:center;"></i> Yönetici Özeti</a></li>
+            
+            <div class="menu-label">Müşteri & Operasyon</div>
+            <li id="menuMukellef"><a href="#" onclick="sayfaDegistir('mukellefPaneli')"><i class="fas fa-users" style="width:20px; text-align:center;"></i> Mükellef Yönetimi</a></li>
+            <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')"><i class="fas fa-building" style="width:20px; text-align:center;"></i> Şirket Kuruluşu</a></li>
+            <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')"><i class="fas fa-tasks" style="width:20px; text-align:center;"></i> Görev & Projeler</a></li>
+            <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')"><i class="fas fa-file-invoice-dollar" style="width:20px; text-align:center;"></i> Vergi Ödemeleri</a></li>
+            
+            <div class="menu-label">Finans & Gelir</div>
+            <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')"><i class="fas fa-calculator" style="width:20px; text-align:center;"></i> Ücret Sihirbazı</a></li>
+            <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')"><i class="fas fa-file-signature" style="width:20px; text-align:center;"></i> Sözleşmeler</a></li>
+            <li id="menuFaturalar"><a href="#" onclick="sayfaDegistir('faturaPaneli')"><i class="fas fa-receipt" style="width:20px; text-align:center;"></i> e-SMM & Faturalar</a></li>
+            <li id="menuCari"><a href="#" onclick="sayfaDegistir('cariPaneli')"><i class="fas fa-wallet" style="width:20px; text-align:center;"></i> Finans & Cari</a></li>
+            
+            <div class="menu-label">Sistem</div>
+            <li id="menuAyarlar"><a href="#" onclick="sayfaDegistir('ayarlarPaneli')"><i class="fas fa-cog" style="width:20px; text-align:center;"></i> Ayarlar</a></li>
+            
+            <li style="margin-top: 30px;">
+                <a href="#" onclick="sistemdenCikisYap()" style="background:rgba(231, 76, 60, 0.1); color:#e74c3c; justify-content:center; border:1px solid rgba(231, 76, 60, 0.3);" onmouseover="this.style.background='#e74c3c'; this.style.color='white';" onmouseout="this.style.background='rgba(231, 76, 60, 0.1)'; this.style.color='#e74c3c';">
+                    <i class="fas fa-sign-out-alt"></i> Güvenli Çıkış
+                </a>
+            </li>
         </ul>
     </div>
 
