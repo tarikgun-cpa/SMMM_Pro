@@ -2065,7 +2065,7 @@
                         <span style="color:#7f8c8d; font-weight:bold;">-</span>
                         <input type="date" id="eksBitTarih" class="search-bar" style="width:auto; padding:5px; font-size:13px;">
                         <button class="action-btn btn-primary" style="padding:6px 12px; font-size:12px; margin:0;" onclick="ekstreTarihFiltrele()"><i class="fas fa-filter"></i> Süz</button>
-                        <button class="action-btn btn-secondary" style="padding:6px 12px; font-size:12px; margin:0; background:#7f8c8d;" onclick="ekstreAc(aktifEkstreVkn)"><i class="fas fa-undo"></i> Yıllık</button>
+                        <button class="action-btn btn-secondary" style="padding:6px 12px; font-size:12px; margin:0; background:#7f8c8d;" onclick="ekstreYillikDon()"><i class="fas fa-undo"></i> Yıllık</button>
                     </div>
 
                     <div id="tahsilatKutu" style="display:none; background:#e8f8f5; border:1px solid #1abc9c; padding:15px; border-radius:5px; margin-bottom:15px;">
@@ -3867,6 +3867,15 @@
                 return;
             }
             ekstreAc(aktifEkstreVkn, null, bas, bit);
+        }
+
+        function ekstreYillikDon() {
+            // Önce tarih kutucuklarındaki süzme verilerini temizle
+            document.getElementById("eksBasTarih").value = "";
+            document.getElementById("eksBitTarih").value = "";
+            
+            // Standart yıllık ekstreyi baştan yükle
+            ekstreAc(aktifEkstreVkn);
         }
 
         function ekstreAc(vkn, yil, basTarihRaw = null, bitTarihRaw = null) {
