@@ -2059,6 +2059,15 @@
                     </div>
                 </div>
                 <div class="modal-body">
+                    <div class="no-print" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f4f6f9; padding:10px 15px; border-radius:5px; border:1px solid #dcdde1; margin-bottom:15px;">
+                        <label style="font-size:13px; font-weight:bold; color:#2c3e50;"><i class="fas fa-calendar-alt"></i> Tarih Aralığı:</label>
+                        <input type="date" id="eksBasTarih" class="search-bar" style="width:auto; padding:5px; font-size:13px;">
+                        <span style="color:#7f8c8d; font-weight:bold;">-</span>
+                        <input type="date" id="eksBitTarih" class="search-bar" style="width:auto; padding:5px; font-size:13px;">
+                        <button class="action-btn btn-primary" style="padding:6px 12px; font-size:12px; margin:0;" onclick="ekstreTarihFiltrele()"><i class="fas fa-filter"></i> Süz</button>
+                        <button class="action-btn btn-secondary" style="padding:6px 12px; font-size:12px; margin:0; background:#7f8c8d;" onclick="ekstreAc(aktifEkstreVkn)"><i class="fas fa-undo"></i> Yıllık</button>
+                    </div>
+
                     <div id="tahsilatKutu" style="display:none; background:#e8f8f5; border:1px solid #1abc9c; padding:15px; border-radius:5px; margin-bottom:15px;">
                         <h4 style="font-size:14px; color:#16a085; margin-bottom:10px;">Tahsilat İşle (Cari Alacaklandır)</h4>
                         <div style="display:flex; gap:10px;">
@@ -3850,46 +3859,79 @@
         }
 
         // --- EKSTRE VE TAHSİLAT ---
-        function ekstreAc(vkn, yil) {
-            if(!yil) yil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
+        function ekstreTarihFiltrele() {
+            let bas = document.getElementById("eksBasTarih").value;
+            let bit = document.getElementById("eksBitTarih").value;
+            if(!bas || !bit) {
+                alert("Lütfen süzme işlemi için başlangıç ve bitiş tarihlerini eksiksiz seçin!");
+                return;
+            }
+            ekstreAc(aktifEkstreVkn, null, bas, bit);
+        }
+
+        function ekstreAc(vkn, yil, basTarihRaw = null, bitTarihRaw = null) {
+            // Eğer tarih aralığı gönderilmemişse, standart yıllık görünümü baz al
+            if(!yil && !basTarihRaw) yil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
             
             aktifEkstreVkn = vkn;
             let m = mukellefler.find(x => x.vkn === vkn);
             document.getElementById("eksUnvan").textContent = m.unvan;
             document.getElementById("eksVkn").textContent = m.vkn;
-            if(document.getElementById("printEksUnvan")) document.getElementById("printEksUnvan").innerHTML = `Mükellef Cari Kartı: <span style="color:#2c3e50;">${m.unvan}</span><br><span style="font-size:14px; color:#7f8c8d; font-weight:normal; display:inline-block; margin-top:5px;">Seçili Dönem: ${yil} Yılı</span>`;
+            
+            // Başlıkta Tarih Gösterimini Dinamik Yapalım
+            let baslikDonem = yil ? `${yil} Yılı` : `${parseTR(basTarihRaw)} - ${parseTR(bitTarihRaw)} Arası`;
+            if(document.getElementById("printEksUnvan")) {
+                document.getElementById("printEksUnvan").innerHTML = `Mükellef Cari Kartı: <span style="color:#2c3e50;">${m.unvan}</span><br><span style="font-size:14px; color:#7f8c8d; font-weight:normal; display:inline-block; margin-top:5px;">Seçili Dönem: ${baslikDonem}</span>`;
+            }
 
             let tbody = document.getElementById("eksTablo"); tbody.innerHTML = "";
             let anlikBakiye = 0; let totalFat = 0; let totalTah = 0; let devreden = 0;
 
             let siraliHrk = [...m.hareketler].sort((a,b) => new Date(a.tarihDüzz) - new Date(b.tarihDüzz));
+            let baslikTarih = yil ? `01.01.${yil}` : parseTR(basTarihRaw);
 
             siraliHrk.forEach(h => {
-                let hYil = parseInt(h.tarih.split('.')[2]);
-                if (hYil < yil) {
+                let islemUygun = false;
+                let devirUygun = false;
+
+                // Seçilen tarih aralığı veya yıllara göre Devreden ve Gösterilecekleri ayırıyoruz
+                if (basTarihRaw && bitTarihRaw) {
+                    if (h.tarihDüzz < basTarihRaw) devirUygun = true;
+                    if (h.tarihDüzz >= basTarihRaw && h.tarihDüzz <= bitTarihRaw) islemUygun = true;
+                } else {
+                    let hYil = parseInt(h.tarih.split('.')[2]);
+                    if (hYil < yil) devirUygun = true;
+                    if (hYil === yil) islemUygun = true;
+                }
+
+                // Devreden bakiyeyi hesapla
+                if (devirUygun) {
                     if(h.tur === "Makbuz") devreden += (h.netTutar || h.tutar);
                     else devreden -= (h.netTutar || h.tutar);
                 }
+
+                // Sadece uygun işlemleri ekrana basmak için işaretle
+                h._renderThis = islemUygun;
             });
 
             anlikBakiye = devreden;
 
+            // Devir Satırını Bas
             tbody.innerHTML += `<tr style="background:#fef9e7;">
-                <td>01.01.${yil}</td><td><b>DEVİR</b></td><td>Geçmiş Yıllardan Devreden Bakiye</td>
+                <td>${baslikTarih}</td><td><b>DEVİR</b></td><td>Önceki Dönemlerden Devreden Bakiye</td>
                 <td style="text-align:right;">-</td><td style="text-align:right;">-</td>
                 <td style="text-align:right; font-weight:bold; color:#d35400;">${formatMoney(devreden)} ₺</td>
                 <td class="no-print"></td>
             </tr>`;
 
+            // Hareket Satırlarını Bas
             siraliHrk.forEach(h => {
-                let hYil = parseInt(h.tarih.split('.')[2]);
-                if (hYil === yil) {
+                if (h._renderThis) {
                     let borc = h.tur === "Makbuz" ? (h.netTutar || h.tutar) : 0;
                     let alacak = h.tur === "Tahsilat" ? (h.netTutar || h.tutar) : 0;
                     anlikBakiye += (borc - alacak);
                     totalFat += borc; totalTah += alacak;
 
-                    // Eski kayıtlardaki [KDV: xxx] ve [Stp: xxx] yazılarını dinamik olarak gizle
                     let temizAciklama = h.aciklama ? h.aciklama.replace(/ \[KDV:.*?\]/g, '').replace(/ \[Stp:.*?\]/g, '') : "";
 
                     tbody.innerHTML += `<tr>
