@@ -492,48 +492,93 @@
         /* --- PREMIUM UI VE MOBİL UYUM (SaaS) --- */
         /* ========================================= */
         
-        * { font-family: 'Inter', sans-serif; } /* Tüm sisteme modern font uygulandı */
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
-        /* Form Elemanları Premium Hissi */
-        input, select, textarea { transition: all 0.2s ease; border: 1px solid #dcdde1 !important; border-radius: 6px !important; }
-        input:focus, select:focus, textarea:focus { border-color: #3498db !important; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2) !important; outline: none !important; }
-        
-        /* Kartlar, Menüler ve Butonlar */
-        .form-container, .summary-card, .company-badge, .password-card, .wizard-form, .receipt-card { border-radius: 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important; border: 1px solid #f1f2f6; }
-        .company-badge { border: 1px solid #eee; border-left: 5px solid #ccc; }
-        .company-badge:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important; transform: translateY(-3px); }
-        .action-btn, .submit-btn, .tab-btn { border-radius: 6px !important; letter-spacing: 0.3px; }
-        
-        /* Tablo Taşkınlık Koruması (Mobilde Sağa Kaydırma) */
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .mukellef-table { white-space: nowrap; box-shadow: none !important; }
+        body { background-color: #f8fafc; color: #334155; }
+        h1 { color: #0f172a; font-weight: 600; font-size: 22px; letter-spacing: -0.5px; }
 
-        /* --- PREMIUM UI CİLALARI (Görsel İyileştirmeler) --- */
-        
-        /* 1. Özel İnce Kaydırma Çubuğu (Scrollbar) */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f4f6f9; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
-
-        /* 2. Modern Checkbox'lar (Kutucukları Büyütür ve Rengini Değiştirir) */
-        input[type="checkbox"] { 
-            width: 18px !important; height: 18px !important; 
-            accent-color: #2980b9; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
+        /* Form Elemanları Premium Hissi (Pudralı Soft Renkler) */
+        input, select, textarea { 
+            transition: all 0.2s ease; 
+            border: 1px solid #cbd5e1 !important; 
+            border-radius: 8px !important; 
+            background-color: #ffffff;
+            color: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02) inset;
         }
-
-        /* 3. Modal ve Kart Hover (Üzerine Gelince Kayma) Efektleri */
-        .modal-body label { transition: all 0.2s ease; border: 1px solid transparent; }
-        .modal-body label:hover { transform: translateX(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-color: #e1e8ed; }
-        .modal-box { border-radius: 12px !important; border: 1px solid #eef2f5; }
+        input:focus, select:focus, textarea:focus { 
+            border-color: #3b82f6 !important; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important; 
+            outline: none !important; 
+        }
         
-        /* 4. Butonlara ve Modal Başlıklarına Derinlik (Gradient) */
-        .action-btn, .submit-btn { transition: all 0.2s ease; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .action-btn:hover, .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); filter: brightness(1.05); }
-        .btn-primary, .submit-btn { background: linear-gradient(135deg, #3498db, #2980b9) !important; border: none; }
-        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60) !important; border: none; }
+        /* Kartlar, Menüler ve Butonlar (Yumuşak Gölgeler) */
+        .form-container, .summary-card, .company-badge, .password-card, .wizard-form, .receipt-card { 
+            border-radius: 12px !important; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important; 
+            border: 1px solid #f1f5f9; 
+            background: #ffffff;
+        }
+        
+        /* Şık Butonlar (Zarif Tonlar, Gradient İptali) */
+        .action-btn, .submit-btn, .table-btn { border-radius: 8px !important; font-weight: 500; letter-spacing: 0.2px; transition: all 0.2s ease; }
+        .action-btn:hover, .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        /* Ana Buton Renkleri (Kurumsal Standartlar) */
+        .btn-primary, .submit-btn { background: #0f172a !important; color: #f8fafc !important; border: none; }
+        .btn-primary:hover, .submit-btn:hover { background: #1e293b !important; }
+        
+        .btn-success { background: #10b981 !important; color: white !important; border: none; }
+        .btn-success:hover { background: #059669 !important; }
+        
+        .btn-danger { background: #ef4444 !important; color: white !important; border: none; }
+        .btn-danger:hover { background: #dc2626 !important; }
+
+        .btn-secondary { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+        .btn-secondary:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+        
+        /* Tablo Zarafeti (Bembeyaz ve Zarif Çizgiler) */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; background: white; }
+        .mukellef-table { white-space: nowrap; box-shadow: none !important; width: 100%; border-collapse: collapse; }
+        .mukellef-table th { background-color: #f8fafc !important; color: #475569 !important; border-bottom: 1px solid #e2e8f0 !important; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; padding: 14px 15px; }
+        .mukellef-table td { border-bottom: 1px solid #f1f5f9 !important; color: #334155; font-size: 13.5px; padding: 12px 15px; }
+
+        /* Modern Sekmeler (Kapsül Tasarım - Pill Tabs) */
+        .tabs { border-bottom: none; gap: 8px; padding: 6px; background: #f1f5f9; border-radius: 12px; display: inline-flex; flex-wrap: wrap; margin-bottom: 25px; }
+        .tab-btn { background: transparent; border: none; border-radius: 8px !important; padding: 8px 16px; color: #64748b; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .tab-btn.active { background: #ffffff !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 600; }
+        .tab-btn:hover:not(.active) { color: #0f172a; }
+
+        .cari-tabs { border-bottom: none; gap: 8px; padding: 5px; background: #f1f5f9; border-radius: 10px; display: inline-flex; margin-bottom: 0; }
+        .cari-tab-btn { background: transparent !important; border: none !important; border-radius: 8px !important; padding: 8px 16px; color: #64748b !important; font-weight: 500; transition: 0.2s; }
+        .cari-tab-btn.active { background: #ffffff !important; color: #0f172a !important; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 600; }
+        .cari-tab-btn:hover:not(.active) { color: #0f172a !important; background: rgba(255,255,255,0.5) !important; }
+
+        /* Modal (Açılır Pencere) Makyajı */
+        .modal-box { border-radius: 16px !important; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .modal-header { background: #ffffff !important; color: #0f172a !important; border-bottom: 1px solid #e2e8f0; border-radius: 16px 16px 0 0; padding: 20px; }
+        .modal-header h3 { font-weight: 700; font-size: 17px; }
+        .modal-close { color: #94a3b8 !important; transition: 0.2s; background: #f1f5f9; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { color: #ef4444 !important; background: #fee2e2; }
+        .modal-footer { background: #f8fafc !important; border-top: 1px solid #e2e8f0; border-radius: 0 0 16px 16px; padding: 15px 20px; }
+
+        /* Rozetler ve Etiketler */
+        .password-card h3 { color: #334155; border-bottom: 1px dashed #e2e8f0; font-weight: 600; margin-bottom: 15px; }
+        .company-badge { border-left-width: 4px; transition: 0.2s; }
+        .company-badge.debt { border-left-color: #ef4444; } 
+        .company-badge.credit { border-left-color: #10b981; }
+        
+        /* Dashboard Gökkuşağı İptali (Sade ve Beyaz Kartlar) */
+        .summary-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
+        div[style*="background:linear-gradient"] { background: #ffffff !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
+        div[style*="background:linear-gradient(to right, #2c3e50, #34495e)"] { background: #0f172a !important; border: none !important; color: white !important;} /* E-Defter kutusu istisna */
+
+        /* Scrollbar ve Checkbox İncelikleri */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        input[type="checkbox"] { accent-color: #0f172a; border-radius: 4px; width: 16px !important; height: 16px !important; cursor: pointer; }
 
         .mobile-header { display: none; } /* Bilgisayarda üst bar gizli kalır */
 
