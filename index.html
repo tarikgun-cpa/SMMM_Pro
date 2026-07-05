@@ -409,63 +409,41 @@
         .print-footer { display: none; } /* Normal ekranda alt bilgiyi gizle */
 
         @media print {
-            @page { margin: 1cm; size: A4; } /* A4 kağıt ve kenar boşluğu */
+            @page { margin: 0.5cm; size: A4; } /* A4 Kağıda Maksimum Alan Kullanımı */
             
-            /* (SORUN 2 VE 3'ÜN ÇÖZÜMÜ) Sayfa Kesilmelerini ve Boş Sayfaları Önleyen Temel Ayar */
             html, body { height: auto !important; overflow: visible !important; background: white !important; }
-
-            /* Ana iskeleti, mobil menüyü ve arka planları tamamen gizle */
             .sidebar, .mobile-header, #loginEkran, .main-content > *:not(.modal-overlay) { display: none !important; }
 
-            /* Raporların her sayfasının en altına eklenecek profesyonel alt bilgi */
             .print-footer {
-                display: block !important;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                text-align: center;
-                font-size: 11px;
-                color: #7f8c8d;
-                border-top: 1px solid #ddd;
-                padding-top: 5px;
-                background: white;
+                display: block !important; position: fixed; bottom: 0; left: 0; width: 100%;
+                text-align: center; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd;
+                padding-top: 4px; background: white;
             }
 
-            /* Modalleri kağıt düzenine sok (Kaydırma ve Tek Sayfa Kesilme Sorunlarını Çözer) */
             .modal-overlay { display: none !important; }
             .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
-            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
             .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
-
-            /* Ekranda görünen gereksiz butonları ve arama kutularını gizle */
             .modal-header, .modal-footer, .no-print, button, #tahsilatKutu, #mutabakatKutu, #giderOdemeKutu { display: none !important; }
 
-            /* Kağıt üst bilgisini (Antetli Kısım) aktif et */
+            /* Antetli Kısım Daraltıldı (Yer Tasarrufu) */
             .print-header { 
-                display: flex !important; 
-                flex-direction: row !important;
-                align-items: center; 
-                border-bottom: 3px solid #2c3e50; 
-                padding-bottom: 15px; 
-                margin-bottom: 20px; 
+                display: flex !important; flex-direction: row !important; align-items: center; 
+                border-bottom: 2px solid #2c3e50; padding-bottom: 8px; margin-bottom: 10px; 
             }
-            .print-header img { width: 110px; height: auto; margin-right: 20px; border-radius: 8px; }
-            .print-header-text h2 { margin: 0; font-size: 24px; color: #2c3e50; }
-            .print-header-text p { margin: 5px 0 0 0; font-size: 14px; color: #7f8c8d; font-weight: bold; }
+            .print-header img { width: 75px; height: auto; margin-right: 15px; border-radius: 6px; }
+            .print-header-text h2 { margin: 0; font-size: 16pt; color: #2c3e50; }
+            .print-header-text p { margin: 2px 0 0 0; font-size: 9pt; color: #7f8c8d; font-weight: bold; }
 
-            /* Tablo arka plan renklerini zorla bas */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            /* Lüks Rapor Tablosu ve Sayfa Kesilme Önlemi */
-            table { width: 100% !important; border-collapse: collapse !important; page-break-inside: auto; margin-bottom: 30px !important; border: 1px solid #bdc3c7 !important; }
-            tr { page-break-inside: avoid !important; page-break-after: auto; }
-            th { border: 1px solid #bdc3c7 !important; padding: 10px 12px !important; font-size: 11pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; width: 35% !important; background-color: #f4f6f9 !important; }
-            td { border: 1px solid #bdc3c7 !important; padding: 10px 12px !important; font-size: 11pt !important; color: #34495e !important; width: 65% !important; }
+            /* Lüks Fakat Kompakt Rapor Tablosu (Tek Sayfaya Sığdırılmış) */
+            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 10px !important; border: 1px solid #bdc3c7 !important; }
+            tr { page-break-inside: avoid !important; }
+            th { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; width: 30% !important; background-color: #f4f6f9 !important; height: 16px !important; }
+            td { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #34495e !important; width: 70% !important; height: 16px !important; }
             
-            /* Kategori Başlık Satırları (A. Temel Bilgiler vb.) */
-            tr.kategori-baslik th { text-align: center !important; font-size: 12pt !important; letter-spacing: 1px !important; padding: 12px !important; background-color: #2c3e50 !important; color: white !important; border-bottom: 2px solid #34495e !important; }
-            
+            tr.kategori-baslik th { text-align: center !important; font-size: 10.5pt !important; letter-spacing: 1px !important; padding: 5px !important; background-color: #2c3e50 !important; color: white !important; border-bottom: 2px solid #34495e !important; }
             /* (SORUN 1'İN ÇÖZÜMÜ) Üstteki özet bilgi kutularını yazdırırken zorla yan yana (row) diz */
             #printEkstreAlan > div:nth-child(2), #printGiderEkstreAlan > div:nth-child(2), 
             div[style*="justify-content:space-between"] { 
@@ -2809,7 +2787,7 @@
                     </div>
                 </div>
 
-                <h2 style="text-align:center; color:#2c3e50; border-bottom:3px double #3498db; padding-bottom:15px; margin-bottom:20px; margin-top:0; font-size:16pt;">${m.unvan || 'Belirtilmedi'}</h2>
+                <h2 style="text-align:center; color:#2c3e50; border-bottom:2px double #3498db; padding-bottom:8px; margin-bottom:10px; margin-top:0; font-size:14pt;">${m.unvan || 'Belirtilmedi'}</h2>
                 
                 <table>
                     <tr class="kategori-baslik"><th colspan="2">A. KURUMSAL TEMEL BİLGİLER</th></tr>
