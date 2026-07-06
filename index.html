@@ -3594,10 +3594,12 @@
                 // SMMM kendi firmasını finansal toplamlara (Son makbuz vb.) dahil etmesin
                 if(m.mukellefTuru === "SMMM") return;
                 
-                m.hareketler.forEach(h => {
-                    if(h.tur === "Makbuz" && h.tarihDüzz > enSonMakbuz) enSonMakbuz = h.tarihDüzz;
-                    if(h.tur === "Tahsilat" && h.tarihDüzz > enSonTahsilat) enSonTahsilat = h.tarihDüzz;
-                });
+                if (m.hareketler) {
+                    m.hareketler.forEach(h => {
+                        if(h.tur === "Makbuz" && h.tarihDüzz > enSonMakbuz) enSonMakbuz = h.tarihDüzz;
+                        if(h.tur === "Tahsilat" && h.tarihDüzz > enSonTahsilat) enSonTahsilat = h.tarihDüzz;
+                    });
+                }
             });
             giderIslemler.forEach(g => {
                 if(g.islemTipi === "Ödeme" && g.tarihDüzz > enSonTahsilat) enSonTahsilat = g.tarihDüzz;
@@ -3606,7 +3608,7 @@
             document.getElementById("dashSonMakbuzTarih").textContent = enSonMakbuz ? parseTR(enSonMakbuz) : "-";
             document.getElementById("dashSonTahsilatTarih").textContent = enSonTahsilat ? parseTR(enSonTahsilat) : "-";
 
-           mukellefler.forEach(m => {
+            mukellefler.forEach(m => {
                 // SMMM (Kendi ofisiniz) Cari panoda listelenmesin ve piyasa bakiyelerine katılmasın
                 if(m.mukellefTuru === "SMMM") return;
 
@@ -3747,7 +3749,6 @@
                 else { kdvYazi.textContent = formatMoney(Math.abs(odenecekKdv)) + " ₺ (Dev.)"; kdvYazi.style.color = "#27ae60"; }
             }
         }
-
         function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
         function modalKapat(id) { document.getElementById(id).style.display = 'none'; kutuKapat('tahsilatKutu'); kutuKapat('mutabakatKutu'); kutuKapat('giderOdemeKutu'); }
         function kutuAc(id) { document.getElementById(id).style.display = 'block'; }
