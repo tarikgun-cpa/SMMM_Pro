@@ -3606,44 +3606,46 @@
             document.getElementById("dashSonMakbuzTarih").textContent = enSonMakbuz ? parseTR(enSonMakbuz) : "-";
             document.getElementById("dashSonTahsilatTarih").textContent = enSonTahsilat ? parseTR(enSonTahsilat) : "-";
 
-            mukellefler.forEach(m => {
+           mukellefler.forEach(m => {
                 // SMMM (Kendi ofisiniz) Cari panoda listelenmesin ve piyasa bakiyelerine katılmasın
                 if(m.mukellefTuru === "SMMM") return;
 
                 let mFaturaYil = 0; let mOdemeYil = 0;
                 let mDevredenBakiye = 0;
 
-                m.hareketler.forEach(h => {
-                    let islemYili = parseInt(h.tarih.split('.')[2]);
-                    
-                    if (islemYili < seciliYil) {
-                        // Seçili yıldan önceki geçmiş işlemler "Devreden Bakiye"dir
-                        if(h.tur === "Makbuz") mDevredenBakiye += (h.netTutar || h.tutar || 0);
-                        else if(h.tur === "Tahsilat") mDevredenBakiye -= (h.netTutar || h.tutar || 0);
-                    } else if (islemYili === seciliYil) {
-                        // Seçili yılın hareketleri dashboard'a yansır
-                        if(h.tur === "Makbuz") { 
-                            mFaturaYil += (h.netTutar || h.tutar || 0);
-                            tMakbuzBrut += (h.brut || 0);
-                            tMakbuzKdv += (h.kdv || 0);
-                            tMakbuzStopaj += (h.stopaj || 0);
-                            tMakbuzNet += (h.netTutar || h.tutar || 0);
+                // ÖLÜMÜ ENGELLEYEN HAYAT KURTARICI KONTROL (Eğer firmanın faturası yoksa çökmesin diye)
+                if (m.hareketler) {
+                    m.hareketler.forEach(h => {
+                        let islemYili = parseInt(h.tarih.split('.')[2]);
+                        
+                        if (islemYili < seciliYil) {
+                            // Seçili yıldan önceki geçmiş işlemler "Devreden Bakiye"dir
+                            if(h.tur === "Makbuz") mDevredenBakiye += (h.netTutar || h.tutar || 0);
+                            else if(h.tur === "Tahsilat") mDevredenBakiye -= (h.netTutar || h.tutar || 0);
+                        } else if (islemYili === seciliYil) {
+                            // Seçili yılın hareketleri dashboard'a yansır
+                            if(h.tur === "Makbuz") { 
+                                mFaturaYil += (h.netTutar || h.tutar || 0);
+                                tMakbuzBrut += (h.brut || 0);
+                                tMakbuzKdv += (h.kdv || 0);
+                                tMakbuzStopaj += (h.stopaj || 0);
+                                tMakbuzNet += (h.netTutar || h.tutar || 0);
+                            }
+                            else if(h.tur === "Tahsilat") { 
+                                mOdemeYil += (h.netTutar || h.tutar || 0);
+                                tTahsilat += (h.netTutar || h.tutar || 0);
+                            }
                         }
-                        else if(h.tur === "Tahsilat") { 
-                            mOdemeYil += (h.netTutar || h.tutar || 0);
-                            tTahsilat += (h.netTutar || h.tutar || 0);
-                        }
-                    }
-                });
+                    });
+                }
 
                 let guncelBakiye = mDevredenBakiye + mFaturaYil - mOdemeYil;
                 genelPiyasaAlacagi += guncelBakiye;
 
                 if(aranacak && m.unvan.toLowerCase().indexOf(aranacak) === -1 && m.vkn.indexOf(aranacak) === -1) return;
 
-                let badgeClass = guncelBakiye > 0 ? "debt" : "credit"; 
-                let bakiyeRenk = guncelBakiye > 0 ? "#e74c3c" : "#2ecc71";
-                let mutabakatHtml = (m.mutabakatlar && m.mutabakatlar.length > 0) ? `<div style="margin-top:10px;"><span style="background:#3498db; color:white; padding:3px 8px; border-radius:10px; font-size:11px;">Mutabık: ${m.mutabakatlar[0]}</span></div>` : "";
+                let bakiyeRenk = guncelBakiye > 0 ? "#ef4444" : "#10b981";
+                let mutabakatHtml = (m.mutabakatlar && m.mutabakatlar.length > 0) ? true : false;
 
                 if(pano) {
                     pano.innerHTML += `
@@ -3701,12 +3703,15 @@
                     genelPiyasaBorcu += grup.bakiye;
 
                     let gRenk = grup.bakiye > 0 ? "#ef4444" : "#10b981";
+                    
+                    if(aranacak && tur.toLowerCase().indexOf(aranacak) === -1) return;
+
                     giderPano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
                         <div class="company-badge" onclick="giderEkstreAc('${tur}', ${seciliYil})">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${gRenk};"></div>
                             
-                            <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px;"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
+                            <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tur}"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
                             <div style="font-size:12px; color:#64748b; margin-bottom:15px;">Kalan Cari Borç (Bakiye)</div>
                             
                             <div style="margin-top:auto; padding-top:15px; border-top:1px dashed #e2e8f0;">
