@@ -2804,6 +2804,7 @@
         function mukellefGoruntule(vkn) {
             let m = mukellefler.find(item => item.vkn === vkn);
             if (!m) return;
+            if (!m.hareketler) m.hareketler = []; // KORUYUCU SATIR
             
             let alan = document.getElementById("printProfilAlan");
             
@@ -3652,7 +3653,7 @@
                 if(pano) {
                     pano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
-                        <div class="company-badge" onclick="ekstreAc('${m.vkn}', ${seciliYil})">
+                        <div class="company-badge" onclick="ekstreAc('${m.vkn}', '${seciliYil}')">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${bakiyeRenk};"></div>
                             
                             <div style="font-weight:700; color:#1e293b; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; letter-spacing:-0.3px;" title="${m.unvan}">${m.unvan}</div>
@@ -3710,7 +3711,7 @@
 
                     giderPano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
-                        <div class="company-badge" onclick="giderEkstreAc('${tur}', ${seciliYil})">
+                        <div class="company-badge" onclick="giderEkstreAc('${tur}', '${seciliYil}')">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${gRenk};"></div>
                             
                             <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tur}"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
@@ -4025,6 +4026,9 @@
             
             aktifEkstreVkn = vkn;
             let m = mukellefler.find(x => x.vkn === vkn);
+            
+            if(!m) { alert("Bu mükellef kaydı bulunamadı."); return; } // KORUYUCU SATIR
+            if(!m.hareketler) m.hareketler = []; // KORUYUCU SATIR
             document.getElementById("eksUnvan").textContent = m.unvan;
             document.getElementById("eksVkn").textContent = m.vkn;
             
