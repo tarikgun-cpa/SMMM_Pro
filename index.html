@@ -289,26 +289,19 @@
             font-weight: 600;
         }
 
-        /* Ghost (Hayalet) Tablo Aksiyon Butonları */
         .table-btn {
-            padding: 5px 10px !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 6px !important;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 12px !important;
-            margin-right: 4px;
-            background: transparent !important;
-            color: #64748b !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            font-size: 13px;
+            margin-right: 5px;
         }
-        .table-btn i { font-size: 12px; }
-        .table-btn.btn-primary:hover { background: #f0f9ff !important; color: #0284c7 !important; border-color: #bae6fd !important; }
-        .table-btn.btn-edit:hover { background: #fef9e7 !important; color: #d97706 !important; border-color: #fde68a !important; }
-        .table-btn.btn-delete:hover, .table-btn.btn-danger:hover { background: #fee2e2 !important; color: #b91c1c !important; border-color: #fecaca !important; }
+
+        .btn-edit { background-color: #f1c40f; color: #333; }
+        .btn-edit:hover { background-color: #d4ac0d; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        .btn-delete:hover { background-color: #c0392b; }
 
         .view-section {
             animation: fadeIn 0.4s;
@@ -830,59 +823,57 @@
                 <div id="dashSaat" style="font-size:11px; color:#7f8c8d; font-weight:500; background:#fff; padding:5px 10px; border-radius:6px; border:1px solid #eef2f5;"></div>
             </div>
 
-            <!-- SAF PREMIUM DASHBOARD KARTLARI -->
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:15px;">
-                <div class="summary-card" style="border-top:4px solid #10b981 !important; padding:15px !important;">
-                    <h3 style="font-size:11px; color:#64748b; text-transform:uppercase; margin-bottom:10px; font-weight:700;"><i class="fas fa-wallet" style="color:#10b981;"></i> Finansal Sağlık Özet</h3>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="color:#475569; font-size:12px;">Net Ofis Kârlılığı:</span>
-                        <strong id="mdNetKar" style="font-size:15px; color:#10b981;">0,00 ₺</strong>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:12px;">
+                <div style="background:linear-gradient(135deg, #ffffff, #2ecc710a); border:1px solid #eef2f5; border-top:3px solid #2ecc71; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-wallet" style="color:#2ecc71;"></i> Finansal Sağlık Özet</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Net Ofis Kârlılığı:</span>
+                        <strong id="mdNetKar" style="font-size:14px; color:#2ecc71;">0,00 ₺</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#475569; font-size:12px;">Toplam Piyasa Alacağı:</span>
-                        <strong id="mdPiyasaAlacak" style="font-size:15px; color:#ef4444;">0,00 ₺</strong>
+                        <span style="color:#555; font-size:12px;">Toplam Piyasa Alacağı:</span>
+                        <strong id="mdPiyasaAlacak" style="font-size:14px; color:#e74c3c;">0,00 ₺</strong>
                     </div>
                 </div>
 
-                <div class="summary-card" style="border-top:4px solid #3b82f6 !important; padding:15px !important;">
-                    <h3 style="font-size:11px; color:#64748b; text-transform:uppercase; margin-bottom:10px; font-weight:700;"><i class="fas fa-tasks" style="color:#3b82f6;"></i> Beyanname / Görev Durumu</h3>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="color:#475569; font-size:12px;">Genel Görev Başarı Oranı:</span>
-                        <strong id="mdGorevOran" style="font-size:15px; color:#f59e0b;">%0</strong>
+                <div style="background:linear-gradient(135deg, #ffffff, #3498db0a); border:1px solid #eef2f5; border-top:3px solid #3498db; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-tasks" style="color:#3498db;"></i> Beyanname / Görev Durumu</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Genel Görev Başarı Oranı:</span>
+                        <strong id="mdGorevOran" style="font-size:14px; color:#f39c12;">%0</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#475569; font-size:12px;">Bekleyen Toplam Görev:</span>
-                        <strong id="mdBekleyenGorev" style="font-size:15px; color:#ef4444;">0</strong>
+                        <span style="color:#555; font-size:12px;">Bekleyen Toplam Görev:</span>
+                        <strong id="mdBekleyenGorev" style="font-size:14px; color:#e74c3c;">0</strong>
                     </div>
                 </div>
 
-                <div class="summary-card" style="border-top:4px solid #a855f7 !important; padding:15px !important;">
-                    <h3 style="font-size:11px; color:#64748b; text-transform:uppercase; margin-bottom:10px; font-weight:700;"><i class="fas fa-business-time" style="color:#a855f7;"></i> Danışmanlık Projeleri</h3>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="color:#475569; font-size:12px;">Aktif Yürütülen Proje:</span>
-                        <strong id="mdAktifProje" style="font-size:15px; color:#a855f7;">0</strong>
+                <div style="background:linear-gradient(135deg, #ffffff, #9b59b60a); border:1px solid #eef2f5; border-top:3px solid #8e44ad; border-radius:8px; padding:12px; box-shadow:0 4px 10px rgba(0,0,0,0.01);">
+                    <h3 style="font-size:11px; color:#7f8c8d; text-transform:uppercase; margin-bottom:8px; font-weight:700;"><i class="fas fa-business-time" style="color:#8e44ad;"></i> Danışmanlık Projeleri</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <span style="color:#555; font-size:12px;">Aktif Yürütülen Proje:</span>
+                        <strong id="mdAktifProje" style="font-size:14px; color:#8e44ad;">0</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:#475569; font-size:12px;">Biten Proje Arşivi:</span>
-                        <strong id="mdBitenProje" style="font-size:15px; color:#10b981;">0</strong>
+                        <span style="color:#555; font-size:12px;">Biten Proje Arşivi:</span>
+                        <strong id="mdBitenProje" style="font-size:14px; color:#27ae60;">0</strong>
                     </div>
                 </div>
             </div>
 
-            <!-- MODERNEŞTİRİLMİŞ E-DEFTER BANDI -->
-            <div class="form-container" style="padding:15px 20px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; border-left:4px solid #6366f1 !important;">
+            <div style="background:linear-gradient(to right, #2c3e50, #34495e); border-radius:8px; padding:15px; margin-bottom:12px; color:white; box-shadow:0 4px 15px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px;">
                 <div style="flex:1; min-width:200px;">
-                    <h3 style="font-size:13px; margin-bottom:4px; color:#4338ca; font-weight:700;"><i class="fas fa-book"></i> E-Defter Yükleme Merkezi</h3>
-                    <p id="mdDefterBaslik" style="font-size:12px; color:#64748b; margin:0;">Takvimden dönem seçin...</p>
+                    <h3 style="font-size:14px; margin-bottom:5px; color:#f1c40f;"><i class="fas fa-book"></i> E-Defter Yükleme Merkezi</h3>
+                    <p id="mdDefterBaslik" style="font-size:12px; color:#bdc3c7; margin:0;">Takvimden dönem seçin...</p>
                 </div>
-                <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                    <div style="text-align:center; background:#f8fafc; padding:8px 15px; border-radius:8px; min-width:120px; border:1px solid #e2e8f0;">
-                        <div style="font-size:11px; color:#64748b; margin-bottom:3px; font-weight:600;">Aylık Beratlar</div>
-                        <div style="font-size:16px; font-weight:bold; color:#10b981;" id="mdDefterAylikDurum">0 / 0</div>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <div style="text-align:center; background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:6px; min-width:120px;">
+                        <div style="font-size:11px; color:#bdc3c7; margin-bottom:5px;">Aylık Beratlar</div>
+                        <div style="font-size:18px; font-weight:bold; color:#2ecc71;" id="mdDefterAylikDurum">0 / 0</div>
                     </div>
-                    <div style="text-align:center; background:#f8fafc; padding:8px 15px; border-radius:8px; min-width:120px; border:1px solid #e2e8f0;">
-                        <div style="font-size:11px; color:#64748b; margin-bottom:3px; font-weight:600;">3 Aylık Beratlar</div>
-                        <div style="font-size:16px; font-weight:bold; color:#3b82f6;" id="mdDefterUcDurum">0 / 0</div>
+                    <div style="text-align:center; background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:6px; min-width:120px;">
+                        <div style="font-size:11px; color:#bdc3c7; margin-bottom:5px;">3 Aylık Beratlar</div>
+                        <div style="font-size:18px; font-weight:bold; color:#3498db;" id="mdDefterUcDurum">0 / 0</div>
                     </div>
                 </div>
             </div>
@@ -1413,10 +1404,10 @@
         <div id="sihirbazPaneli" class="view-section" style="display: none;">
             <h1>SMMM Ücret Teklifi ve Hesaplama Sihirbazı</h1>
             
-            <div class="form-grid form-container" style="padding: 20px; margin-bottom: 20px; background:#f8fafc;">
+            <div class="form-grid" style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bce0ee;">
                 <div class="form-group">
-                    <label style="color:#475569; font-weight:600;"><i class="far fa-calendar-check" style="color:#ef4444;"></i> Hesaplama Yılı:</label>
-                    <select id="wzYil" onchange="ucretHesapla()" style="font-weight:600;">
+                    <label style="color:#e74c3c; font-weight:bold;">Hesaplama Yılı:</label>
+                    <select id="wzYil" onchange="ucretHesapla()" style="border: 2px solid #e74c3c; font-weight:bold; padding: 10px;">
                         <option value="2025">2025 (Baz Tarife)</option>
                         <option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
@@ -1426,8 +1417,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label style="color:#475569; font-weight:600;"><i class="far fa-star" style="color:#f59e0b;"></i> Müşteri Kalite Puanı:</label>
-                    <select id="wzYildiz" onchange="ucretHesapla()" style="font-weight:600;">
+                    <label style="color:#2c3e50; font-weight:bold;">Müşteri Kalite Puanı (Yıldız Sistemi):</label>
+                    <select id="wzYildiz" onchange="ucretHesapla()" style="border: 2px solid #f1c40f; font-weight:bold; padding: 10px;">
                         <option value="5">⭐⭐⭐⭐⭐ 5 Yıldız (Asgari Ücret)</option>
                         <option value="4">⭐⭐⭐⭐ 4 Yıldız (+ %10 İlave Fiyat)</option>
                         <option value="3">⭐⭐⭐ 3 Yıldız (+ %20 İlave Fiyat)</option>
@@ -1436,12 +1427,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label style="color:#475569; font-weight:600;"><i class="fas fa-percent" style="color:#10b981;"></i> Yıllık Dijital İskonto (%):</label>
-                    <input type="number" id="wzDijitalIskonto" value="0" min="0" max="100" oninput="ucretHesapla()" style="font-weight:600;">
+                    <label style="color:#2c3e50; font-weight:bold;">Yıllık Dijital İskonto (%):</label>
+                    <input type="number" id="wzDijitalIskonto" value="0" min="0" max="100" oninput="ucretHesapla()">
                 </div>
                 <div class="form-group">
-                    <label style="visibility:hidden;">Kaydet</label>
-                    <button type="button" class="btn-primary action-btn" onclick="teklifKaydet()" style="height: 38px; font-size: 13px; font-weight:600;"><i class="far fa-save"></i> Teklifi Kaydet</button>
+                    <label style="visibility:hidden;">Kaydet Butonu</label>
+                    <button type="button" class="btn-primary action-btn" onclick="teklifKaydet()" style="height: 100%; font-size: 16px;">💾 Teklifi Kaydet</button>
                 </div>
             </div>
 
@@ -1587,8 +1578,9 @@
 
         <div id="kurulusYonetimModal" class="modal-overlay">
             <div class="modal-box" style="max-width:800px;">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-rocket" style="color:#ef4444; margin-right:6px;"></i> Kuruluş Asistanı: <span id="mdlKurulusUnvan" style="color:#64748b;">Yeni Şirket</span></h3>
+                <div class="modal-header" style="background:#e74c3c;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-cogs"></i> Kuruluş Asistanı: <span id="mdlKurulusUnvan">Yeni Şirket</span></h3>
+                    <button class="modal-close" onclick="modalKapat('kurulusYonetimModal')">X</button>
                 </div>
                 <div class="modal-body" style="background:#f9fbfc; padding:20px;">
                     <input type="hidden" id="kurulusId">
@@ -1699,8 +1691,9 @@
 
         <div id="danismanlikFirmaSecModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-rocket" style="color:#8b5cf6; margin-right:6px;"></i> Danışmanlık Projesi Başlat</h3>
+                <div class="modal-header" style="background:#8e44ad;">
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-rocket"></i> Danışmanlık Projesi Başlat</h3>
+                    <button class="modal-close" onclick="modalKapat('danismanlikFirmaSecModal')">X</button>
                 </div>
                 <div class="modal-body" style="padding:20px;">
                     <p style="font-size:13px; color:#555; margin-bottom:15px;">Sistemde kayıtlı herhangi bir mükellefiniz için proje başlatabilirsiniz.</p>
@@ -1717,8 +1710,8 @@
 
         <div id="danismanlikGorevModal" class="modal-overlay">
             <div class="modal-box" style="max-width: 700px;">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-project-diagram" style="color:#8b5cf6; margin-right:6px;"></i> <span id="mdlDanFirmaAd" style="color:#64748b;">Firma Adı</span> - Proje Yönetimi</h3>
+                <div class="modal-header" style="background:#8e44ad;">
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-project-diagram"></i> <span id="mdlDanFirmaAd">Firma Adı</span> - Proje Yönetimi</h3>
                     <button class="modal-close" onclick="modalKapat('danismanlikGorevModal')">X</button>
                 </div>
                 <div class="modal-body" style="padding:20px; background:#f9fbfc;">
@@ -1741,8 +1734,8 @@
         <!-- MÜKELLEF MESLEKİ GÖREV KONTROL MODALI -->
         <div id="takvimGorevModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-tasks" style="color:#3b82f6; margin-right:6px;"></i> <span id="mdlTakvimFirmaAd" style="color:#64748b;">Firma Adı</span></h3>
+                <div class="modal-header" style="background:#2c3e50;">
+                    <h3 style="font-size:15px; margin:0;"><i class="fas fa-tasks"></i> <span id="mdlTakvimFirmaAd">Firma Adı</span></h3>
                     <button class="modal-close" onclick="modalKapat('takvimGorevModal')">X</button>
                 </div>
                 <div class="modal-body" style="padding:20px;">
@@ -1822,8 +1815,7 @@
         <div id="tahakkukGirisModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
                 <div class="modal-header" style="background:#e67e22;">
-                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-coins"></i> Tahakkuk / Ödeme Bilgisi Gir</h3><div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-coins" style="color:#f59e0b; margin-right:6px;"></i> Tahakkuk / Ödeme Bilgisi Gir</h3>
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-coins"></i> Tahakkuk / Ödeme Bilgisi Gir</h3>
                     <button class="modal-close" onclick="modalKapat('tahakkukGirisModal')">X</button>
                 </div>
                 <div class="modal-body" style="padding:20px; background:#fdfbf7;">
@@ -1867,8 +1859,8 @@
 
         <div id="evrakModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-file-archive" style="color:#a855f7; margin-right:6px;"></i> Evrak & Teslimat Çetelesi</h3>
+                <div class="modal-header" style="background:#9b59b6;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-file-archive"></i> Evrak & Teslimat Çetelesi</h3>
                     <button class="modal-close" onclick="modalKapat('evrakModal')">X</button>
                 </div>
                 <div class="modal-body">
@@ -2234,8 +2226,8 @@
 
         <div id="giderModal" class="modal-overlay">
             <div class="modal-box modal-box-sm">
-                <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
-                    <h3 style="font-size:15px; margin:0; color:#0f172a;"><i class="fas fa-file-invoice-dollar" style="color:#ef4444; margin-right:6px;"></i> Yeni Gider / Dış Hizmet Ekle</h3>
+                <div class="modal-header" style="background:#c0392b;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-file-invoice-dollar"></i> Yeni Gider / Dış Hizmet Ekle</h3>
                     <button class="modal-close" onclick="modalKapat('giderModal')">X</button>
                 </div>
                 <div class="modal-body">
@@ -2804,7 +2796,6 @@
         function mukellefGoruntule(vkn) {
             let m = mukellefler.find(item => item.vkn === vkn);
             if (!m) return;
-            if (!m.hareketler) m.hareketler = []; // KORUYUCU SATIR
             
             let alan = document.getElementById("printProfilAlan");
             
@@ -3595,12 +3586,10 @@
                 // SMMM kendi firmasını finansal toplamlara (Son makbuz vb.) dahil etmesin
                 if(m.mukellefTuru === "SMMM") return;
                 
-                if (m.hareketler) {
-                    m.hareketler.forEach(h => {
-                        if(h.tur === "Makbuz" && h.tarihDüzz > enSonMakbuz) enSonMakbuz = h.tarihDüzz;
-                        if(h.tur === "Tahsilat" && h.tarihDüzz > enSonTahsilat) enSonTahsilat = h.tarihDüzz;
-                    });
-                }
+                m.hareketler.forEach(h => {
+                    if(h.tur === "Makbuz" && h.tarihDüzz > enSonMakbuz) enSonMakbuz = h.tarihDüzz;
+                    if(h.tur === "Tahsilat" && h.tarihDüzz > enSonTahsilat) enSonTahsilat = h.tarihDüzz;
+                });
             });
             giderIslemler.forEach(g => {
                 if(g.islemTipi === "Ödeme" && g.tarihDüzz > enSonTahsilat) enSonTahsilat = g.tarihDüzz;
@@ -3616,42 +3605,39 @@
                 let mFaturaYil = 0; let mOdemeYil = 0;
                 let mDevredenBakiye = 0;
 
-                // ÖLÜMÜ ENGELLEYEN HAYAT KURTARICI KONTROL (Eğer firmanın faturası yoksa çökmesin diye)
-                if (m.hareketler) {
-                    m.hareketler.forEach(h => {
-                        let islemYili = parseInt(h.tarih.split('.')[2]);
-                        
-                        if (islemYili < seciliYil) {
-                            // Seçili yıldan önceki geçmiş işlemler "Devreden Bakiye"dir
-                            if(h.tur === "Makbuz") mDevredenBakiye += (h.netTutar || h.tutar || 0);
-                            else if(h.tur === "Tahsilat") mDevredenBakiye -= (h.netTutar || h.tutar || 0);
-                        } else if (islemYili === seciliYil) {
-                            // Seçili yılın hareketleri dashboard'a yansır
-                            if(h.tur === "Makbuz") { 
-                                mFaturaYil += (h.netTutar || h.tutar || 0);
-                                tMakbuzBrut += (h.brut || 0);
-                                tMakbuzKdv += (h.kdv || 0);
-                                tMakbuzStopaj += (h.stopaj || 0);
-                                tMakbuzNet += (h.netTutar || h.tutar || 0);
-                            }
-                            else if(h.tur === "Tahsilat") { 
-                                mOdemeYil += (h.netTutar || h.tutar || 0);
-                                tTahsilat += (h.netTutar || h.tutar || 0);
-                            }
+                m.hareketler.forEach(h => {
+                    let islemYili = parseInt(h.tarih.split('.')[2]);
+                    
+                    if (islemYili < seciliYil) {
+                        // Seçili yıldan önceki geçmiş işlemler "Devreden Bakiye"dir
+                        if(h.tur === "Makbuz") mDevredenBakiye += (h.netTutar || h.tutar || 0);
+                        else if(h.tur === "Tahsilat") mDevredenBakiye -= (h.netTutar || h.tutar || 0);
+                    } else if (islemYili === seciliYil) {
+                        // Seçili yılın hareketleri dashboard'a yansır
+                        if(h.tur === "Makbuz") { 
+                            mFaturaYil += (h.netTutar || h.tutar || 0);
+                            tMakbuzBrut += (h.brut || 0);
+                            tMakbuzKdv += (h.kdv || 0);
+                            tMakbuzStopaj += (h.stopaj || 0);
+                            tMakbuzNet += (h.netTutar || h.tutar || 0);
                         }
-                    });
-                }
+                        else if(h.tur === "Tahsilat") { 
+                            mOdemeYil += (h.netTutar || h.tutar || 0);
+                            tTahsilat += (h.netTutar || h.tutar || 0);
+                        }
+                    }
+                });
 
                 let guncelBakiye = mDevredenBakiye + mFaturaYil - mOdemeYil;
                 genelPiyasaAlacagi += guncelBakiye;
 
                 if(aranacak && m.unvan.toLowerCase().indexOf(aranacak) === -1 && m.vkn.indexOf(aranacak) === -1) return;
 
-                let bakiyeRenk = guncelBakiye > 0 ? "#ef4444" : "#10b981";
-                let mutabakatHtml = (m.mutabakatlar && m.mutabakatlar.length > 0) ? true : false;
+                let badgeClass = guncelBakiye > 0 ? "debt" : "credit"; 
+                let bakiyeRenk = guncelBakiye > 0 ? "#e74c3c" : "#2ecc71";
+                let mutabakatHtml = (m.mutabakatlar && m.mutabakatlar.length > 0) ? `<div style="margin-top:10px;"><span style="background:#3498db; color:white; padding:3px 8px; border-radius:10px; font-size:11px;">Mutabık: ${m.mutabakatlar[0]}</span></div>` : "";
 
                 if(pano) {
-                    // DİKKAT: BURADAKİ ONCLICK TIKLAMA OLAYI DÜZELTİLDİ
                     pano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
                         <div class="company-badge" onclick="ekstreAc('${m.vkn}', ${seciliYil})">
@@ -3707,16 +3693,12 @@
                     genelPiyasaBorcu += grup.bakiye;
 
                     let gRenk = grup.bakiye > 0 ? "#ef4444" : "#10b981";
-                    
-                    if(aranacak && tur.toLowerCase().indexOf(aranacak) === -1) return;
-
-                    // DİKKAT: BURADAKİ ONCLICK TIKLAMA OLAYI DÜZELTİLDİ
                     giderPano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
                         <div class="company-badge" onclick="giderEkstreAc('${tur}', ${seciliYil})">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${gRenk};"></div>
                             
-                            <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tur}"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
+                            <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px;"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
                             <div style="font-size:12px; color:#64748b; margin-bottom:15px;">Kalan Cari Borç (Bakiye)</div>
                             
                             <div style="margin-top:auto; padding-top:15px; border-top:1px dashed #e2e8f0;">
@@ -3752,6 +3734,7 @@
                 else { kdvYazi.textContent = formatMoney(Math.abs(odenecekKdv)) + " ₺ (Dev.)"; kdvYazi.style.color = "#27ae60"; }
             }
         }
+
         function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
         function modalKapat(id) { document.getElementById(id).style.display = 'none'; kutuKapat('tahsilatKutu'); kutuKapat('mutabakatKutu'); kutuKapat('giderOdemeKutu'); }
         function kutuAc(id) { document.getElementById(id).style.display = 'block'; }
@@ -4028,9 +4011,6 @@
             
             aktifEkstreVkn = vkn;
             let m = mukellefler.find(x => x.vkn === vkn);
-            
-            if(!m) { alert("Bu mükellef kaydı bulunamadı."); return; } // KORUYUCU SATIR
-            if(!m.hareketler) m.hareketler = []; // KORUYUCU SATIR
             document.getElementById("eksUnvan").textContent = m.unvan;
             document.getElementById("eksVkn").textContent = m.vkn;
             
