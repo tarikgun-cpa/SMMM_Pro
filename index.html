@@ -3651,9 +3651,10 @@
                 let mutabakatHtml = (m.mutabakatlar && m.mutabakatlar.length > 0) ? true : false;
 
                 if(pano) {
+                    // DİKKAT: BURADAKİ ONCLICK TIKLAMA OLAYI DÜZELTİLDİ
                     pano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
-                        <div class="company-badge" onclick="ekstreAc('${m.vkn}', '${seciliYil}')">
+                        <div class="company-badge" onclick="ekstreAc('${m.vkn}', ${seciliYil})">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${bakiyeRenk};"></div>
                             
                             <div style="font-weight:700; color:#1e293b; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; letter-spacing:-0.3px;" title="${m.unvan}">${m.unvan}</div>
@@ -3709,9 +3710,10 @@
                     
                     if(aranacak && tur.toLowerCase().indexOf(aranacak) === -1) return;
 
+                    // DİKKAT: BURADAKİ ONCLICK TIKLAMA OLAYI DÜZELTİLDİ
                     giderPano.innerHTML += `
                     <div style="flex: 0 0 calc(25% - 15px); min-width: 250px;">
-                        <div class="company-badge" onclick="giderEkstreAc('${tur}', '${seciliYil}')">
+                        <div class="company-badge" onclick="giderEkstreAc('${tur}', ${seciliYil})">
                             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background:${gRenk};"></div>
                             
                             <div style="font-weight:700; color:#1e293b; font-size:15px; margin-bottom:6px; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tur}"><i class="fas fa-folder-open" style="color:${gRenk}; margin-right:5px;"></i> ${tur}</div>
