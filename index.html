@@ -438,11 +438,33 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
             /* Lüks Fakat Kompakt Rapor Tablosu (Tek Sayfaya Sığdırılmış) */
-            table { width: 100% !important; border-collapse: collapse !important; margin-bottom: 10px !important; border: 1px solid #bdc3c7 !important; }
+            table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; margin-bottom: 10px !important; border: 1px solid #bdc3c7 !important; }
             tr { page-break-inside: avoid !important; }
-            th { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; width: 30% !important; background-color: #f4f6f9 !important; height: 16px !important; }
-            td { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #34495e !important; width: 70% !important; height: 16px !important; }
+            th, td { word-wrap: break-word !important; overflow-wrap: break-word !important; }
+            th { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; background-color: #f4f6f9 !important; height: 16px !important; }
+            td { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #34495e !important; height: 16px !important; }
             
+            /* Sadece Mükellef Profili Tablosuna Özel Genişlik (2 Sütunlu Form) */
+            #printProfilAlan table th { width: 35% !important; }
+            #printProfilAlan table td { width: 65% !important; }
+            #printProfilAlan table td[colspan="2"] { width: 100% !important; text-align: center !important; }
+
+            /* Ekstre Tablolarına (6 Sütunlu) Özel Orantılı Genişlikler */
+            #eksTablo th:nth-child(1), #eksTablo td:nth-child(1) { width: 12% !important; } /* Tarih */
+            #eksTablo th:nth-child(2), #eksTablo td:nth-child(2) { width: 12% !important; } /* Tipi */
+            #eksTablo th:nth-child(3), #eksTablo td:nth-child(3) { width: 34% !important; } /* Açıklama */
+            #eksTablo th:nth-child(4), #eksTablo td:nth-child(4) { width: 14% !important; } /* Borç */
+            #eksTablo th:nth-child(5), #eksTablo td:nth-child(5) { width: 14% !important; } /* Alacak */
+            #eksTablo th:nth-child(6), #eksTablo td:nth-child(6) { width: 14% !important; } /* Bakiye */
+
+            /* Gider Ekstresi İçin Aynı Orantılar */
+            #giderEkstreTablo th:nth-child(1), #giderEkstreTablo td:nth-child(1) { width: 12% !important; }
+            #giderEkstreTablo th:nth-child(2), #giderEkstreTablo td:nth-child(2) { width: 12% !important; }
+            #giderEkstreTablo th:nth-child(3), #giderEkstreTablo td:nth-child(3) { width: 34% !important; }
+            #giderEkstreTablo th:nth-child(4), #giderEkstreTablo td:nth-child(4) { width: 14% !important; }
+            #giderEkstreTablo th:nth-child(5), #giderEkstreTablo td:nth-child(5) { width: 14% !important; }
+            #giderEkstreTablo th:nth-child(6), #giderEkstreTablo td:nth-child(6) { width: 14% !important; }
+
             tr.kategori-baslik th { text-align: center !important; font-size: 10.5pt !important; letter-spacing: 1px !important; padding: 5px !important; background-color: #2c3e50 !important; color: white !important; border-bottom: 2px solid #34495e !important; }
             /* (SORUN 1'İN ÇÖZÜMÜ) Üstteki özet bilgi kutularını yazdırırken zorla yan yana (row) diz */
             #printEkstreAlan > div:nth-child(2), #printGiderEkstreAlan > div:nth-child(2), 
