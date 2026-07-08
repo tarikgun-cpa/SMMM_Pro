@@ -757,6 +757,18 @@
             }
         }
 
+        /* --- YAZDIRMA (PRINT) AYARLARI --- */
+        @media print {
+            .page-footer { display: block; position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 8pt; background: white; border-top: 1px solid #000; padding-top: 5px; color: #000; }
+            .page-break { page-break-after: always; }
+            
+            /* YAZDIRMADA CARİ BAKIYE VE BORÇ/ALACAK RENKLERİNİ ZORLA KORU */
+            td[style*="color:#e74c3c"], td[style*="color:#c0392b"] { color: #c0392b !important; font-weight: bold !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            td[style*="color:#2ecc71"] { color: #27ae60 !important; font-weight: bold !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            td[style*="background:#f4f6f9"] { background-color: #f4f6f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            b[style*="color:#e74c3c"], b[style*="color:#c0392b"] { color: #c0392b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            b[style*="color:#2ecc71"] { color: #27ae60 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -821,6 +833,15 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h1 style="margin:0; font-size:18px; color:#2c3e50; font-weight:700;"><i class="fas fa-chart-line" style="color:#3498db;"></i> Ofis Genel Durum & Yönetici Özeti</h1>
                 <div id="dashSaat" style="font-size:11px; color:#7f8c8d; font-weight:500; background:#fff; padding:5px 10px; border-radius:6px; border:1px solid #eef2f5;"></div>
+            </div>
+
+            <!-- YENİ EKLENEN AI YÖNETİCİ ÖZETİ KUTUSU -->
+            <div id="aiYoneticiOzeti" style="background:linear-gradient(to right, #eafaf1, #ffffff); border-left:4px solid #2ecc71; padding:15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:center; gap:15px; box-shadow:0 2px 5px rgba(46, 204, 113, 0.1);">
+                <i class="fas fa-robot" style="font-size:24px; color:#2ecc71;"></i>
+                <div>
+                    <h4 style="margin:0 0 5px 0; color:#2c3e50; font-size:14px;">Yapay Zeka Yönetici Özeti</h4>
+                    <p id="aiYoneticiMetin" style="margin:0; font-size:13px; color:#555;">Sistem verileri analiz ediliyor...</p>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:12px;">
@@ -1588,6 +1609,8 @@
                    <div class="cari-tabs" style="margin-bottom:15px;">
                         <button class="cari-tab-btn active" id="btnKurTab1" onclick="kurulusSekmeSec('kurBilgiTab')"><i class="fas fa-info-circle"></i> Temel Bilgiler & KOTO</button>
                         <button class="cari-tab-btn" id="btnKurTab2" onclick="kurulusSekmeSec('kurAdimTab')"><i class="fas fa-tasks"></i> Kuruluş Sonrası 15 Adım</button>
+                        <!-- YENİ EKLENEN MASRAF SEKMESİ -->
+                        <button class="cari-tab-btn" id="btnKurTab3" onclick="kurulusSekmeSec('kurMaliyetTab')"><i class="fas fa-lira-sign"></i> Kuruluş Masrafları</button>
                     </div>
 
                     <div id="kurBilgiTab" style="display:block;">
@@ -1600,7 +1623,7 @@
                                 <div class="form-group"><label>Şirketin Süresi / Tabiyeti:</label><input type="text" id="kurSureTabiyet" class="search-bar" value="Süresiz / T.C."></div>
                                 <div class="form-group full-width"><label>Şirket Adresi (Ticari İkametgah):</label><textarea id="kurAdres" class="search-bar" rows="2" placeholder="İlçe / İL dahil açık adres..."></textarea></div>
                                 <div class="form-group full-width"><label>Faaliyet Konusu (NACE) ve Açıklaması:</label><input type="text" id="kurFaaliyet" class="search-bar" placeholder="Örn: 12.34.56 - İştigal Açıklaması..."></div>
-                                <div class="form-group full-width"><label>Ortaklar ve Yetkililer (Ad, Soyad, TC, Adres, Tel, E-posta):</label><textarea id="kurOrtaklar" class="search-bar" rows="4" placeholder="1. Ortak Adı Soyadı - TCKN - Adres - Tel - Eposta&#10;2. Ortak Adı Soyadı - TCKN - Adres - Tel - Eposta"></textarea></div>
+                                <div class="form-group full-width"><label>Ortaklar ve Yetkililer (Ad, Soyad, TC, Adres, Tel, E-posta):</label><textarea id="kurOrtaklar" class="search-bar" rows="4" placeholder="1. Ortak Adı Soyadı - TCKN - Adres - Tel - Eposta"></textarea></div>
                                 <div class="form-group"><label>Şirket İletişim (Tel/E-Posta):</label><input type="text" id="kurIletisim" class="search-bar"></div>
                                 <div class="form-group"><label>Firma Muhasebecisi (Ad / Tel):</label><input type="text" id="kurMuhasebeci" class="search-bar" value="Tarık GÜN - 0542 323 74 77"></div>
                             </div>
@@ -1620,16 +1643,33 @@
                         </div>
                     </div>
 
-                        <div id="kurAdimTab" style="display:none;">
+                    <div id="kurAdimTab" style="display:none;">
                         <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
                             <p style="font-size:12px; color:#c0392b; font-weight:bold; margin-bottom:15px; border-bottom:1px dashed #fadbd8; padding-bottom:10px;">Şirket tescil edildikten sonra yapılması zorunlu yasal işlemler:</p>
-                            <div id="kurulusChecklist" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                </div>
+                            <div id="kurulusChecklist" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- YENİ EKLENEN MASRAF İÇERİĞİ -->
+                    <div id="kurMaliyetTab" style="display:none;">
+                        <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Mükelleften tahsil edilecek resmi harçları ve kuruluş hizmet bedelinizi takip edin:</p>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Noter Masrafları (TL):</label><input type="number" id="kurMalNoter" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Ticaret Odası Sicil ve Tescil (TL):</label><input type="number" id="kurMalSicil" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Rekabet Kurumu Payı (TL):</label><input type="number" id="kurMalRekabet" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Oda Kayıt Ücreti (TL):</label><input type="number" id="kurMalOda" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>SMMM Kuruluş Hizmet Bedeli (TL):</label><input type="number" id="kurMalSmmm" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Diğer Masraflar (TL):</label><input type="number" id="kurMalDiger" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                            </div>
+                            <div style="background:#eafaf1; padding:15px; border-radius:6px; border:1px solid #2ecc71; margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:bold; color:#27ae60; font-size:16px;">Mükelleften Alınacak Toplam:</span>
+                                <strong id="kurMalToplam" style="font-size:22px; color:#27ae60;">0.00 TL</strong>
+                            </div>
                         </div>
                     </div>
 
                 </div>
-                <div class="modal-footer" style="justify-content:space-between;">
                     <button class="action-btn btn-danger" style="background:none; color:#e74c3c; border:1px solid #e74c3c;" onclick="kurulusSil()"><i class="fas fa-trash"></i> Süreci Sil</button>
                     <button class="action-btn btn-primary" style="background:#e74c3c;" onclick="kurulusKaydet()">Bilgileri ve Adımları Kaydet</button>
                 </div>
@@ -2040,6 +2080,15 @@
                 <div style="display:flex; gap:15px; font-size:11px; color:#7f8c8d; background:#fff; padding:6px 12px; border-radius:6px; border:1px solid #ddd;">
                     <div><i class="fas fa-file-invoice" style="color:#3498db;"></i> Son Makbuz: <span id="dashSonMakbuzTarih" style="color:#e74c3c;">-</span></div>
                     <div><i class="fas fa-hand-holding-usd" style="color:#2ecc71;"></i> Son Tahsilat: <span id="dashSonTahsilatTarih" style="color:#e74c3c;">-</span></div>
+                </div>
+            </div>
+
+            <!-- YENİ EKLENEN AI FİNANS ÖZETİ KUTUSU -->
+            <div id="aiFinansOzeti" style="background:linear-gradient(to right, #ebf5fb, #ffffff); border-left:4px solid #3498db; padding:15px; margin-bottom:15px; border-radius:6px; display:flex; align-items:center; gap:15px; box-shadow:0 2px 5px rgba(52, 152, 219, 0.1);">
+                <i class="fas fa-brain" style="font-size:24px; color:#3498db;"></i>
+                <div>
+                    <h4 style="margin:0 0 5px 0; color:#2c3e50; font-size:14px;">AI Finansal Zeka ve Nakit Akışı</h4>
+                    <p id="aiFinansMetin" style="margin:0; font-size:13px; color:#555;">Tahsilat ve fatura verileri hesaplanıyor...</p>
                 </div>
             </div>
             
@@ -6123,6 +6172,112 @@
             link.click();
             document.body.removeChild(link);
         }
+        // --- AI YÖNETİCİ ÖZETİ EKLENTİSİ ---
+        const eskiMasterDash = masterDashboardCiz;
+        masterDashboardCiz = function() {
+            eskiMasterDash();
+            let totalAlacak = 0;
+            let fGorevTop = 0; let fGorevTamam = 0;
+            try { fGorevTop = parseInt(document.getElementById("mdBekleyenGorev").textContent) + parseInt(document.getElementById("takvimTamamlananGorev") ? document.getElementById("takvimTamamlananGorev").textContent : 0); } catch(e){}
+            try { fGorevTamam = parseInt(document.getElementById("takvimTamamlananGorev") ? document.getElementById("takvimTamamlananGorev").textContent : 0); } catch(e){}
+            try { totalAlacak = parseFloat(document.getElementById("mdPiyasaAlacak").textContent.replace(/[^0-9,-]+/g,"").replace(",",".")); } catch(e){}
+            
+            let yuzde = fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100);
+            let aiMetin = `Ofisiniz bu ay <b>%${yuzde || 0}</b> operasyonel başarı ile çalışıyor. Toplam <b>${formatMoney(totalAlacak || 0)} ₺</b> piyasa alacağınız bulunuyor. `;
+            if((yuzde || 0) < 50) aiMetin += "<span style='color:#e74c3c; font-weight:bold;'>Görevlerde ciddi birikme var, acil müdahale önerilir!</span>";
+            else if((yuzde || 0) < 80) aiMetin += "Görevler orta hızda ilerliyor.";
+            else aiMetin += "<span style='color:#27ae60; font-weight:bold;'>Harika bir performans, ofiste işler tıkırında!</span>";
+            if(document.getElementById("aiYoneticiMetin")) document.getElementById("aiYoneticiMetin").innerHTML = aiMetin;
+        };
+
+        // --- AI FİNANS ÖZETİ EKLENTİSİ ---
+        const eskiCariPano = cariPanoCiz;
+        cariPanoCiz = function() {
+            eskiCariPano();
+            try {
+                let tMakbuzNet = parseFloat(document.getElementById("sumGelir").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
+                let tTahsilat = tMakbuzNet - parseFloat(document.getElementById("sumAlacak").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
+                let netKar = parseFloat(document.getElementById("sumKar").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
+                let genelPiyasaBorcu = parseFloat(document.getElementById("sumBorc").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
+
+                let tahsilatOrani = tMakbuzNet === 0 ? 0 : Math.round((tTahsilat / tMakbuzNet) * 100);
+                if (tahsilatOrani < 0) tahsilatOrani = 0; if (tahsilatOrani > 100) tahsilatOrani = 100;
+                
+                let aiFinans = `Seçili yılda kestiğiniz makbuzların yaklaşık <b>%${tahsilatOrani}</b> kadarını tahsil etmişsiniz. Toplam piyasa borcunuz <b>${formatMoney(genelPiyasaBorcu || 0)} ₺</b>. `;
+                if(netKar < 0) aiFinans += "<span style='color:#e74c3c; font-weight:bold;'>Giderleriniz gelirlerinizi aşmış durumda. Nakit açığına dikkat!</span>";
+                else aiFinans += `<span style='color:#27ae60; font-weight:bold;'>Ticari kârlılığınız pozitif. Ofis finansal olarak oldukça sağlıklı.</span>`;
+                if(document.getElementById("aiFinansMetin")) document.getElementById("aiFinansMetin").innerHTML = aiFinans;
+            } catch(e) {}
+        };
+
+        // --- KURULUŞ MASRAFLARI JS EKLENTİSİ ---
+        function kurulusSekmeSec(tabId) {
+            document.getElementById('kurBilgiTab').style.display = 'none';
+            document.getElementById('kurAdimTab').style.display = 'none';
+            if(document.getElementById('kurMaliyetTab')) document.getElementById('kurMaliyetTab').style.display = 'none'; 
+            
+            document.getElementById('btnKurTab1').classList.remove('active');
+            document.getElementById('btnKurTab1').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab1').style.color = '#333';
+            
+            document.getElementById('btnKurTab2').classList.remove('active');
+            document.getElementById('btnKurTab2').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab2').style.color = '#333';
+
+            if(document.getElementById('btnKurTab3')) {
+                document.getElementById('btnKurTab3').classList.remove('active'); 
+                document.getElementById('btnKurTab3').style.background = '#e1e8ed'; 
+                document.getElementById('btnKurTab3').style.color = '#333'; 
+            }
+
+            document.getElementById(tabId).style.display = 'block';
+            
+            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : (tabId === 'kurAdimTab' ? 'btnKurTab2' : 'btnKurTab3');
+            document.getElementById(btn).classList.add('active');
+            document.getElementById(btn).style.background = '#e74c3c';
+            document.getElementById(btn).style.color = 'white';
+        }
+
+        function kurulusMaliyetTopla() {
+            let n = parseFloat(document.getElementById("kurMalNoter").value) || 0;
+            let s = parseFloat(document.getElementById("kurMalSicil").value) || 0;
+            let r = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
+            let o = parseFloat(document.getElementById("kurMalOda").value) || 0;
+            let sm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
+            let d = parseFloat(document.getElementById("kurMalDiger").value) || 0;
+            let top = n + s + r + o + sm + d;
+            document.getElementById("kurMalToplam").textContent = formatMoney(top) + " TL";
+        }
+
+        const eskiKurModalAc = kurulusModalAc;
+        kurulusModalAc = function(id) {
+            eskiKurModalAc(id);
+            let k = kurulusVeritabani[id];
+            if(document.getElementById("kurMalNoter")) {
+                document.getElementById("kurMalNoter").value = k.mN || 0;
+                document.getElementById("kurMalSicil").value = k.mS || 0;
+                document.getElementById("kurMalRekabet").value = k.mR || 0;
+                document.getElementById("kurMalOda").value = k.mO || 0;
+                document.getElementById("kurMalSmmm").value = k.mSm || 0;
+                document.getElementById("kurMalDiger").value = k.mD || 0;
+                kurulusMaliyetTopla();
+            }
+        };
+
+        const eskiKurKaydet = kurulusKaydet;
+        kurulusKaydet = function() {
+            let id = document.getElementById("kurulusId").value;
+            let k = kurulusVeritabani[id];
+            if(document.getElementById("kurMalNoter")) {
+                k.mN = parseFloat(document.getElementById("kurMalNoter").value) || 0;
+                k.mS = parseFloat(document.getElementById("kurMalSicil").value) || 0;
+                k.mR = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
+                k.mO = parseFloat(document.getElementById("kurMalOda").value) || 0;
+                k.mSm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
+                k.mD = parseFloat(document.getElementById("kurMalDiger").value) || 0;
+            }
+            eskiKurKaydet();
+        };
     </script>
 </body>
 </html>
