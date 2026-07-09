@@ -2868,10 +2868,11 @@
             if(logoElement) {
                 try {
                     let canvas = document.createElement("canvas");
-                    canvas.width = logoElement.naturalWidth || 140;
-                    canvas.height = logoElement.naturalHeight || 140;
+                    // Canvas boyutunu ve resim çizimini 140px'e sabitledik
+                    canvas.width = 140; 
+                    canvas.height = (logoElement.naturalHeight / logoElement.naturalWidth) * 140; 
                     let ctx = canvas.getContext("2d");
-                    ctx.drawImage(logoElement, 0, 0);
+                    ctx.drawImage(logoElement, 0, 0, canvas.width, canvas.height);
                     // Logoyu ham veriye çevir
                     logoBase64 = canvas.toDataURL("image/png");
                 } catch(e) {
