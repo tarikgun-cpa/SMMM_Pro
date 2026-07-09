@@ -5892,41 +5892,70 @@
         ];
 
         function kurulusSekmeSec(tabId) {
+            // Tüm içerikleri gizle
             document.getElementById('kurBilgiTab').style.display = 'none';
             document.getElementById('kurAdimTab').style.display = 'none';
+            if(document.getElementById('kurMaliyetTab')) document.getElementById('kurMaliyetTab').style.display = 'none';
+
+            // Tüm butonların aktifliğini kaldır
             document.getElementById('btnKurTab1').classList.remove('active');
             document.getElementById('btnKurTab1').style.background = '#e1e8ed';
             document.getElementById('btnKurTab1').style.color = '#333';
+            
             document.getElementById('btnKurTab2').classList.remove('active');
             document.getElementById('btnKurTab2').style.background = '#e1e8ed';
             document.getElementById('btnKurTab2').style.color = '#333';
 
+            if(document.getElementById('btnKurTab3')) {
+                document.getElementById('btnKurTab3').classList.remove('active');
+                document.getElementById('btnKurTab3').style.background = '#e1e8ed';
+                document.getElementById('btnKurTab3').style.color = '#333';
+            }
+
+            // Seçilen içeriği göster
             document.getElementById(tabId).style.display = 'block';
-            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : 'btnKurTab2';
-            document.getElementById(btn).classList.add('active');
-            document.getElementById(btn).style.background = '#e74c3c';
-            document.getElementById(btn).style.color = 'white';
+            
+            // Seçilen butonu aktif et
+            let btn = 'btnKurTab1';
+            if(tabId === 'kurAdimTab') btn = 'btnKurTab2';
+            else if(tabId === 'kurMaliyetTab') btn = 'btnKurTab3';
+            
+            if(document.getElementById(btn)) {
+                document.getElementById(btn).classList.add('active');
+                document.getElementById(btn).style.background = '#e74c3c';
+                document.getElementById(btn).style.color = 'white';
+            }
         }
 
         function yeniKurulusBaslat() {
             let id = "KUR_" + Date.now();
             kurulusVeritabani[id] = {
                 id: id, unvan: "", sermaye: "", ortaklar: "", adres: "", faaliyet: "", iletisim: "",
-                adımlar: {}, olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
+                nevi: "Limited Şirket", vergi: "", sureTabiyet: "Süresiz / T.C.", muhasebeci: "Tarık GÜN - 0542 323 74 77",
+                adımlar: {}, masraflar: [], olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
             };
             kurulusModalAc(id);
         }
 
         function kurulusModalAc(id) {
             let k = kurulusVeritabani[id];
+            if (!k) return;
+            if (!k.adımlar) k.adımlar = {};
+            
             document.getElementById("kurulusId").value = id;
             document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
+            
+            // Tüm Temel Bilgi Alanlarının Yüklenmesi
             document.getElementById("kurUnvan").value = k.unvan || "";
+            document.getElementById("kurNevi").value = k.nevi || "Limited Şirket";
             document.getElementById("kurSermaye").value = k.sermaye || "";
-            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
+            document.getElementById("kurVergi").value = k.vergi || "";
+            document.getElementById("kurSureTabiyet").value = k.sureTabiyet || "Süresiz / T.C.";
             document.getElementById("kurAdres").value = k.adres || "";
             document.getElementById("kurFaaliyet").value = k.faaliyet || "";
+            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
             document.getElementById("kurIletisim").value = k.iletisim || "";
+            document.getElementById("kurMuhasebeci").value = k.muhasebeci || "Tarık GÜN - 0542 323 74 77";
 
             let chkHtml = "";
             kurulusAdimlariListe.forEach((adim, index) => {
@@ -5941,6 +5970,22 @@
             });
             document.getElementById("kurulusChecklist").innerHTML = chkHtml;
 
+            // Masrafları Yükleme
+            let masrafListesi = document.getElementById("kurulusMasrafListesi");
+            if(masrafListesi) {
+                masrafListesi.innerHTML = "";
+                if (k.masraflar && k.masraflar.length > 0) {
+                    k.masraflar.forEach(m => yeniKurulusMasrafiEkle(m.ad, m.tutar));
+                } else {
+                    // Ön Tanımlı Şablon Ekle (İlk kez açılanlar için)
+                    yeniKurulusMasrafiEkle("Noter Masrafları", "");
+                    yeniKurulusMasrafiEkle("Ticaret Odası Sicil ve Tescil", "");
+                    yeniKurulusMasrafiEkle("Rekabet Kurumu Payı", "");
+                    yeniKurulusMasrafiEkle("SMMM Kuruluş Hizmet Bedeli", "");
+                }
+                kurulusMaliyetTopla();
+            }
+
             kurulusSekmeSec('kurBilgiTab');
             modalAc('kurulusYonetimModal');
         }
@@ -5948,16 +5993,33 @@
         function kurulusKaydet() {
             let id = document.getElementById("kurulusId").value;
             let k = kurulusVeritabani[id];
+            if(!k) return;
             
+            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
             k.unvan = document.getElementById("kurUnvan").value;
+            k.nevi = document.getElementById("kurNevi").value;
             k.sermaye = document.getElementById("kurSermaye").value;
-            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.vergi = document.getElementById("kurVergi").value;
+            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
             k.adres = document.getElementById("kurAdres").value;
             k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
             k.iletisim = document.getElementById("kurIletisim").value;
+            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
 
+            if(!k.adımlar) k.adımlar = {};
             kurulusAdimlariListe.forEach((adim, index) => {
                 k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+            });
+
+            // Masrafları Kaydetme
+            k.masraflar = [];
+            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
+                let ad = satir.querySelector('.kur-masraf-ad').value;
+                let tutar = parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0;
+                if(ad || tutar > 0) {
+                    k.masraflar.push({ad: ad, tutar: tutar});
+                }
             });
 
             localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
@@ -5978,6 +6040,7 @@
         function kuruluslariListele() {
             let arama = document.getElementById("kurulusArama").value.toLowerCase().trim();
             let container = document.getElementById("kurulusKartlariAlani");
+            if(!container) return;
             container.innerHTML = "";
 
             let listelenen = 0;
@@ -5987,9 +6050,11 @@
                 
                 listelenen++;
                 let tamamlananAdim = 0;
-                kurulusAdimlariListe.forEach((adim, i) => { if(k.adımlar["adim_"+i]) tamamlananAdim++; });
-                let yuzde = Math.round((tamamlananAdim / 15) * 100);
                 
+                if(!k.adımlar) k.adımlar = {}; // Liste çizerken güvenlik yaması
+                kurulusAdimlariListe.forEach((adim, i) => { if(k.adımlar["adim_"+i]) tamamlananAdim++; });
+                
+                let yuzde = Math.round((tamamlananAdim / 15) * 100);
                 let barRenk = yuzde === 100 ? "#27ae60" : (yuzde > 0 ? "#e74c3c" : "#95a5a6");
 
                 container.innerHTML += `
@@ -6008,6 +6073,31 @@
             });
 
             if(listelenen === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Kayıtlı kuruluş süreci bulunamadı. Yukarıdan yeni başlatabilirsiniz.</div>`;
+        }
+
+        function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
+            let container = document.getElementById("kurulusMasrafListesi");
+            let id = "kMasraf_" + Date.now() + Math.floor(Math.random() * 1000);
+            
+            let html = `
+            <div class="kur-masraf-satir" id="${id}" style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                <input type="text" class="kur-masraf-ad search-bar" placeholder="Masraf Adı (Örn: İlan Ücreti)" value="${ad}" style="flex:2; padding:8px;">
+                <input type="number" class="kur-masraf-tutar search-bar" placeholder="Tutar (TL)" value="${tutar}" oninput="kurulusMaliyetTopla()" style="flex:1; padding:8px; font-weight:bold; color:#d35400;">
+                <button type="button" onclick="this.parentElement.remove(); kurulusMaliyetTopla();" style="background:#e74c3c; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:4px;" title="Sil"><i class="fas fa-trash"></i></button>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function kurulusMaliyetTopla() {
+            let toplam = 0;
+            document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
+                let val = parseFloat(input.value) || 0;
+                toplam += val;
+            });
+            let totalEl = document.getElementById("kurMalToplam");
+            if(totalEl) {
+                totalEl.textContent = formatMoney(toplam) + " TL";
+            }
         }
 
         // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
