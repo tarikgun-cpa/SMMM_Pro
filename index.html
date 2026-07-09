@@ -5891,6 +5891,25 @@
         ];
 
         
+        // Şirket Kuruluş Sekme Değiştirme Fonksiyonu
+        function kurulusSekmeSec(tabId) {
+            // Tüm içerikleri gizle
+            document.getElementById('kurBilgiTab').style.display = 'none';
+            document.getElementById('kurAdimTab').style.display = 'none';
+            document.getElementById('kurMaliyetTab').style.display = 'none';
+            
+            // Butonların aktiflik durumunu temizle
+            document.getElementById('btnKurTab1').classList.remove('active');
+            document.getElementById('btnKurTab2').classList.remove('active');
+            document.getElementById('btnKurTab3').classList.remove('active');
+            
+            // Seçilen sekmeyi göster ve butonunu aktif yap
+            document.getElementById(tabId).style.display = 'block';
+            if (tabId === 'kurBilgiTab') document.getElementById('btnKurTab1').classList.add('active');
+            else if (tabId === 'kurAdimTab') document.getElementById('btnKurTab2').classList.add('active');
+            else if (tabId === 'kurMaliyetTab') document.getElementById('btnKurTab3').classList.add('active');
+        }
+
         function yeniKurulusBaslat() {
             let id = "KUR_" + Date.now();
             kurulusVeritabani[id] = {
