@@ -2746,6 +2746,7 @@
         });
 
         // Tabloyu ekrana basan fonksiyon
+        // Tabloyu ekrana basan ve GPRS (Evrak/Alarm) verilerini gösteren fonksiyon
         function listeyiYenile(filtreliListe = null) {
             let liste = filtreliListe || mukellefler;
             let tbody = document.getElementById('mukellefListeGövdesi');
@@ -2756,28 +2757,132 @@
                 return;
             }
 
+            // Çetele İçin "Geçen Ayı" Bul
+            let d = new Date(); 
+            d.setMonth(d.getMonth() - 1); 
+            let guncelDonem = d.getFullYear() + "-" + (d.getMonth() + 1).toString().padStart(2, '0');
+
             liste.forEach(m => {
                 let isPasif = m.durum === "Pasif";
                 let pasifRozet = isPasif ? `<span style="background:#e74c3c; color:white; padding:3px 6px; border-radius:4px; font-size:11px; margin-left:8px; vertical-align:middle;"><i class="fas fa-user-times"></i> PASİF</span>` : "";
                 let satirStili = isPasif ? `background-color: #fdf2f2;` : ``;
-                let unvanStili = isPasif ? `color:#7f8c8d; text-decoration:line-through;` : ``;
+                let unvanStili = isPasif ? `color:#7f8c8d; text-decoration:line-through;` : `color:#2c3e50;`;
+
+                // 1. GPRS: Evrak Teslimat Çetelesi Radarı (Ana Ekrana Taşındı)
+                let evrakText = `<div style="margin-top:6px;"><span style="background:#f1f5f9; color:#64748b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:600;"><i class="fas fa-file-alt"></i> Geçen Ay Evrak: 0 / 5</span></div>`;
+                if (m.evraklar && m.evraklar[guncelDonem] && !isPasif) {
+                    let e = m.evraklar[guncelDonem];
+                    let count = (e.alis?1:0) + (e.satis?1:0) + (e.banka?1:0) + (e.puantaj?1:0) + (e.teslim?1:0);
+                    let color = count === 5 ? '#16a34a' : (count > 0 ? '#d97706' : '#64748b');
+                    let bg = count === 5 ? '#dcfce7' : (count > 0 ? '#fef3c7' : '#f1f5f9');
+                    let border = count === 5 ? '#bbf7d0' : (count > 0 ? '#fde68a' : '#e2e8f0');
+                    evrakText = `<div style="margin-top:6px;"><span style="background:${bg}; color:${color}; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; border: 1px solid ${border}"><i class="fas fa-folder-open"></i> Geçen Ay Evrak: ${count} / 5</span></div>`;
+                }
+
+                // 2. GPRS: Mali Mühür & E-İmza Son Kullanma Tarihi Asistanı
+                let muhurAlarm = "";
+                if (m.muhurBitis && !isPasif) {
+                    let bitis = new Date(m.muhurBitis);
+                    let bugun = new Date();
+                    bitis.setHours(0,0,0,0); bugun.setHours(0,0,0,0);
+                    let farkGun = Math.ceil((bitis - bugun) / (1000 * 60 * 60 * 24));
+
+                    if (farkGun <= 30) {
+                        let mTxt = farkGun < 0 ? "SÜRESİ BİTTİ!" : (farkGun === 0 ? "BUGÜN SON!" : `${farkGun} Gün Kaldı`);
+                        muhurAlarm = `<div style="margin-top:6px;"><span style="background:#fee2e2; color:#dc2626; border:1px solid #f87171; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800; display:inline-block;"><i class="fas fa-key"></i> Mühür: ${mTxt}</span></div>`;
+                    }
+                }
 
                 let tr = document.createElement('tr');
                 tr.style = satirStili;
                 tr.innerHTML = `
-                    <td><strong style="${unvanStili}">${m.unvan || 'Belirtilmedi'}</strong>${pasifRozet}</td>
-                    <td>${m.vkn || '-'}</td>
-                    <td>${m.telefon || '-'}</td>
-                    <td>${m.mukellefTuru || '-'}</td>
-                    <td style="white-space: nowrap;">
+                    <td>
+                        <strong style="${unvanStili} font-size:14.5px; display:inline-block; margin-bottom:2px;">${m.unvan || 'Belirtilmedi'}</strong>${pasifRozet}
+                        ${evrakText}
+                    </td>
+                    <td style="vertical-align:top; padding-top:15px;">${m.vkn || '-'}</td>
+                    <td style="vertical-align:top; padding-top:15px;">${m.telefon || '-'}</td>
+                    <td style="vertical-align:top; padding-top:15px;">
+                        ${m.mukellefTuru || '-'}
+                        ${muhurAlarm}
+                    </td>
+                    <td style="white-space: nowrap; vertical-align:top; padding-top:12px;">
                         <button type="button" class="table-btn btn-primary" style="background:#3498db; padding:6px 10px;" onclick="mukellefGoruntule('${m.vkn}')" title="Profili & Şifreleri Görüntüle"><i class="fas fa-eye"></i></button>
                         <button type="button" class="table-btn" style="background:#9b59b6; color:white; padding:6px 10px;" onclick="evrakCetelesiAc('${m.vkn}', '${m.unvan.replace(/'/g, "\\'")}')" title="Evrak & Teslimat Çetelesi"><i class="fas fa-file-archive"></i></button>
+                        <button type="button" class="table-btn" style="background:#1abc9c; color:white; padding:6px 10px;" onclick="hosGeldinPaketiIndir('${m.vkn}')" title="Müşteri Karşılama Paketi (Onboarding) İndir"><i class="fas fa-gift"></i></button>
                         <button type="button" class="table-btn btn-edit" style="padding:6px 10px;" onclick="mukellefDuzenle('${m.vkn}')" title="Düzenle"><i class="fas fa-edit"></i></button>
                         <button type="button" class="table-btn btn-delete" style="padding:6px 10px;" onclick="mukellefSilAcModal('${m.vkn}')" title="Kalıcı Sil"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // --- DİJİTAL HOŞ GELDİN PAKETİ (ONBOARDING) MOTORU ---
+        function hosGeldinPaketiIndir(vkn) {
+            let m = mukellefler.find(x => x.vkn === vkn);
+            if (!m) return;
+
+            let tarih = new Date().toLocaleDateString('tr-TR');
+            let dosyaAdi = "Hos_Geldin_Paketi_" + (m.unvan || "Firma").substring(0, 15).replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, '_');
+
+            let icerik = `
+                <div style="text-align:center; margin-bottom:30px;">
+                    <h1 style="color:#2c3e50; font-family:'Times New Roman', Times, serif; border-bottom:2px solid #3498db; padding-bottom:10px; font-size:20pt;">SMMM TARIK GÜN MALİ MÜŞAVİRLİK OFİSİ'NE HOŞ GELDİNİZ</h1>
+                </div>
+                <p style="text-align:right; font-weight:bold; font-size:12pt; font-family:'Times New Roman', Times, serif;">Tarih: ${tarih}</p>
+                <p style="font-size:12pt; text-align:justify; line-height:1.5; font-family:'Times New Roman', Times, serif;">Sayın <b>${m.unvan}</b> yetkilisi,</p>
+                <p style="font-size:12pt; text-align:justify; line-height:1.5; font-family:'Times New Roman', Times, serif;">Mali Müşavirlik ofisimizi tercih ettiğiniz için teşekkür ederiz. Ticari hayatınızda başarılar dileriz. Karşılıklı çalışmalarımızın düzenli, hatasız ve yasal sürelere tam uyumlu ilerleyebilmesi adına ofis işleyiş kurallarımız aşağıda bilgilerinize sunulmuştur:</p>
+                
+                <h3 style="color:#c0392b; font-family:'Times New Roman', Times, serif; margin-top:20px; text-align:left; font-size:14pt;">1. EVRAK TESLİM SÜREÇLERİ</h3>
+                <ul style="font-size:12pt; line-height:1.5; font-family:'Times New Roman', Times, serif;">
+                    <li>Bir önceki aya ait <b>Alış, Satış Faturaları ve Masraf Fişleri</b> en geç takip eden ayın <b>15'ine kadar</b> ofisimize elden veya kargo ile teslim edilmelidir.</li>
+                    <li>Banka ekstreleri (PDF veya Excel formatında) ayın ilk haftası tarafımıza e-posta veya WhatsApp ile iletilmelidir.</li>
+                </ul>
+
+                <h3 style="color:#c0392b; font-family:'Times New Roman', Times, serif; margin-top:20px; text-align:left; font-size:14pt;">2. SGK VE PERSONEL İŞLEMLERİ</h3>
+                <ul style="font-size:12pt; line-height:1.5; font-family:'Times New Roman', Times, serif;">
+                    <li>Yeni işe girecek personelin kimlik bilgileri <b>en az 1 (bir) iş günü önceden</b> ofisimize bildirilmelidir. (Aynı gün yapılan girişlerde SGK cezası uygulanmaktadır.)</li>
+                    <li>İşten ayrılan personeller, ayrılış tarihinden itibaren <b>en geç 3 gün içinde</b> ofisimize bildirilmelidir.</li>
+                    <li>Personel maaş, puantaj ve fazla mesai bilgileri her ayın <b>1'i ile 3'ü arasında</b> ofisimize iletilmelidir.</li>
+                </ul>
+
+                <h3 style="color:#c0392b; font-family:'Times New Roman', Times, serif; margin-top:20px; text-align:left; font-size:14pt;">3. OFİS İLETİŞİM VE ÇALIŞMA SAATLERİ</h3>
+                <ul style="font-size:12pt; line-height:1.5; font-family:'Times New Roman', Times, serif;">
+                    <li><b>Çalışma Saatlerimiz:</b> Hafta içi 09:00 - 18:00</li>
+                    <li><b>Telefon / WhatsApp:</b> 0542 323 74 77</li>
+                    <li><b>E-Posta:</b> tarikgun@cpa-ftc.com</li>
+                    <li><b>Adres:</b> Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli</li>
+                </ul>
+
+                <h3 style="color:#c0392b; font-family:'Times New Roman', Times, serif; margin-top:20px; text-align:left; font-size:14pt;">4. MUHASEBE ÜCRETİ ÖDEMELERİ</h3>
+                <ul style="font-size:12pt; line-height:1.5; font-family:'Times New Roman', Times, serif;">
+                    <li>Aylık mali müşavirlik ücretleri, karşılıklı anlaşılan tarihlerde aşağıdaki banka hesabımıza havale/EFT yoluyla yapılmalıdır.</li>
+                    <li><b>Banka:</b> ....................................................</li>
+                    <li><b>IBAN:</b> TR...................................................</li>
+                    <li><b>Alıcı:</b> Tarık GÜN</li>
+                </ul>
+
+                <p style="font-size:12pt; text-align:justify; line-height:1.5; margin-top:30px; font-family:'Times New Roman', Times, serif;">Yukarıdaki kurallara göstereceğiniz hassasiyet, firmanızın gereksiz vergi ve SGK cezalarına maruz kalmasını önleyecektir. Ortak çalışmalarımızın uzun soluklu ve hayırlı olmasını dileriz.</p>
+                <p style="font-size:12pt; text-align:right; margin-top:40px; font-family:'Times New Roman', Times, serif;"><b>Tarık GÜN<br>Serbest Muhasebeci Mali Müşavir</b></p>
+            `;
+
+            let msoHtmlWrapper = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>${dosyaAdi}</title></head>
+            <body style="font-family: 'Times New Roman', Times, serif; font-size:12pt; padding:40px 30px;">
+                ${icerik}
+            </body>
+            </html>`;
+
+            let blob = new Blob(['\ufeff', msoHtmlWrapper], { type: 'application/msword' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = dosyaAdi + '.doc';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         // --- KOPYALAMA ASİSTAN VE EVRAK YÖNETİM FONKSİYONLARI ---
