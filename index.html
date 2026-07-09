@@ -5413,6 +5413,7 @@
             reader.readAsArrayBuffer(dosya);
         }
         // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
+        // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
         function masterDashboardCiz() {
             let bugun = new Date();
             if(document.getElementById("dashSaat")) {
@@ -5457,7 +5458,7 @@
             document.getElementById("mdNetKar").style.color = netKar >= 0 ? "#2ecc71" : "#e74c3c";
             document.getElementById("mdPiyasaAlacak").textContent = formatMoney(totalAlacak) + " ₺";
 
-            // 2. Operasyonel Beyanname / Görev Takibi (Kritik Son 7 Gün Filtresi)
+            // 2. Operasyonel Beyanname / Görev Takibi
             let takvimInput = document.getElementById("takvimDonem");
             let donem = takvimInput && takvimInput.value ? takvimInput.value : "";
             if(!donem) {
@@ -5472,11 +5473,14 @@
             let aylikDefterTop = 0, aylikDefterTamam = 0;
             let ucAylikDefterTop = 0, ucAylikDefterTamam = 0;
 
+            // --- YENİ: AI İçin Zaman Çizelgesi Değişkenleri ---
+            let minGun = 999;
+            let gecikmisGorevVar = false;
+
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; // SMMM hariç düz danışmanlıkları buraya alma
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; 
                 
-                // KRİTİK DÜZELTME: Henüz o ay işlem görmemiş mükellefleri "boş obje" olarak algıla
                 let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : {};
 
                 let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
@@ -5489,7 +5493,11 @@
                             fGorevTamam++;
                         } else {
                             let gun = gunFarkiHesapla(targetDate);
-                            // Alarm süresini Son 3 Günden Son 7 Güne çıkardık
+                            
+                            // AI Analizi İçin En Yakın Tarihi Yakala
+                            if(gun !== null && gun >= 0 && gun < minGun) minGun = gun;
+                            if(gun !== null && gun < 0) gecikmisGorevVar = true;
+
                             if(gun !== null && gun <= 7) {
                                 let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
                                 alarmListesiHTML += `
@@ -5512,7 +5520,6 @@
                     if(isDefterUc) defterTarihiDash = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
                     else defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                     
-                    // Dashboard E-Defter Sayacı Beslemesi
                     if(defterTarihiDash) {
                         if(isDefterUc) { ucAylikDefterTop++; if(f.DEFTER) ucAylikDefterTamam++; }
                         else { aylikDefterTop++; if(f.DEFTER) aylikDefterTamam++; }
@@ -5536,7 +5543,6 @@
                 }
                 if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false);
                 
-                // Dashboard Özel Görev Alarmları
                 if((tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn)) {
                     kontrolAlarm(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false);
                 }
@@ -5544,7 +5550,6 @@
                     kontrolAlarm(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false);
                 }
 
-                // YENİ: Mali Mühür / E-İmza Bitiş Takibi (Son 30 Gün Alarmı)
                 if(m.muhurBitis) {
                     let mGun = gunFarkiHesapla(m.muhurBitis);
                     if(mGun !== null && mGun <= 30) {
@@ -5557,7 +5562,6 @@
                     }
                 }
 
-                // YENİ: SGK Personel Sayısı OSGB Takibi (48 ve üstü Alarm Verir)
                 let perSayisi = parseInt(m.sgkCalisanSayisi) || 0;
                 if(perSayisi >= 48) {
                     let sText = perSayisi >= 50 ? `<span style="color:#c0392b; font-weight:bold;">OSGB ZORUNLU!</span>` : `<span style="color:#e67e22; font-weight:bold;">Sınıra Yaklaştı</span>`;
@@ -5575,7 +5579,6 @@
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik veya geciken görev bulunmuyor. Süreç stabil.</div>`;
             
-            // Dashboard E-Defter Kutusuna Veri Basma
             if(document.getElementById("mdDefterBaslik")) {
                 document.getElementById("mdDefterBaslik").innerHTML = "Bu ay yüklenmesi gereken beratlar";
             }
@@ -5589,7 +5592,6 @@
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
                 
-                // Mükellefin projesi var mı kontrol et. Eğer projesi yoksa ve "Sadece Danışmanlık" değilse atla.
                 let hasProject = danismanlikVeritabani[m.vkn] && danismanlikVeritabani[m.vkn].length > 0;
                 if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık" && !hasProject) return;
                 
@@ -5604,7 +5606,7 @@
                         let yz = topA === 0 ? 0 : Math.round((bitA / topA) * 100);
                         
                         projelerHTML += `
-                        <div style="background:#fcfaff; border:1px solid #e8e2f7; border-left:3px solid #8e44ad; padding:6px 10px; border-radius:5px;">
+                        <div style="background:#fcfaff; border:1px solid #e8e2f7; border-left:3px solid #8e44ad; padding:6px 10px; border-radius:5px; margin-bottom:5px;">
                             <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:600; color:#2c3e50; margin-bottom:3px;">
                                 <div style="max-width:75%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.unvan} <span style="font-weight:normal; color:#7f8c8d; font-size:10px;">(${p.projeAdi})</span></div>
                                 <div style="color:#8e44ad;">%${yz}</div>
@@ -5620,6 +5622,35 @@
             document.getElementById("mdAktifProje").textContent = aktifSayac;
             document.getElementById("mdBitenProje").textContent = bitenSayac;
             document.getElementById("mdAktifProjelerListesi").innerHTML = projelerHTML || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Şu an devam eden aktif bir danışmanlık projesi bulunmuyor.</div>`;
+
+            // 4. --- YAPAY ZEKA YÖNETİCİ ÖZETİ YAZDIRMA ---
+            let aiMetin = "";
+            let bekleyen = fGorevTop - fGorevTamam;
+
+            if(fGorevTop === 0) {
+                aiMetin += "Bu ay için henüz görev veya beyanname planlaması yapılmamış. ";
+            } else if(bekleyen === 0) {
+                aiMetin += "<span style='color:#27ae60; font-weight:bold;'>Tebrikler!</span> Seçili döneme ait tüm beyanname ve bildirimleri başarıyla tamamladınız. Operasyonel yükünüz kalmadı. ";
+            } else {
+                if(gecikmisGorevVar) {
+                    aiMetin += "<b style='color:#c0392b;'><i class='fas fa-exclamation-triangle'></i> Acil Müdahale:</b> Yasal süresi geçmiş beyanname/bildirimleriniz var! Cezalı duruma düşmemek için acilen kontrol etmelisiniz. ";
+                } else if (minGun <= 3) {
+                    aiMetin += `<b style="color:#e74c3c;"><i class="fas fa-fire"></i> Kritik Süreç:</b> Beyannamelerin son günlerine (${minGun} gün) girdik! Bekleyen ${bekleyen} adet göreve acil odaklanmalısınız. `;
+                } else if (minGun <= 7) {
+                    aiMetin += `Beyanname teslimlerine ${minGun} gün kaldı. Evrak kayıtlarını bitirip yavaştan onay ve gönderim aşamalarına geçmeniz tavsiye edilir. `;
+                } else {
+                    aiMetin += `Beyanname teslimlerine henüz ${minGun} gün var. Muhasebe meslek pratiğine uygun olarak; önünüzde geniş bir vakit bulunuyor, şu an önceliğiniz <b>evrak toplama ve fiş işleme</b> olmalıdır. `;
+                }
+            }
+
+            if (totalAlacak > 5000) {
+                aiMetin += `<br><br><i class='fas fa-info-circle' style='color:#3498db;'></i> Finansal olarak piyasada tahsil edilmeyi bekleyen <b style="color:#e74c3c;">${formatMoney(totalAlacak)} TL</b> alacağınız birikmiş durumda. Ay sonu gelmeden vade takibi yaparak tahsilatlara hız vermelisiniz.`;
+            } else {
+                aiMetin += `<br><br><i class='fas fa-info-circle' style='color:#3498db;'></i> Tahsilat performansınız gayet sağlıklı görünüyor.`;
+            }
+
+            let aiKutu = document.getElementById("aiYoneticiMetin");
+            if(aiKutu) aiKutu.innerHTML = aiMetin;
         }
 
         function acDanismanlikEkleModal() {
