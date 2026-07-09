@@ -1650,17 +1650,18 @@
                         </div>
                     </div>
 
-                    <!-- YENİ EKLENEN MASRAF İÇERİĞİ (DİNAMİK) -->
+                    <!-- YENİ EKLENEN MASRAF İÇERİĞİ -->
                     <div id="kurMaliyetTab" style="display:none;">
                         <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
-                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Şirket kuruluşunda oluşacak masrafları detaylıca ekleyip mükellefe sunabilirsiniz:</p>
-                            
-                            <div id="kurulusMasrafListesi">
-                                <!-- Dinamik satırlar buraya gelecek -->
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Mükelleften tahsil edilecek resmi harçları ve kuruluş hizmet bedelinizi takip edin:</p>
+                            <div class="form-grid">
+                                <div class="form-group"><label>Noter Masrafları (TL):</label><input type="number" id="kurMalNoter" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Ticaret Odası Sicil ve Tescil (TL):</label><input type="number" id="kurMalSicil" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Rekabet Kurumu Payı (TL):</label><input type="number" id="kurMalRekabet" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Oda Kayıt Ücreti (TL):</label><input type="number" id="kurMalOda" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>SMMM Kuruluş Hizmet Bedeli (TL):</label><input type="number" id="kurMalSmmm" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                                <div class="form-group"><label>Diğer Masraflar (TL):</label><input type="number" id="kurMalDiger" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
                             </div>
-                            
-                            <button type="button" class="btn-secondary action-btn" onclick="yeniKurulusMasrafiEkle()" style="margin-top:10px; font-size:12px; background:#f39c12; color:white; border:none; margin-bottom: 0;">+ Yeni Masraf Kalemi Ekle</button>
-
                             <div style="background:#eafaf1; padding:15px; border-radius:6px; border:1px solid #2ecc71; margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:bold; color:#27ae60; font-size:16px;">Mükelleften Alınacak Toplam:</span>
                                 <strong id="kurMalToplam" style="font-size:22px; color:#27ae60;">0.00 TL</strong>
@@ -2376,11 +2377,7 @@
             measurementId: "G-22FXXHKGBS"
         };
         
-        // Firebase zaten başlatıldıysa tekrar başlatmasını engelleyen güvenlik kilidi
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -5894,47 +5891,42 @@
             "15. SGK Dosya Açılışı ve Şifre (Personel varsa)"
         ];
 
-        // Şirket Kuruluş Sekme Değiştirme Fonksiyonu
         function kurulusSekmeSec(tabId) {
-            let tabs = ['kurBilgiTab', 'kurAdimTab', 'kurMaliyetTab'];
-            let btns = ['btnKurTab1', 'btnKurTab2', 'btnKurTab3'];
-            
-            tabs.forEach(t => { if(document.getElementById(t)) document.getElementById(t).style.display = 'none'; });
-            btns.forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('active'); });
-            
-            if(document.getElementById(tabId)) document.getElementById(tabId).style.display = 'block';
-            if (tabId === 'kurBilgiTab' && document.getElementById('btnKurTab1')) document.getElementById('btnKurTab1').classList.add('active');
-            else if (tabId === 'kurAdimTab' && document.getElementById('btnKurTab2')) document.getElementById('btnKurTab2').classList.add('active');
-            else if (tabId === 'kurMaliyetTab' && document.getElementById('btnKurTab3')) document.getElementById('btnKurTab3').classList.add('active');
+            document.getElementById('kurBilgiTab').style.display = 'none';
+            document.getElementById('kurAdimTab').style.display = 'none';
+            document.getElementById('btnKurTab1').classList.remove('active');
+            document.getElementById('btnKurTab1').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab1').style.color = '#333';
+            document.getElementById('btnKurTab2').classList.remove('active');
+            document.getElementById('btnKurTab2').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab2').style.color = '#333';
+
+            document.getElementById(tabId).style.display = 'block';
+            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : 'btnKurTab2';
+            document.getElementById(btn).classList.add('active');
+            document.getElementById(btn).style.background = '#e74c3c';
+            document.getElementById(btn).style.color = 'white';
         }
 
         function yeniKurulusBaslat() {
             let id = "KUR_" + Date.now();
             kurulusVeritabani[id] = {
                 id: id, unvan: "", sermaye: "", ortaklar: "", adres: "", faaliyet: "", iletisim: "",
-                adımlar: {}, masraflar: [], olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
+                adımlar: {}, olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
             };
             kurulusModalAc(id);
         }
 
         function kurulusModalAc(id) {
             let k = kurulusVeritabani[id];
-            if (!k) return; 
-            if (!k.adımlar) k.adımlar = {}; 
-            
-            if(document.getElementById("kurulusId")) document.getElementById("kurulusId").value = id;
-            if(document.getElementById("mdlKurulusUnvan")) document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
-            
-            if(document.getElementById("kurUnvan")) document.getElementById("kurUnvan").value = k.unvan || "";
-            if(document.getElementById("kurNevi")) document.getElementById("kurNevi").value = k.nevi || "Limited Şirket";
-            if(document.getElementById("kurSermaye")) document.getElementById("kurSermaye").value = k.sermaye || "";
-            if(document.getElementById("kurVergi")) document.getElementById("kurVergi").value = k.vergi || "";
-            if(document.getElementById("kurSureTabiyet")) document.getElementById("kurSureTabiyet").value = k.sureTabiyet || "Süresiz / T.C.";
-            if(document.getElementById("kurAdres")) document.getElementById("kurAdres").value = k.adres || "";
-            if(document.getElementById("kurFaaliyet")) document.getElementById("kurFaaliyet").value = k.faaliyet || "";
-            if(document.getElementById("kurOrtaklar")) document.getElementById("kurOrtaklar").value = k.ortaklar || "";
-            if(document.getElementById("kurIletisim")) document.getElementById("kurIletisim").value = k.iletisim || "";
-            if(document.getElementById("kurMuhasebeci")) document.getElementById("kurMuhasebeci").value = k.muhasebeci || "Tarık GÜN - 0542 323 74 77";
+            document.getElementById("kurulusId").value = id;
+            document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
+            document.getElementById("kurUnvan").value = k.unvan || "";
+            document.getElementById("kurSermaye").value = k.sermaye || "";
+            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
+            document.getElementById("kurAdres").value = k.adres || "";
+            document.getElementById("kurFaaliyet").value = k.faaliyet || "";
+            document.getElementById("kurIletisim").value = k.iletisim || "";
 
             let chkHtml = "";
             kurulusAdimlariListe.forEach((adim, index) => {
@@ -5947,71 +5939,35 @@
                     <div style="color:#2c3e50; font-weight:${isChecked ? 'bold' : 'normal'};">${adim}</div>
                 </label>`;
             });
-            if(document.getElementById("kurulusChecklist")) document.getElementById("kurulusChecklist").innerHTML = chkHtml;
-
-            let masrafListesi = document.getElementById("kurulusMasrafListesi");
-            if(masrafListesi) {
-                masrafListesi.innerHTML = "";
-                if (k.masraflar && k.masraflar.length > 0) {
-                    k.masraflar.forEach(m => yeniKurulusMasrafiEkle(m.ad, m.tutar));
-                } else {
-                    yeniKurulusMasrafiEkle("Noter Masrafları", "");
-                    yeniKurulusMasrafiEkle("Ticaret Odası Sicil ve Tescil", "");
-                    yeniKurulusMasrafiEkle("Rekabet Kurumu Payı", "");
-                    yeniKurulusMasrafiEkle("SMMM Kuruluş Hizmet Bedeli", "");
-                }
-                kurulusMaliyetTopla();
-            }
+            document.getElementById("kurulusChecklist").innerHTML = chkHtml;
 
             kurulusSekmeSec('kurBilgiTab');
             modalAc('kurulusYonetimModal');
         }
 
         function kurulusKaydet() {
-            let id = document.getElementById("kurulusId") ? document.getElementById("kurulusId").value : null;
-            if(!id || !kurulusVeritabani[id]) return;
+            let id = document.getElementById("kurulusId").value;
             let k = kurulusVeritabani[id];
             
-            k.unvan = document.getElementById("kurUnvan") ? document.getElementById("kurUnvan").value : "";
-            k.nevi = document.getElementById("kurNevi") ? document.getElementById("kurNevi").value : "";
-            k.sermaye = document.getElementById("kurSermaye") ? document.getElementById("kurSermaye").value : "";
-            k.vergi = document.getElementById("kurVergi") ? document.getElementById("kurVergi").value : "";
-            k.sureTabiyet = document.getElementById("kurSureTabiyet") ? document.getElementById("kurSureTabiyet").value : "";
-            k.adres = document.getElementById("kurAdres") ? document.getElementById("kurAdres").value : "";
-            k.faaliyet = document.getElementById("kurFaaliyet") ? document.getElementById("kurFaaliyet").value : "";
-            k.ortaklar = document.getElementById("kurOrtaklar") ? document.getElementById("kurOrtaklar").value : "";
-            k.iletisim = document.getElementById("kurIletisim") ? document.getElementById("kurIletisim").value : "";
-            k.muhasebeci = document.getElementById("kurMuhasebeci") ? document.getElementById("kurMuhasebeci").value : "";
+            k.unvan = document.getElementById("kurUnvan").value;
+            k.sermaye = document.getElementById("kurSermaye").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.adres = document.getElementById("kurAdres").value;
+            k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.iletisim = document.getElementById("kurIletisim").value;
 
             kurulusAdimlariListe.forEach((adim, index) => {
-                let chk = document.getElementById("kurChk_"+index);
-                if(chk) k.adımlar["adim_"+index] = chk.checked;
-            });
-
-            k.masraflar = [];
-            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
-                let ad = satir.querySelector('.kur-masraf-ad') ? satir.querySelector('.kur-masraf-ad').value : "";
-                let tutar = satir.querySelector('.kur-masraf-tutar') ? parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0 : 0;
-                if(ad || tutar > 0) {
-                    k.masraflar.push({ad: ad, tutar: tutar});
-                }
+                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
             });
 
             localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
             modalKapat('kurulusYonetimModal');
             kuruluslariListele();
-            
-            // Başarı Bildirimi
-            let toast = document.getElementById("toast-mesaj");
-            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
-            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#2ecc71;"></i> Kuruluş süreci başarıyla kaydedildi!`;
-            toast.className = "show";
-            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
 
         function kurulusSil() {
-            let id = document.getElementById("kurulusId") ? document.getElementById("kurulusId").value : null;
-            if(id && confirm("Bu kuruluş sürecini tamamen silmek istediğinize emin misiniz?")) {
+            let id = document.getElementById("kurulusId").value;
+            if(confirm("Bu kuruluş sürecini tamamen silmek istediğinize emin misiniz?")) {
                 delete kurulusVeritabani[id];
                 localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
                 modalKapat('kurulusYonetimModal');
@@ -6020,10 +5976,8 @@
         }
 
         function kuruluslariListele() {
-            let aramaEl = document.getElementById("kurulusArama");
-            let arama = aramaEl ? aramaEl.value.toLowerCase().trim() : "";
+            let arama = document.getElementById("kurulusArama").value.toLowerCase().trim();
             let container = document.getElementById("kurulusKartlariAlani");
-            if(!container) return;
             container.innerHTML = "";
 
             let listelenen = 0;
@@ -6033,15 +5987,13 @@
                 
                 listelenen++;
                 let tamamlananAdim = 0;
-                
-                if(!k.adımlar) k.adımlar = {}; 
                 kurulusAdimlariListe.forEach((adim, i) => { if(k.adımlar["adim_"+i]) tamamlananAdim++; });
-                
                 let yuzde = Math.round((tamamlananAdim / 15) * 100);
+                
                 let barRenk = yuzde === 100 ? "#27ae60" : (yuzde > 0 ? "#e74c3c" : "#95a5a6");
 
                 container.innerHTML += `
-                <div class="company-badge" onclick="kurulusModalAc('${k.id}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px; cursor:pointer;">
+                <div class="company-badge" onclick="kurulusModalAc('${k.id}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
                     <div style="font-weight:bold; color:#2c3e50; font-size:14px; margin-bottom:5px;">${unvanLabel}</div>
                     <div style="font-size:11px; color:#7f8c8d; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Dosya Açılış: ${k.olusturmaTarihi}</div>
                     
@@ -6058,29 +6010,6 @@
             if(listelenen === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Kayıtlı kuruluş süreci bulunamadı. Yukarıdan yeni başlatabilirsiniz.</div>`;
         }
 
-        function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
-            let container = document.getElementById("kurulusMasrafListesi");
-            if(!container) return;
-            let id = "kMasraf_" + Date.now() + Math.floor(Math.random() * 1000);
-            
-            let html = `
-            <div class="kur-masraf-satir" id="${id}" style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                <input type="text" class="kur-masraf-ad search-bar" placeholder="Masraf Adı (Örn: İlan Ücreti)" value="${ad}" style="flex:2; padding:8px;">
-                <input type="number" class="kur-masraf-tutar search-bar" placeholder="Tutar (TL)" value="${tutar}" oninput="kurulusMaliyetTopla()" style="flex:1; padding:8px; font-weight:bold; color:#d35400;">
-                <button type="button" onclick="this.parentElement.remove(); kurulusMaliyetTopla();" style="background:#e74c3c; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:4px;" title="Sil"><i class="fas fa-trash"></i></button>
-            </div>`;
-            container.insertAdjacentHTML('beforeend', html);
-        }
-
-        function kurulusMaliyetTopla() {
-            let toplam = 0;
-            document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
-                let val = parseFloat(input.value) || 0;
-                toplam += val;
-            });
-            let totalEl = document.getElementById("kurMalToplam");
-            if(totalEl) totalEl.textContent = formatMoney(toplam) + " TL";
-        }
         // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
         function kotoEvrakIndir(belgeTuru) {
             // Formdaki Verileri Çekme (Boşsa noktalı yer bırakır)
@@ -6245,13 +6174,7 @@
             document.body.removeChild(link);
         }
         // --- AI YÖNETİCİ ÖZETİ EKLENTİSİ ---
-        if (typeof masterDashboardCiz === "function") {
         const eskiMasterDash = masterDashboardCiz;
-        masterDashboardCiz = function() {
-        eskiMasterDash();
-        // ... sizin AI kodlarınız ...
-        };
-        }
         masterDashboardCiz = function() {
             eskiMasterDash();
             let totalAlacak = 0;
@@ -6290,109 +6213,72 @@
 
         // --- KURULUŞ MASRAFLARI JS EKLENTİSİ ---
         function kurulusSekmeSec(tabId) {
-            // Tüm içerikleri gizle
-            let tabs = ['kurBilgiTab', 'kurAdimTab', 'kurMaliyetTab'];
-            tabs.forEach(t => { 
-                if(document.getElementById(t)) document.getElementById(t).style.display = 'none'; 
-            });
-
-            // Tüm butonların aktifliğini kaldır ve stillerini sıfırla
-            let btns = ['btnKurTab1', 'btnKurTab2', 'btnKurTab3'];
-            btns.forEach(b => {
-                let btn = document.getElementById(b);
-                if(btn) {
-                    btn.classList.remove('active');
-                    btn.style.background = '#e1e8ed';
-                    btn.style.color = '#333';
-                }
-            });
-
-            // Seçilen içeriği göster
-            if(document.getElementById(tabId)) document.getElementById(tabId).style.display = 'block';
+            document.getElementById('kurBilgiTab').style.display = 'none';
+            document.getElementById('kurAdimTab').style.display = 'none';
+            if(document.getElementById('kurMaliyetTab')) document.getElementById('kurMaliyetTab').style.display = 'none'; 
             
-            // Seçilen butonu aktif et ve stillendir
-            let activeBtnId = 'btnKurTab1';
-            if(tabId === 'kurAdimTab') activeBtnId = 'btnKurTab2';
-            else if(tabId === 'kurMaliyetTab') activeBtnId = 'btnKurTab3';
+            document.getElementById('btnKurTab1').classList.remove('active');
+            document.getElementById('btnKurTab1').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab1').style.color = '#333';
             
-            let activeBtn = document.getElementById(activeBtnId);
-            if(activeBtn) {
-                activeBtn.classList.add('active');
-                activeBtn.style.background = '#e74c3c';
-                activeBtn.style.color = 'white';
+            document.getElementById('btnKurTab2').classList.remove('active');
+            document.getElementById('btnKurTab2').style.background = '#e1e8ed';
+            document.getElementById('btnKurTab2').style.color = '#333';
+
+            if(document.getElementById('btnKurTab3')) {
+                document.getElementById('btnKurTab3').classList.remove('active'); 
+                document.getElementById('btnKurTab3').style.background = '#e1e8ed'; 
+                document.getElementById('btnKurTab3').style.color = '#333'; 
             }
+
+            document.getElementById(tabId).style.display = 'block';
+            
+            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : (tabId === 'kurAdimTab' ? 'btnKurTab2' : 'btnKurTab3');
+            document.getElementById(btn).classList.add('active');
+            document.getElementById(btn).style.background = '#e74c3c';
+            document.getElementById(btn).style.color = 'white';
         }
 
         function kurulusMaliyetTopla() {
-            let toplam = 0;
+            let n = parseFloat(document.getElementById("kurMalNoter").value) || 0;
+            let s = parseFloat(document.getElementById("kurMalSicil").value) || 0;
+            let r = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
+            let o = parseFloat(document.getElementById("kurMalOda").value) || 0;
+            let sm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
+            let d = parseFloat(document.getElementById("kurMalDiger").value) || 0;
+            let top = n + s + r + o + sm + d;
+            document.getElementById("kurMalToplam").textContent = formatMoney(top) + " TL";
+        }
 
-            // 1. Dinamik olarak eklenen masrafları topla (Orijinal yapı)
-            document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
-                toplam += parseFloat(input.value) || 0;
-            });
-
-            // 2. Sabit masrafları güvenli (null kontrollü) şekilde topla
-            let mNoter = document.getElementById("kurMalNoter");
-            let mSicil = document.getElementById("kurMalSicil");
-            let mRekabet = document.getElementById("kurMalRekabet");
-            let mOda = document.getElementById("kurMalOda");
-            let mSmmm = document.getElementById("kurMalSmmm");
-            let mDiger = document.getElementById("kurMalDiger");
-
-            let n = mNoter ? parseFloat(mNoter.value) || 0 : 0;
-            let s = mSicil ? parseFloat(mSicil.value) || 0 : 0;
-            let r = mRekabet ? parseFloat(mRekabet.value) || 0 : 0;
-            let o = mOda ? parseFloat(mOda.value) || 0 : 0;
-            let sm = mSmmm ? parseFloat(mSmmm.value) || 0 : 0;
-            let d = mDiger ? parseFloat(mDiger.value) || 0 : 0;
-
-            toplam += (n + s + r + o + sm + d);
-
-            // Toplamı ekrana yazdır
-            let totalEl = document.getElementById("kurMalToplam");
-            if(totalEl) {
-                totalEl.textContent = (typeof formatMoney === "function" ? formatMoney(toplam) : toplam) + " TL";
+        const eskiKurModalAc = kurulusModalAc;
+        kurulusModalAc = function(id) {
+            eskiKurModalAc(id);
+            let k = kurulusVeritabani[id];
+            if(document.getElementById("kurMalNoter")) {
+                document.getElementById("kurMalNoter").value = k.mN || 0;
+                document.getElementById("kurMalSicil").value = k.mS || 0;
+                document.getElementById("kurMalRekabet").value = k.mR || 0;
+                document.getElementById("kurMalOda").value = k.mO || 0;
+                document.getElementById("kurMalSmmm").value = k.mSm || 0;
+                document.getElementById("kurMalDiger").value = k.mD || 0;
+                kurulusMaliyetTopla();
             }
-        }
+        };
 
-        // Modal Açma Fonksiyonuna Güvenli Eklenti
-        if (typeof kurulusModalAc === "function") {
-            const eskiKurModalAc = kurulusModalAc;
-            kurulusModalAc = function(id) {
-                eskiKurModalAc(id);
-                let k = kurulusVeritabani[id];
-                
-                if (k && document.getElementById("kurMalNoter")) {
-                    document.getElementById("kurMalNoter").value = k.mN || 0;
-                    document.getElementById("kurMalSicil").value = k.mS || 0;
-                    document.getElementById("kurMalRekabet").value = k.mR || 0;
-                    document.getElementById("kurMalOda").value = k.mO || 0;
-                    document.getElementById("kurMalSmmm").value = k.mSm || 0;
-                    document.getElementById("kurMalDiger").value = k.mD || 0;
-                    kurulusMaliyetTopla();
-                }
-            };
-        }
-
-        // Kaydetme Fonksiyonuna Güvenli Eklenti
-        if (typeof kurulusKaydet === "function") {
-            const eskiKurKaydet = kurulusKaydet;
-            kurulusKaydet = function() {
-                let idEl = document.getElementById("kurulusId");
-                let id = idEl ? idEl.value : null;
-                
-                if (id && kurulusVeritabani[id] && document.getElementById("kurMalNoter")) {
-                    let k = kurulusVeritabani[id];
-                    k.mN = parseFloat(document.getElementById("kurMalNoter").value) || 0;
-                    k.mS = parseFloat(document.getElementById("kurMalSicil").value) || 0;
-                    k.mR = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
-                    k.mO = parseFloat(document.getElementById("kurMalOda").value) || 0;
-                    k.mSm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
-                    k.mD = parseFloat(document.getElementById("kurMalDiger").value) || 0;
-                }
-                eskiKurKaydet(); 
-            };
-        }
+        const eskiKurKaydet = kurulusKaydet;
+        kurulusKaydet = function() {
+            let id = document.getElementById("kurulusId").value;
+            let k = kurulusVeritabani[id];
+            if(document.getElementById("kurMalNoter")) {
+                k.mN = parseFloat(document.getElementById("kurMalNoter").value) || 0;
+                k.mS = parseFloat(document.getElementById("kurMalSicil").value) || 0;
+                k.mR = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
+                k.mO = parseFloat(document.getElementById("kurMalOda").value) || 0;
+                k.mSm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
+                k.mD = parseFloat(document.getElementById("kurMalDiger").value) || 0;
+            }
+            eskiKurKaydet();
+        };
     </script>
 </body>
 </html>
