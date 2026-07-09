@@ -1659,7 +1659,11 @@
                                 <!-- Dinamik satırlar buraya gelecek -->
                             </div>
                             
-                            <button type="button" class="btn-secondary action-btn" onclick="yeniKurulusMasrafiEkle()" style="margin-top:10px; font-size:12px; background:#f39c12; color:white; border:none; margin-bottom: 0;">+ Yeni Masraf Kalemi Ekle</button>
+                            <!-- YENİ BUTON GRUBU BAŞLANGICI -->
+                            <div style="display: flex; gap: 10px; margin-top:10px; margin-bottom: 0;">
+                                <button type="button" class="btn-secondary action-btn" onclick="yeniKurulusMasrafiEkle()" style="font-size:12px; background:#f39c12; color:white; border:none;">+ Yeni Masraf Kalemi Ekle</button>
+                                <button type="button" class="btn-primary action-btn" onclick="kurulusMasrafYazdir()" style="font-size:12px; background:#2980b9; color:white; border:none;"><i class="fas fa-print"></i> Masrafları Yazdır</button>
+                            </div>
 
                             <div style="background:#eafaf1; padding:15px; border-radius:6px; border:1px solid #2ecc71; margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:bold; color:#27ae60; font-size:16px;">Mükelleften Alınacak Toplam:</span>
@@ -5990,42 +5994,8 @@
         }
 
         
-        function kurulusKaydet() {
-            let id = document.getElementById("kurulusId").value;
-            let k = kurulusVeritabani[id];
-            if(!k) return;
-            
-            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
-            k.unvan = document.getElementById("kurUnvan").value;
-            k.nevi = document.getElementById("kurNevi").value;
-            k.sermaye = document.getElementById("kurSermaye").value;
-            k.vergi = document.getElementById("kurVergi").value;
-            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
-            k.adres = document.getElementById("kurAdres").value;
-            k.faaliyet = document.getElementById("kurFaaliyet").value;
-            k.ortaklar = document.getElementById("kurOrtaklar").value;
-            k.iletisim = document.getElementById("kurIletisim").value;
-            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
+        
 
-            if(!k.adımlar) k.adımlar = {};
-            kurulusAdimlariListe.forEach((adim, index) => {
-                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
-            });
-
-            // Masrafları Kaydetme
-            k.masraflar = [];
-            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
-                let ad = satir.querySelector('.kur-masraf-ad').value;
-                let tutar = parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0;
-                if(ad || tutar > 0) {
-                    k.masraflar.push({ad: ad, tutar: tutar});
-                }
-            });
-
-            localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
-            modalKapat('kurulusYonetimModal');
-            kuruluslariListele();
-        }
 
         function kurulusSil() {
             let id = document.getElementById("kurulusId").value;
@@ -6088,17 +6058,149 @@
             container.insertAdjacentHTML('beforeend', html);
         }
 
+        function kurulusKaydet() {
+            let id = document.getElementById("kurulusId").value;
+            let k = kurulusVeritabani[id];
+            if(!k) return;
+            
+            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
+            k.unvan = document.getElementById("kurUnvan").value;
+            k.nevi = document.getElementById("kurNevi").value;
+            k.sermaye = document.getElementById("kurSermaye").value;
+            k.vergi = document.getElementById("kurVergi").value;
+            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
+            k.adres = document.getElementById("kurAdres").value;
+            k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.iletisim = document.getElementById("kurIletisim").value;
+            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
+
+            if(!k.adımlar) k.adımlar = {};
+            kurulusAdimlariListe.forEach((adim, index) => {
+                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+            });
+
+            // Masrafları Akıllı Format ile (Binlik Ayracı Temizleyerek) Kaydetme
+            k.masraflar = [];
+            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
+                let ad = satir.querySelector('.kur-masraf-ad').value;
+                let tutarRaw = satir.querySelector('.kur-masraf-tutar').value.replace(/\./g, '').replace(',', '.');
+                let tutar = parseFloat(tutarRaw) || 0;
+                if(ad || tutar > 0) {
+                    k.masraflar.push({ad: ad, tutar: tutar});
+                }
+            });
+
+            localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
+            modalKapat('kurulusYonetimModal');
+            kuruluslariListele();
+        }
+
+        // AKILLI SATIR EKLEME VE FORMATLAMA MOTORU
+        function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
+            let container = document.getElementById("kurulusMasrafListesi");
+            let div = document.createElement("div");
+            div.className = "kur-masraf-satir";
+            div.style.cssText = "display:flex; gap:10px; margin-bottom:10px;";
+            
+            let tGosterim = "";
+            if(tutar !== "" && !isNaN(parseFloat(tutar))) {
+                tGosterim = parseFloat(tutar).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+
+            div.innerHTML = `
+                <input type="text" class="kur-masraf-ad search-bar" value="${ad}" placeholder="Masraf Kalemi (Örn: Noter)" style="flex:2;">
+                <div style="display:flex; gap:5px; flex:1;">
+                    <input type="text" class="kur-masraf-tutar search-bar" value="${tGosterim}" placeholder="0,00" style="width:100%; font-weight:bold; color:#e74c3c; text-align:right;" onfocus="temizleMasraf(this)" onblur="formatlaMasraf(this)" oninput="kurulusMaliyetTopla()">
+                    <button class="action-btn btn-danger" style="padding:10px; margin:0;" onclick="this.parentElement.parentElement.remove(); kurulusMaliyetTopla();" title="Sil"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function temizleMasraf(el) {
+            if(!el.value) return;
+            // Düzenleme yapmak için tıklandığında noktaları temizle ki kolay yazılsın
+            el.value = el.value.replace(/\./g, '').replace(',', '.');
+        }
+
+        function formatlaMasraf(el) {
+            if(!el.value) return;
+            // Kutudan çıkıldığında tr-TR formatına (19.546,00) geri çevir
+            let val = parseFloat(el.value.replace(/,/g, '.')); 
+            if(!isNaN(val)) {
+                el.value = val.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } else {
+                el.value = "";
+            }
+            kurulusMaliyetTopla();
+        }
+
         function kurulusMaliyetTopla() {
             let toplam = 0;
             document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
-                let val = parseFloat(input.value) || 0;
+                let valRaw = input.value.replace(/\./g, '').replace(',', '.');
+                let val = parseFloat(valRaw) || 0;
                 toplam += val;
             });
             let totalEl = document.getElementById("kurMalToplam");
             if(totalEl) {
-                totalEl.textContent = formatMoney(toplam) + " TL";
+                totalEl.textContent = toplam.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " TL";
             }
         }
+
+        // YAZDIRMA FONKSİYONU
+        function kurulusMasrafYazdir() {
+            let id = document.getElementById("kurulusId").value;
+            let unvan = document.getElementById("kurUnvan").value || "Yeni Şirket";
+            
+            let printWindow = window.open('', '', 'width=800,height=600');
+            let html = `
+                <html><head><title>Kuruluş Masrafları - ${unvan}</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; }
+                    .header h2 { margin: 0 0 5px 0; color: #2c3e50; font-size: 20px; text-transform: uppercase; }
+                    .header p { margin: 0; color: #7f8c8d; font-size: 14px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size:14px; }
+                    th { background-color: #f8f9fa; color: #2c3e50; }
+                    .total { font-size: 18px; font-weight: bold; color: #27ae60; text-align: right; padding-top: 15px; margin-top:15px; border-top: 2px solid #27ae60; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #999; }
+                </style>
+                </head><body>
+                <div class="header">
+                    <h2>${unvan}</h2>
+                    <p>Kuruluş ve Tescil İşlemleri Maliyet Tablosu</p>
+                </div>
+                <table>
+                    <thead><tr><th>Masraf Kalemi</th><th style="text-align:right; width:150px;">Tutar (TL)</th></tr></thead>
+                    <tbody>
+            `;
+            
+            let toplam = 0;
+            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
+                let ad = satir.querySelector('.kur-masraf-ad').value || '-';
+                let tutarRaw = satir.querySelector('.kur-masraf-tutar').value.replace(/\./g, '').replace(',', '.');
+                let tutar = parseFloat(tutarRaw) || 0;
+                if(ad !== '-' || tutar > 0) {
+                    toplam += tutar;
+                    html += `<tr><td>${ad}</td><td style="text-align:right;">${tutar.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td></tr>`;
+                }
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <div class="total">MÜKELLEFTEN ALINACAK TOPLAM: ${toplam.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</div>
+                <div class="footer">Bu belge bilgilendirme amaçlıdır. Mali nitelik taşımaz.</div>
+                <script>window.print(); setTimeout(()=>window.close(), 500);<\/script>
+                </body></html>
+            `;
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+               
 
         // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
         function kotoEvrakIndir(belgeTuru) {
