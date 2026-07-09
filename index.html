@@ -1650,18 +1650,17 @@
                         </div>
                     </div>
 
-                    <!-- YENİ EKLENEN MASRAF İÇERİĞİ -->
+                    <!-- YENİ EKLENEN MASRAF İÇERİĞİ (DİNAMİK) -->
                     <div id="kurMaliyetTab" style="display:none;">
                         <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
-                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Mükelleften tahsil edilecek resmi harçları ve kuruluş hizmet bedelinizi takip edin:</p>
-                            <div class="form-grid">
-                                <div class="form-group"><label>Noter Masrafları (TL):</label><input type="number" id="kurMalNoter" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Ticaret Odası Sicil ve Tescil (TL):</label><input type="number" id="kurMalSicil" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Rekabet Kurumu Payı (TL):</label><input type="number" id="kurMalRekabet" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Oda Kayıt Ücreti (TL):</label><input type="number" id="kurMalOda" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>SMMM Kuruluş Hizmet Bedeli (TL):</label><input type="number" id="kurMalSmmm" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Diğer Masraflar (TL):</label><input type="number" id="kurMalDiger" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Şirket kuruluşunda oluşacak masrafları detaylıca ekleyip mükellefe sunabilirsiniz:</p>
+                            
+                            <div id="kurulusMasrafListesi">
+                                <!-- Dinamik satırlar buraya gelecek -->
                             </div>
+                            
+                            <button type="button" class="btn-secondary action-btn" onclick="yeniKurulusMasrafiEkle()" style="margin-top:10px; font-size:12px; background:#f39c12; color:white; border:none; margin-bottom: 0;">+ Yeni Masraf Kalemi Ekle</button>
+
                             <div style="background:#eafaf1; padding:15px; border-radius:6px; border:1px solid #2ecc71; margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:bold; color:#27ae60; font-size:16px;">Mükelleften Alınacak Toplam:</span>
                                 <strong id="kurMalToplam" style="font-size:22px; color:#27ae60;">0.00 TL</strong>
@@ -5921,12 +5920,18 @@
             let k = kurulusVeritabani[id];
             document.getElementById("kurulusId").value = id;
             document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
+            
+            // Tüm Temel Bilgi Alanlarının Yüklenmesi
             document.getElementById("kurUnvan").value = k.unvan || "";
+            document.getElementById("kurNevi").value = k.nevi || "Limited Şirket";
             document.getElementById("kurSermaye").value = k.sermaye || "";
-            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
+            document.getElementById("kurVergi").value = k.vergi || "";
+            document.getElementById("kurSureTabiyet").value = k.sureTabiyet || "Süresiz / T.C.";
             document.getElementById("kurAdres").value = k.adres || "";
             document.getElementById("kurFaaliyet").value = k.faaliyet || "";
+            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
             document.getElementById("kurIletisim").value = k.iletisim || "";
+            document.getElementById("kurMuhasebeci").value = k.muhasebeci || "Tarık GÜN - 0542 323 74 77";
 
             let chkHtml = "";
             kurulusAdimlariListe.forEach((adim, index) => {
@@ -5941,6 +5946,19 @@
             });
             document.getElementById("kurulusChecklist").innerHTML = chkHtml;
 
+            // Masrafları Yükleme
+            document.getElementById("kurulusMasrafListesi").innerHTML = "";
+            if (k.masraflar && k.masraflar.length > 0) {
+                k.masraflar.forEach(m => yeniKurulusMasrafiEkle(m.ad, m.tutar));
+            } else {
+                // Ön Tanımlı Şablon Ekle (İlk kez açılanlar için)
+                yeniKurulusMasrafiEkle("Noter Masrafları", "");
+                yeniKurulusMasrafiEkle("Ticaret Odası Sicil ve Tescil", "");
+                yeniKurulusMasrafiEkle("Rekabet Kurumu Payı", "");
+                yeniKurulusMasrafiEkle("SMMM Kuruluş Hizmet Bedeli", "");
+            }
+            kurulusMaliyetTopla();
+
             kurulusSekmeSec('kurBilgiTab');
             modalAc('kurulusYonetimModal');
         }
@@ -5949,15 +5967,30 @@
             let id = document.getElementById("kurulusId").value;
             let k = kurulusVeritabani[id];
             
+            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
             k.unvan = document.getElementById("kurUnvan").value;
+            k.nevi = document.getElementById("kurNevi").value;
             k.sermaye = document.getElementById("kurSermaye").value;
-            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.vergi = document.getElementById("kurVergi").value;
+            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
             k.adres = document.getElementById("kurAdres").value;
             k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
             k.iletisim = document.getElementById("kurIletisim").value;
+            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
 
             kurulusAdimlariListe.forEach((adim, index) => {
                 k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+            });
+
+            // Masrafları Kaydetme
+            k.masraflar = [];
+            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
+                let ad = satir.querySelector('.kur-masraf-ad').value;
+                let tutar = parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0;
+                if(ad || tutar > 0) {
+                    k.masraflar.push({ad: ad, tutar: tutar});
+                }
             });
 
             localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
@@ -6008,6 +6041,28 @@
             });
 
             if(listelenen === 0) container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#7f8c8d; padding:30px;">Kayıtlı kuruluş süreci bulunamadı. Yukarıdan yeni başlatabilirsiniz.</div>`;
+        }
+
+        function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
+            let container = document.getElementById("kurulusMasrafListesi");
+            let id = "kMasraf_" + Date.now() + Math.floor(Math.random() * 1000);
+            
+            let html = `
+            <div class="kur-masraf-satir" id="${id}" style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                <input type="text" class="kur-masraf-ad search-bar" placeholder="Masraf Adı (Örn: İlan Ücreti)" value="${ad}" style="flex:2; padding:8px;">
+                <input type="number" class="kur-masraf-tutar search-bar" placeholder="Tutar (TL)" value="${tutar}" oninput="kurulusMaliyetTopla()" style="flex:1; padding:8px; font-weight:bold; color:#d35400;">
+                <button type="button" onclick="this.parentElement.remove(); kurulusMaliyetTopla();" style="background:#e74c3c; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:4px;" title="Sil"><i class="fas fa-trash"></i></button>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function kurulusMaliyetTopla() {
+            let toplam = 0;
+            document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
+                let val = parseFloat(input.value) || 0;
+                toplam += val;
+            });
+            document.getElementById("kurMalToplam").textContent = formatMoney(toplam) + " TL";
         }
 
         // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
