@@ -2862,10 +2862,30 @@
             let tarih = new Date().toLocaleDateString('tr-TR');
             let dosyaAdi = "Hos_Geldin_Paketi_" + (m.unvan || "Firma").substring(0, 15).replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, '_');
 
+            // LOGOYU WORD İÇİN BASE64 FORMATINA ÇEVİRME İŞLEMİ (KIRIK GÖRSEL HATASINI ÇÖZER)
+            let logoBase64 = "";
+            let logoElement = document.querySelector('.sidebar-logo');
+            if(logoElement) {
+                try {
+                    let canvas = document.createElement("canvas");
+                    canvas.width = logoElement.naturalWidth || 140;
+                    canvas.height = logoElement.naturalHeight || 140;
+                    let ctx = canvas.getContext("2d");
+                    ctx.drawImage(logoElement, 0, 0);
+                    // Logoyu ham veriye çevir
+                    logoBase64 = canvas.toDataURL("image/png");
+                } catch(e) {
+                    // Tarayıcı güvenlik kısıtlamasına takılırsa fallback
+                    logoBase64 = "SMMM Logo.png"; 
+                }
+            } else {
+                logoBase64 = "SMMM Logo.png";
+            }
+
             let icerik = `
                 <div style="text-align:center; margin-bottom:30px;">
-                    <!-- TASARLANAN MÜKEMMEL LOGONUZ BURAYA EKLENDİ -->
-                    <img src="SMMM Logo.png" alt="Tarık GÜN SMMM" style="width:140px; height:auto; margin-bottom:15px;">
+                    <!-- BASE64 GÖMÜLÜ LOGO -->
+                    <img src="${logoBase64}" alt="Tarık GÜN SMMM" style="width:140px; height:auto; margin-bottom:15px;">
                     <h1 style="color:#2c3e50; font-family:'Times New Roman', Times, serif; border-bottom:2px solid #3498db; padding-bottom:10px; font-size:20pt;">SMMM TARIK GÜN MALİ MÜŞAVİRLİK OFİSİ'NE HOŞ GELDİNİZ</h1>
                 </div>
                 <p style="text-align:right; font-weight:bold; font-size:12pt; font-family:'Times New Roman', Times, serif;">Tarih: ${tarih}</p>
