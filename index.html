@@ -6082,46 +6082,8 @@
 
             if(!k.adımlar) k.adımlar = {};
             kurulusAdimlariListe.forEach((adim, index) => {
-                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
-            });
-
-            // Masrafları Akıllı Format ile (Binlik Ayracı Temizleyerek) Kaydetme
-            k.masraflar = [];
-            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
-                let ad = satir.querySelector('.kur-masraf-ad').value;
-                let tutarRaw = satir.querySelector('.kur-masraf-tutar').value.replace(/\./g, '').replace(',', '.');
-                let tutar = parseFloat(tutarRaw) || 0;
-                if(ad || tutar > 0) {
-                    k.masraflar.push({ad: ad, tutar: tutar});
-                }
-            });
-
-            localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
-            modalKapat('kurulusYonetimModal');
-            kuruluslariListele();
-        }
-
-        // AKILLI SATIR EKLEME VE FORMATLAMA MOTORU
-        function kurulusKaydet() {
-            let id = document.getElementById("kurulusId").value;
-            let k = kurulusVeritabani[id];
-            if(!k) return;
-            
-            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
-            k.unvan = document.getElementById("kurUnvan").value;
-            k.nevi = document.getElementById("kurNevi").value;
-            k.sermaye = document.getElementById("kurSermaye").value;
-            k.vergi = document.getElementById("kurVergi").value;
-            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
-            k.adres = document.getElementById("kurAdres").value;
-            k.faaliyet = document.getElementById("kurFaaliyet").value;
-            k.ortaklar = document.getElementById("kurOrtaklar").value;
-            k.iletisim = document.getElementById("kurIletisim").value;
-            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
-
-            if(!k.adımlar) k.adımlar = {};
-            kurulusAdimlariListe.forEach((adim, index) => {
-                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+                let chk = document.getElementById("kurChk_"+index);
+                if(chk) k.adımlar["adim_"+index] = chk.checked;
             });
 
             // Masrafları Akıllı Format ile (Binlik Ayracı Temizleyerek) Kaydetme
@@ -6152,7 +6114,6 @@
                 tGosterim = parseFloat(tutar).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
 
-            // DİKKAT: Burada input type="text" kullanıldı, böylece binlik ayraçlar (19.546,00) yazılabilir.
             div.innerHTML = `
                 <input type="text" class="kur-masraf-ad search-bar" value="${ad}" placeholder="Masraf Kalemi (Örn: Noter)" style="flex:2; padding:8px;">
                 <div style="display:flex; gap:5px; flex:1;">
@@ -6165,13 +6126,11 @@
 
         function temizleMasraf(el) {
             if(!el.value) return;
-            // Düzenleme yapmak için tıklandığında noktaları temizle ki kolay yazılsın
             el.value = el.value.replace(/\./g, '').replace(',', '.');
         }
 
         function formatlaMasraf(el) {
             if(!el.value) return;
-            // Kutudan çıkıldığında tr-TR formatına (19.546,00) geri çevir
             let val = parseFloat(el.value.replace(/,/g, '.')); 
             if(!isNaN(val)) {
                 el.value = val.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -6184,7 +6143,6 @@
         function kurulusMaliyetTopla() {
             let toplam = 0;
             document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
-                // Toplarken yazılı olan binlik ayraçları temizleyip gerçek rakamı buluyoruz
                 let valRaw = input.value.replace(/\./g, '').replace(',', '.');
                 let val = parseFloat(valRaw) || 0;
                 toplam += val;
@@ -6245,6 +6203,114 @@
             `;
             printWindow.document.write(html);
             printWindow.document.close();
+        }
+
+        // KOTO MATBU EVRAK OLUŞTURMA VE İNDİRME MOTORU
+        function kotoEvrakIndir(tur) {
+            let unvan = document.getElementById("kurUnvan").value || ".......................................................";
+            let adres = document.getElementById("kurAdres").value || ".......................................................";
+            let sermaye = document.getElementById("kurSermaye").value || ".........................";
+            let faaliyet = document.getElementById("kurFaaliyet").value || ".........................";
+            let vergi = document.getElementById("kurVergi").value || ".........................";
+            let ortaklar = document.getElementById("kurOrtaklar").value || ".........................";
+
+            let icerik = "";
+            let dosyaAdi = "Evrak";
+            let tarih = new Date().toLocaleDateString('tr-TR');
+
+            if(tur === 'sicil_tescil') {
+                dosyaAdi = "Sicil_Tescil_Dilekcesi";
+                icerik = `
+                    <div style="text-align:right; margin-bottom:30px;">Tarih: ${tarih}</div>
+                    <h3 style="text-align:center; font-family: 'Times New Roman', Times, serif;">KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜNE</h3>
+                    <p style="text-indent: 40px; text-align:justify;">Aşağıda bilgileri bulunan şirketimizin kuruluş işlemlerinin yapılarak tescil ve ilan edilmesini saygılarımızla arz ederiz.</p>
+                    <br>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+                        <tr><td style="width:30%; padding:5px; font-weight:bold;">Şirket Unvanı</td><td style="padding:5px;">: ${unvan}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Ticari İkametgah</td><td style="padding:5px;">: ${adres}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Sermayesi</td><td style="padding:5px;">: ${sermaye}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Vergi Dairesi/No</td><td style="padding:5px;">: ${vergi}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Nace / Faaliyet</td><td style="padding:5px;">: ${faaliyet}</td></tr>
+                    </table>
+                    <div style="text-align:right; width:100%;">
+                        <p><b>Kurucu Ortak / Yetkili İmza</b></p>
+                        <p>${unvan}</p>
+                    </div>
+                `;
+            } else if(tur === 'koto_kayit') {
+                dosyaAdi = "KOTO_Kayit_Dilekcesi";
+                icerik = `
+                    <div style="text-align:right; margin-bottom:30px;">Tarih: ${tarih}</div>
+                    <h3 style="text-align:center; font-family: 'Times New Roman', Times, serif;">KOCAELİ TİCARET ODASI BAŞKANLIĞINA</h3>
+                    <p style="text-indent: 40px; text-align:justify;">Odanız sınırları içerisinde yeni kurulan <b>${unvan}</b> unvanlı firmamızın oda kayıt işlemlerinin yapılmasını arz ederiz.</p>
+                    <br>
+                    <p><b>Şirket Adresi:</b> ${adres}</p>
+                    <br><br><br>
+                    <div style="text-align:right; width:100%;">
+                        <p><b>Yetkili İmza / Kaşe</b></p>
+                    </div>
+                `;
+            } else if(tur === 'taahhutname') {
+                dosyaAdi = "Taahhutname_Madde24";
+                icerik = `
+                    <h3 style="text-align:center; font-family: 'Times New Roman', Times, serif;">TAAHHÜTNAME</h3>
+                    <p style="text-align:center;">(Ticaret Sicili Yönetmeliği Madde 24)</p>
+                    <br>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+                        <tr><td style="width:30%; padding:5px; font-weight:bold;">Ticaret Unvanı</td><td style="padding:5px;">: ${unvan}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Ticari İkametgahı</td><td style="padding:5px;">: ${adres}</td></tr>
+                        <tr><td style="padding:5px; font-weight:bold;">Vergi Dairesi ve No</td><td style="padding:5px;">: ${vergi}</td></tr>
+                    </table>
+                    <p style="text-indent: 40px; text-align:justify;">Yukarıda bilgileri yer alan firmamızın, beyan ettiğimiz faaliyet konusu dışında bir faaliyette bulunmayacağını, beyan ettiğimiz adreste tebligatları kabul edeceğimizi taahhüt ederiz.</p>
+                    <br><br>
+                    <div style="text-align:right; width:100%;">
+                        <p><b>Yetkili İsim / İmza</b></p>
+                    </div>
+                `;
+            } else if(tur === 'oda_beyanname') {
+                dosyaAdi = "Oda_Kayit_Beyannamesi";
+                icerik = `
+                    <h3 style="text-align:center; font-family: 'Times New Roman', Times, serif;">ODA KAYIT BEYANNAMESİ</h3>
+                    <br>
+                    <p><b>Ticaret Unvanı:</b> ${unvan}</p>
+                    <p><b>Adresi:</b> ${adres}</p>
+                    <p><b>Sermayesi:</b> ${sermaye}</p>
+                    <p><b>Ortaklar ve TC Bilgileri:</b><br>${ortaklar.replace(/\n/g, '<br>')}</p>
+                    <br><br>
+                    <p style="text-align:justify;">Yukarıdaki bilgilerin doğruluğunu beyan ederiz.</p>
+                    <div style="text-align:right; width:100%; margin-top:30px;">
+                        <p><b>İmza / Kaşe</b></p>
+                    </div>
+                `;
+            } else if(tur === 'kimlik_kart') {
+                dosyaAdi = "Uye_Kimlik_Karti_Talebi";
+                icerik = `
+                    <div style="text-align:right; margin-bottom:30px;">Tarih: ${tarih}</div>
+                    <h3 style="text-align:center; font-family: 'Times New Roman', Times, serif;">KOCAELİ TİCARET ODASI BAŞKANLIĞINA</h3>
+                    <p style="text-indent: 40px; text-align:justify;">Odanıza yeni kayıt olan <b>${unvan}</b> unvanlı firmamızın şirket müdürlerine / yetkililerine Ticaret Odası Üye Kimlik Kartı düzenlenmesini rica ederiz.</p>
+                    <br><br><br>
+                    <div style="text-align:right; width:100%;">
+                        <p><b>Şirket Yetkilisi İmza / Kaşe</b></p>
+                    </div>
+                `;
+            }
+
+            let html = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>${dosyaAdi}</title></head>
+            <body style="font-family: 'Times New Roman', Times, serif; font-size:12pt; padding:20px;">
+                ${icerik}
+            </body>
+            </html>`;
+
+            let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = dosyaAdi + '_' + unvan.substring(0, 15).replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]/g, '_') + '.doc';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
