@@ -6213,72 +6213,109 @@
 
         // --- KURULUŞ MASRAFLARI JS EKLENTİSİ ---
         function kurulusSekmeSec(tabId) {
-            document.getElementById('kurBilgiTab').style.display = 'none';
-            document.getElementById('kurAdimTab').style.display = 'none';
-            if(document.getElementById('kurMaliyetTab')) document.getElementById('kurMaliyetTab').style.display = 'none'; 
-            
-            document.getElementById('btnKurTab1').classList.remove('active');
-            document.getElementById('btnKurTab1').style.background = '#e1e8ed';
-            document.getElementById('btnKurTab1').style.color = '#333';
-            
-            document.getElementById('btnKurTab2').classList.remove('active');
-            document.getElementById('btnKurTab2').style.background = '#e1e8ed';
-            document.getElementById('btnKurTab2').style.color = '#333';
+            // Tüm içerikleri gizle
+            let tabs = ['kurBilgiTab', 'kurAdimTab', 'kurMaliyetTab'];
+            tabs.forEach(t => { 
+                if(document.getElementById(t)) document.getElementById(t).style.display = 'none'; 
+            });
 
-            if(document.getElementById('btnKurTab3')) {
-                document.getElementById('btnKurTab3').classList.remove('active'); 
-                document.getElementById('btnKurTab3').style.background = '#e1e8ed'; 
-                document.getElementById('btnKurTab3').style.color = '#333'; 
+            // Tüm butonların aktifliğini kaldır ve stillerini sıfırla
+            let btns = ['btnKurTab1', 'btnKurTab2', 'btnKurTab3'];
+            btns.forEach(b => {
+                let btn = document.getElementById(b);
+                if(btn) {
+                    btn.classList.remove('active');
+                    btn.style.background = '#e1e8ed';
+                    btn.style.color = '#333';
+                }
+            });
+
+            // Seçilen içeriği göster
+            if(document.getElementById(tabId)) document.getElementById(tabId).style.display = 'block';
+            
+            // Seçilen butonu aktif et ve stillendir
+            let activeBtnId = 'btnKurTab1';
+            if(tabId === 'kurAdimTab') activeBtnId = 'btnKurTab2';
+            else if(tabId === 'kurMaliyetTab') activeBtnId = 'btnKurTab3';
+            
+            let activeBtn = document.getElementById(activeBtnId);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = '#e74c3c';
+                activeBtn.style.color = 'white';
             }
-
-            document.getElementById(tabId).style.display = 'block';
-            
-            let btn = tabId === 'kurBilgiTab' ? 'btnKurTab1' : (tabId === 'kurAdimTab' ? 'btnKurTab2' : 'btnKurTab3');
-            document.getElementById(btn).classList.add('active');
-            document.getElementById(btn).style.background = '#e74c3c';
-            document.getElementById(btn).style.color = 'white';
         }
 
         function kurulusMaliyetTopla() {
-            let n = parseFloat(document.getElementById("kurMalNoter").value) || 0;
-            let s = parseFloat(document.getElementById("kurMalSicil").value) || 0;
-            let r = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
-            let o = parseFloat(document.getElementById("kurMalOda").value) || 0;
-            let sm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
-            let d = parseFloat(document.getElementById("kurMalDiger").value) || 0;
-            let top = n + s + r + o + sm + d;
-            document.getElementById("kurMalToplam").textContent = formatMoney(top) + " TL";
+            let toplam = 0;
+
+            // 1. Dinamik olarak eklenen masrafları topla (Orijinal yapı)
+            document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
+                toplam += parseFloat(input.value) || 0;
+            });
+
+            // 2. Sabit masrafları güvenli (null kontrollü) şekilde topla
+            let mNoter = document.getElementById("kurMalNoter");
+            let mSicil = document.getElementById("kurMalSicil");
+            let mRekabet = document.getElementById("kurMalRekabet");
+            let mOda = document.getElementById("kurMalOda");
+            let mSmmm = document.getElementById("kurMalSmmm");
+            let mDiger = document.getElementById("kurMalDiger");
+
+            let n = mNoter ? parseFloat(mNoter.value) || 0 : 0;
+            let s = mSicil ? parseFloat(mSicil.value) || 0 : 0;
+            let r = mRekabet ? parseFloat(mRekabet.value) || 0 : 0;
+            let o = mOda ? parseFloat(mOda.value) || 0 : 0;
+            let sm = mSmmm ? parseFloat(mSmmm.value) || 0 : 0;
+            let d = mDiger ? parseFloat(mDiger.value) || 0 : 0;
+
+            toplam += (n + s + r + o + sm + d);
+
+            // Toplamı ekrana yazdır
+            let totalEl = document.getElementById("kurMalToplam");
+            if(totalEl) {
+                totalEl.textContent = (typeof formatMoney === "function" ? formatMoney(toplam) : toplam) + " TL";
+            }
         }
 
-        const eskiKurModalAc = kurulusModalAc;
-        kurulusModalAc = function(id) {
-            eskiKurModalAc(id);
-            let k = kurulusVeritabani[id];
-            if(document.getElementById("kurMalNoter")) {
-                document.getElementById("kurMalNoter").value = k.mN || 0;
-                document.getElementById("kurMalSicil").value = k.mS || 0;
-                document.getElementById("kurMalRekabet").value = k.mR || 0;
-                document.getElementById("kurMalOda").value = k.mO || 0;
-                document.getElementById("kurMalSmmm").value = k.mSm || 0;
-                document.getElementById("kurMalDiger").value = k.mD || 0;
-                kurulusMaliyetTopla();
-            }
-        };
+        // Modal Açma Fonksiyonuna Güvenli Eklenti
+        if (typeof kurulusModalAc === "function") {
+            const eskiKurModalAc = kurulusModalAc;
+            kurulusModalAc = function(id) {
+                eskiKurModalAc(id);
+                let k = kurulusVeritabani[id];
+                
+                if (k && document.getElementById("kurMalNoter")) {
+                    document.getElementById("kurMalNoter").value = k.mN || 0;
+                    document.getElementById("kurMalSicil").value = k.mS || 0;
+                    document.getElementById("kurMalRekabet").value = k.mR || 0;
+                    document.getElementById("kurMalOda").value = k.mO || 0;
+                    document.getElementById("kurMalSmmm").value = k.mSm || 0;
+                    document.getElementById("kurMalDiger").value = k.mD || 0;
+                    kurulusMaliyetTopla();
+                }
+            };
+        }
 
-        const eskiKurKaydet = kurulusKaydet;
-        kurulusKaydet = function() {
-            let id = document.getElementById("kurulusId").value;
-            let k = kurulusVeritabani[id];
-            if(document.getElementById("kurMalNoter")) {
-                k.mN = parseFloat(document.getElementById("kurMalNoter").value) || 0;
-                k.mS = parseFloat(document.getElementById("kurMalSicil").value) || 0;
-                k.mR = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
-                k.mO = parseFloat(document.getElementById("kurMalOda").value) || 0;
-                k.mSm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
-                k.mD = parseFloat(document.getElementById("kurMalDiger").value) || 0;
-            }
-            eskiKurKaydet();
-        };
+        // Kaydetme Fonksiyonuna Güvenli Eklenti
+        if (typeof kurulusKaydet === "function") {
+            const eskiKurKaydet = kurulusKaydet;
+            kurulusKaydet = function() {
+                let idEl = document.getElementById("kurulusId");
+                let id = idEl ? idEl.value : null;
+                
+                if (id && kurulusVeritabani[id] && document.getElementById("kurMalNoter")) {
+                    let k = kurulusVeritabani[id];
+                    k.mN = parseFloat(document.getElementById("kurMalNoter").value) || 0;
+                    k.mS = parseFloat(document.getElementById("kurMalSicil").value) || 0;
+                    k.mR = parseFloat(document.getElementById("kurMalRekabet").value) || 0;
+                    k.mO = parseFloat(document.getElementById("kurMalOda").value) || 0;
+                    k.mSm = parseFloat(document.getElementById("kurMalSmmm").value) || 0;
+                    k.mD = parseFloat(document.getElementById("kurMalDiger").value) || 0;
+                }
+                eskiKurKaydet(); 
+            };
+        }
     </script>
 </body>
 </html>
