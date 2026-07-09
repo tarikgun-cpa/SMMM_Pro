@@ -6097,6 +6097,45 @@
         }
 
         // AKILLI SATIR EKLEME VE FORMATLAMA MOTORU
+        function kurulusKaydet() {
+            let id = document.getElementById("kurulusId").value;
+            let k = kurulusVeritabani[id];
+            if(!k) return;
+            
+            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
+            k.unvan = document.getElementById("kurUnvan").value;
+            k.nevi = document.getElementById("kurNevi").value;
+            k.sermaye = document.getElementById("kurSermaye").value;
+            k.vergi = document.getElementById("kurVergi").value;
+            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
+            k.adres = document.getElementById("kurAdres").value;
+            k.faaliyet = document.getElementById("kurFaaliyet").value;
+            k.ortaklar = document.getElementById("kurOrtaklar").value;
+            k.iletisim = document.getElementById("kurIletisim").value;
+            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
+
+            if(!k.adımlar) k.adımlar = {};
+            kurulusAdimlariListe.forEach((adim, index) => {
+                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+            });
+
+            // Masrafları Akıllı Format ile (Binlik Ayracı Temizleyerek) Kaydetme
+            k.masraflar = [];
+            document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
+                let ad = satir.querySelector('.kur-masraf-ad').value;
+                let tutarRaw = satir.querySelector('.kur-masraf-tutar').value.replace(/\./g, '').replace(',', '.');
+                let tutar = parseFloat(tutarRaw) || 0;
+                if(ad || tutar > 0) {
+                    k.masraflar.push({ad: ad, tutar: tutar});
+                }
+            });
+
+            localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
+            modalKapat('kurulusYonetimModal');
+            kuruluslariListele();
+        }
+
+        // AKILLI SATIR EKLEME VE FORMATLAMA MOTORU
         function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
             let container = document.getElementById("kurulusMasrafListesi");
             let div = document.createElement("div");
@@ -6108,11 +6147,12 @@
                 tGosterim = parseFloat(tutar).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             }
 
+            // DİKKAT: Burada input type="text" kullanıldı, böylece binlik ayraçlar (19.546,00) yazılabilir.
             div.innerHTML = `
-                <input type="text" class="kur-masraf-ad search-bar" value="${ad}" placeholder="Masraf Kalemi (Örn: Noter)" style="flex:2;">
+                <input type="text" class="kur-masraf-ad search-bar" value="${ad}" placeholder="Masraf Kalemi (Örn: Noter)" style="flex:2; padding:8px;">
                 <div style="display:flex; gap:5px; flex:1;">
-                    <input type="text" class="kur-masraf-tutar search-bar" value="${tGosterim}" placeholder="0,00" style="width:100%; font-weight:bold; color:#e74c3c; text-align:right;" onfocus="temizleMasraf(this)" onblur="formatlaMasraf(this)" oninput="kurulusMaliyetTopla()">
-                    <button class="action-btn btn-danger" style="padding:10px; margin:0;" onclick="this.parentElement.parentElement.remove(); kurulusMaliyetTopla();" title="Sil"><i class="fas fa-trash"></i></button>
+                    <input type="text" class="kur-masraf-tutar search-bar" value="${tGosterim}" placeholder="0,00" style="width:100%; font-weight:bold; color:#d35400; text-align:right; padding:8px;" onfocus="temizleMasraf(this)" onblur="formatlaMasraf(this)" oninput="kurulusMaliyetTopla()">
+                    <button class="action-btn btn-danger" style="padding:8px 12px; margin:0;" onclick="this.parentElement.parentElement.remove(); kurulusMaliyetTopla();" title="Sil"><i class="fas fa-trash"></i></button>
                 </div>
             `;
             container.appendChild(div);
@@ -6139,6 +6179,7 @@
         function kurulusMaliyetTopla() {
             let toplam = 0;
             document.querySelectorAll('.kur-masraf-tutar').forEach(input => {
+                // Toplarken yazılı olan binlik ayraçları temizleyip gerçek rakamı buluyoruz
                 let valRaw = input.value.replace(/\./g, '').replace(',', '.');
                 let val = parseFloat(valRaw) || 0;
                 toplam += val;
@@ -6200,209 +6241,6 @@
             printWindow.document.write(html);
             printWindow.document.close();
         }
-               
-
-        // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
-        function kotoEvrakIndir(belgeTuru) {
-            // Formdaki Verileri Çekme (Boşsa noktalı yer bırakır)
-            let unvan = document.getElementById("kurUnvan").value || ".......................................................................................";
-            let nevi = document.getElementById("kurNevi").value || ".............................";
-            let sermaye = document.getElementById("kurSermaye").value || "........................................";
-            let vergiDairesi = document.getElementById("kurVergi").value || ".......................................................";
-            let adres = document.getElementById("kurAdres").value || "...................................................................................................................";
-            let faaliyet = document.getElementById("kurFaaliyet").value || "..................................................................";
-            let ortaklarRaw = document.getElementById("kurOrtaklar").value || ".................................................................................\n.................................................................................";
-            let iletisim = document.getElementById("kurIletisim").value || ".............................";
-            let muhasebeci = document.getElementById("kurMuhasebeci").value || ".......................................................";
-            let sureTabiyet = document.getElementById("kurSureTabiyet").value || ".............................";
-            let tarih = new Date().toLocaleDateString('tr-TR');
-
-            // Ortaklar metnini Word'de alt alta düzgün basmak için satır sonlarını <br> yapar
-            let ortaklarHtml = ortaklarRaw.replace(/\n/g, "<br><br>");
-
-            // Word Dosyası İçin Gerekli HTML İskeleti
-            let htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><style>
-                body { font-family: 'Arial', 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; }
-                h3 { text-align: center; font-size: 13pt; margin-bottom: 15px; font-weight: bold; }
-                h4 { text-align: center; font-size: 11pt; margin-bottom: 15px; text-decoration: underline; }
-                p { margin: 5px 0; }
-                .right { text-align: right; }
-                .center { text-align: center; }
-                .madde { margin-bottom: 15px; }
-            </style></head><body>`;
-
-            // 1. SİCİL TESCİL DİLEKÇESİ (Orijinal Format)
-            if (belgeTuru === 'sicil_tescil') {
-                htmlContent += `
-                    <p><b>Tarih:</b> ${tarih}</p><br><br>
-                    <h3>KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜ'NE</h3>
-                    <h3>KOCAELİ</h3><br><br>
-                    <p>Kocaeli ili dahilinde, <b>${adres} / KOCAELİ</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p><br>
-                    <p>Kuruluş tescili için gerekli evraklar ektedir. Türk Ticaret kanunun ve ilgili kanun ve diğer hükümler çerçevesinde kuruluşumuzun tescil ve ilanını arz ederiz.</p><br><br>
-                    <p>Saygılarımızla,</p><br>
-                    <p><b>UNVAN, İMZA</b></p><br><br><br>
-                    <p><b>Vergi Dairesi:</b> ${vergiDairesi}</p>
-                    <p><b>Adres:</b> ${adres}</p>
-                    <p><b>Tel:</b> ${iletisim}</p>
-                    <p><b>GSM:</b> ${iletisim}</p>
-                `;
-            } 
-            // 2. KOTO KAYIT DİLEKÇESİ (Orijinal Format)
-            else if (belgeTuru === 'koto_kayit') {
-                htmlContent += `
-                    <p><b>TARİH:</b> ${tarih}</p><br><br>
-                    <h3>KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA</h3>
-                    <h3>KOCAELİ</h3><br><br>
-                    <p>Kocaeli ili dahilinde, <b>${adres} / KOCAELİ</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p><br>
-                    <p>Yapmakta olduğum işlerden ağırlıklı iş konumuz <b>${faaliyet}</b> işi olup, ağırlıklı iş koluma karşılık gelen <b>NACE KODU</b> (..................) DİR kaydımın yapılmasını rica ederim.</p><br><br>
-                    <p>Saygılarımızla,</p><br>
-                    <p><b>UNVAN, İMZA</b></p><br><br><br>
-                    <p><b>VERGİ DAİRESİ:</b> ${vergiDairesi}</p>
-                    <p><b>ADRES:</b> ${adres}</p>
-                    <p><b>TELEFON:</b> ${iletisim}</p>
-                    <p><b>GSM:</b> ${iletisim}</p>
-                `;
-            }
-            // 3. TAAHHÜTNAME (Ticaret Sicili Yönetmeliği 24. Madde Orijinal Format)
-            else if (belgeTuru === 'taahhutname') {
-                htmlContent += `
-                    <h3>TAAHHÜTNAME</h3>
-                    <h4>(TİCARET SİCİLİ YÖNETMELİĞİNİN 24. MADDESİ GEREĞİNCE)</h4><br>
-                    <h3>KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜ'NE</h3><br><br>
-                    
-                    <p><b>İŞYERİ SAHİBİNİN ADI SOYADI / (ŞİRKETLERDE UNVAN):</b><br>${unvan}</p><br>
-                    <p><b>İŞYERİNİN AÇIK ADRESİ:</b><br>${adres}</p><br>
-                    <p><b>SERMAYESİ (RAKAM VE YAZI İLE):</b><br>${sermaye} TL</p><br>
-                    <p><b>İŞLETMENİN AÇILIŞ TARİHİ:</b><br>${tarih}</p><br>
-                    <p><b>GERÇEK FAALİYET KONUSU / NACE KODU TANIMI:</b><br>${faaliyet}</p><br>
-                    <p><b>İŞLETME YA DA YETKİLİLERİN TELEFON NUMARASI VE E-POSTA ADRESİ:</b><br>${iletisim}</p><br><br>
-                    <p style="text-align:justify;">TİCARET SİCİLİ YÖNETMELİĞİNİN 24. MADDESİ'NİN BİRİNCİ FIKRASINA UYGUN OLARAK DÜZENLENEN BU TAAHHÜTNAMEDEKİ BİLGİLERİN DOĞRU OLDUĞUNU, YAPILACAK İNCELEME SONUCUNDA AKSİNE TESPİT YAPILMASI DURUMUNDA SORUMLULUĞU KABUL ETTİĞİMİ / ETTİĞİMİZİ BEYAN VE TAAHHÜT EDERİM / EDERİZ.</p>
-                    <br><br><br>
-                    <p class="right" style="padding-right: 50px;"><b>(İMZA)</b><br><b>İŞLETME SAHİBİNİN / YETKİLİSİNİN ADI - SOYADI</b></p>
-                `;
-            }
-            // 4. ODA KAYIT BEYANNAMESİ (Eksiksiz 21 Maddelik Orijinal Format)
-            else if (belgeTuru === 'oda_beyanname') {
-                htmlContent += `
-                    <table style="width:100%; border:none; margin-bottom:20px;">
-                        <tr>
-                            <td style="border:none; text-align:center; height:100px; width:20%; border:1px solid #ccc;">FOTO</td>
-                            <td style="border:none; text-align:center; height:100px; width:20%; border:1px solid #ccc;">FOTO</td>
-                            <td style="border:none; text-align:center; height:100px; width:20%; border:1px solid #ccc;">FOTO</td>
-                            <td style="border:none; text-align:center; height:100px; width:20%; border:1px solid #ccc;">FOTO</td>
-                            <td style="border:none; text-align:center; height:100px; width:20%; border:1px solid #ccc;">FOTO</td>
-                        </tr>
-                    </table>
-                    <p style="text-align:justify; margin-bottom:15px;">Aşağıda yazılı bilgilerin gerçeğe uygun olduğunu beyan eder, 5174 sayılı Kanunun 24, 25 ve 50. maddelerine dayanılarak hazırlanılan kayıt ücreti ile yıllık aidat ve munzam aidatın tespiti ve ödenmesi hakkındaki yönetmelik hükümleri dahilinde Odaya kaydedilmemizi rica ederiz.</p>
-                    
-                    <table style="width:100%; border:none; margin-bottom:30px;">
-                        <tr>
-                            <td style="border:none; width:50%;"><b>TARİH:</b> ${tarih}</td>
-                            <td style="border:none; width:50%; text-align:right;"><b>KAŞE VE YETKİLİ İMZALARI:</b> ........................................</td>
-                        </tr>
-                    </table>
-
-                    <p class="madde"><b>1- Hükmi Şahsın nev'i (Kollektif, Komandit, Kooperatif, Limited, Anonim vb.):</b><br> ${nevi}</p>
-                    <p class="madde"><b>2- Ticaret Unvanı:</b><br> ${unvan}</p>
-                    <p class="madde"><b>3- Ticari İkametgahı:</b><br> ${adres}</p>
-                    <p class="madde"><b>4- Fiilen işe başladığı yer ve tarih:</b><br> ${adres} / ${tarih}</p>
-                    <p class="madde"><b>5- Şirketin süresi:</b><br> ${sureTabiyet.split('/')[0] || "..........................."}</p>
-                    <p class="madde"><b>6- Tabiyeti:</b><br> ${sureTabiyet.split('/')[1] || "..........................."}</p>
-                    <p class="madde"><b>7- 1330 sayılı kanuna tabii yabancı şirket ise, Ticaret Bakanlığından alınan izin belgesi numarası ve tarihi:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>8- Hükmi şahsın;</b><br> a) Müseccel sermayesi (rakam ve yazıyla): ${sermaye} TL<br> b) Ödenmiş sermayesi (rakam ve yazıyla): ${sermaye} TL</p>
-                    <p class="madde"><b>9- Esas iştigal konusu / NACE KODU:</b><br> ${faaliyet}</p>
-                    <p class="madde"><b>10- Tali iştigal konusu:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>11- FİRMANIN;</b><br> Fabrika/Yazıhane Tel: ${iletisim}<br> Faks: ..............................<br> Gsm / Mail: ${iletisim}</p>
-                    <p class="madde"><b>12- FİRMA YETKİLİ / ORTAĞININ Adı Soyadı, İletişim, Mail Bilgileri:</b><br><br>${ortaklarHtml}</p><br>
-                    <p class="madde"><b>13- FİRMA MUHASEBECİSİ / AVUKATI:</b><br> ${muhasebeci}</p>
-                    <p class="madde"><b>14- Hükmi şahıs ihracatla iştigal ediyorsa, ihracatını yapacağı madde ve mamüller:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>15- Hükmi şahıs ithalatla iştigal ediyorsa; Münhasır mümessillik:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>16- Tali bayilik halinde:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>17- Kolektif ve komandit şirketlerde imzaya yetkililerin isim ve adresleri:</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>18- Hükmi şahsın Yönetim Kurulu Üyelerinin ve Müdürlerin isimleri:</b><br><br>${ortaklarHtml}</p><br>
-                    <p class="madde"><b>19- Hükmi şahsın bağlı bulunduğu vergi dairesi ve hesap numarası:</b><br> ${vergiDairesi}</p>
-                    <p class="madde"><b>20- Hükmi şahıs sınai faaliyette bulunuyorsa (Fabrika, Kira bedeli, İşçi Sayısı vb.):</b><br> ........................................................................................................</p>
-                    <p class="madde"><b>21- Hükmi şahsın ayrıca iştirak ettiği sınai teşebbüsler varsa unvan ve adresleri:</b><br> ........................................................................................................</p>
-                `;
-            }
-            // 5. KİMLİK KARTI TALEP DİLEKÇESİ (Orijinal Format)
-            else if (belgeTuru === 'kimlik_kart') {
-                htmlContent += `
-                    <p class="right"><b>TARİH:</b> ${tarih}</p><br><br>
-                    <h3>KİMLİK KARTI TALEP DİLEKÇESİ</h3>
-                    <h3>KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA</h3>
-                    <h3>KOCAELİ</h3><br><br>
-                    <p style="text-align:justify;">Kocaeli Ticaret Odası üyeleri ile tüzel kişi ortak ve yetkilileri için düzenlenen kimlik kartları, gerçek kişilerin Odaya kayıtlı firmaları ile ilişkilerini gösterilmesi maksadıyla hazırlanmış olup, bu amaç dışındaki kullanımdan doğan sorumluluk kişilerin kendisine aittir.</p><br>
-                    <p style="text-align:justify;">Adına kimlik kartı düzenlenen kişinin Oda ile ilişiğinin kesilmesi, kimlik kartı üzerinde yazılı bilgilerin değişmesi veya Odanın iadesini talep etmesi halinde kimliklerin 7 gün içerisinde Odaya teslimi zorunludur.</p><br>
-                    <p style="text-align:justify;">1/12/2017 tarihinden sonra Odaya kayıt olan her firma için 1 (bir) kimlik kartı ücretsiz olup, birden fazla talep edilen kimlikler ile 1/12/2017 tarihinden önce Odaya kayıt olmuş üyelere ait kimlik kartları ücrete tabidir.</p><br>
-                    <p style="text-align:justify;">Gerçek kişinin ilişiği olan firma sayısına bakılmaksızın her gerçek kişiye 1 (bir) kimlik düzenlenebilmektedir.</p><br>
-                    <p style="text-align:justify;">Kimliğin kullanım süresinin dolması, kaybolması veya kimlik üzerinde yazılı bilgilerin değişmesi halinde ücret mukabili yenisi düzenlenebilecektir.</p><br>
-                    <p style="text-align:justify;">Yukarıda yazılı şartları okuduğumu ve kabul ettiğimi beyan eder, Kocaeli Ticaret Odası tarafından <b>${unvan}</b> firması ile ilgili olarak adıma kimlik kartı düzenlenmesini, düzenlenecek olan kimliğin şahsıma veya ........................................................... T.C. Kimlik numaralı ........................................................... teslim edilmesini rica ederim.</p>
-                    <br><br><br>
-                    <table style="width:100%; border:none;">
-                        <tr>
-                            <td style="width:50%; text-align:center; border:none;"><b>İSİM SOY İSİM</b></td>
-                            <td style="width:50%; text-align:center; border:none;"><b>İMZA</b></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align:center; border:none;"><br>...........................................................<br></td>
-                            <td style="text-align:center; border:none;"><br>...........................................................<br></td>
-                        </tr>
-                    </table>
-                `;
-            }
-
-            htmlContent += `</body></html>`;
-
-            // HTML'i Microsoft Word'ün anlayacağı DOC Blob'una Çevirme
-            let blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-            let url = URL.createObjectURL(blob);
-            let link = document.createElement('a');
-            link.href = url;
-            link.download = belgeTuru + '_' + unvan.substring(0, 15) + '.doc';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        // --- AI YÖNETİCİ ÖZETİ EKLENTİSİ ---
-        const eskiMasterDash = masterDashboardCiz;
-        masterDashboardCiz = function() {
-            eskiMasterDash();
-            let totalAlacak = 0;
-            let fGorevTop = 0; let fGorevTamam = 0;
-            try { fGorevTop = parseInt(document.getElementById("mdBekleyenGorev").textContent) + parseInt(document.getElementById("takvimTamamlananGorev") ? document.getElementById("takvimTamamlananGorev").textContent : 0); } catch(e){}
-            try { fGorevTamam = parseInt(document.getElementById("takvimTamamlananGorev") ? document.getElementById("takvimTamamlananGorev").textContent : 0); } catch(e){}
-            try { totalAlacak = parseFloat(document.getElementById("mdPiyasaAlacak").textContent.replace(/[^0-9,-]+/g,"").replace(",",".")); } catch(e){}
-            
-            let yuzde = fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100);
-            let aiMetin = `Ofisiniz bu ay <b>%${yuzde || 0}</b> operasyonel başarı ile çalışıyor. Toplam <b>${formatMoney(totalAlacak || 0)} ₺</b> piyasa alacağınız bulunuyor. `;
-            if((yuzde || 0) < 50) aiMetin += "<span style='color:#e74c3c; font-weight:bold;'>Görevlerde ciddi birikme var, acil müdahale önerilir!</span>";
-            else if((yuzde || 0) < 80) aiMetin += "Görevler orta hızda ilerliyor.";
-            else aiMetin += "<span style='color:#27ae60; font-weight:bold;'>Harika bir performans, ofiste işler tıkırında!</span>";
-            if(document.getElementById("aiYoneticiMetin")) document.getElementById("aiYoneticiMetin").innerHTML = aiMetin;
-        };
-
-        // --- AI FİNANS ÖZETİ EKLENTİSİ ---
-        const eskiCariPano = cariPanoCiz;
-        cariPanoCiz = function() {
-            eskiCariPano();
-            try {
-                let tMakbuzNet = parseFloat(document.getElementById("sumGelir").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
-                let tTahsilat = tMakbuzNet - parseFloat(document.getElementById("sumAlacak").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
-                let netKar = parseFloat(document.getElementById("sumKar").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
-                let genelPiyasaBorcu = parseFloat(document.getElementById("sumBorc").textContent.replace(/[^0-9,-]+/g,"").replace(",","."));
-
-                let tahsilatOrani = tMakbuzNet === 0 ? 0 : Math.round((tTahsilat / tMakbuzNet) * 100);
-                if (tahsilatOrani < 0) tahsilatOrani = 0; if (tahsilatOrani > 100) tahsilatOrani = 100;
-                
-                let aiFinans = `Seçili yılda kestiğiniz makbuzların yaklaşık <b>%${tahsilatOrani}</b> kadarını tahsil etmişsiniz. Toplam piyasa borcunuz <b>${formatMoney(genelPiyasaBorcu || 0)} ₺</b>. `;
-                if(netKar < 0) aiFinans += "<span style='color:#e74c3c; font-weight:bold;'>Giderleriniz gelirlerinizi aşmış durumda. Nakit açığına dikkat!</span>";
-                else aiFinans += `<span style='color:#27ae60; font-weight:bold;'>Ticari kârlılığınız pozitif. Ofis finansal olarak oldukça sağlıklı.</span>`;
-                if(document.getElementById("aiFinansMetin")) document.getElementById("aiFinansMetin").innerHTML = aiFinans;
-            } catch(e) {}
-        };
-
     </script>
 </body>
 </html>
