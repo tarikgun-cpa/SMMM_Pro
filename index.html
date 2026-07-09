@@ -6213,7 +6213,6 @@
             let faaliyet = document.getElementById("kurFaaliyet").value || ".........................";
             let vergi = document.getElementById("kurVergi").value || ".........................";
             let ortaklar = document.getElementById("kurOrtaklar").value || ".........................";
-            let nevi = document.getElementById("kurNevi").value || ".........................";
             let iletisim = document.getElementById("kurIletisim").value || ".........................";
 
             let icerik = "";
@@ -6223,139 +6222,125 @@
             if(tur === 'sicil_tescil') {
                 dosyaAdi = "Sicil_Tescil_Dilekcesi";
                 icerik = `
-                    <div style="text-align:right; margin-bottom:40px; font-size:12pt;">Tarih: ${tarih}</div>
-                    <h2 style="text-align:center; font-family: 'Times New Roman', Times, serif; margin-bottom:30px;">KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜNE</h2>
-                    <p style="text-indent: 40px; text-align:justify; font-size:12pt; line-height:1.5;">
-                        Aşağıda unvanı, merkezi, sermayesi ve işletme konusu belirtilen şirketimizin kuruluş işlemlerinin Türk Ticaret Kanunu ve Ticaret Sicili Yönetmeliği'nin ilgili maddeleri gereğince yapılarak tescil ve ilan edilmesini saygılarımızla arz ve talep ederiz.
-                    </p>
-                    <br>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:40px; font-size:12pt; line-height:2;">
-                        <tr><td style="width:35%; font-weight:bold; vertical-align:top;">Şirket Unvanı</td><td style="vertical-align:top;">: ${unvan}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">Şirket Merkezi / Adresi</td><td style="vertical-align:top;">: ${adres}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">Sermayesi</td><td style="vertical-align:top;">: ${sermaye}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">İşletme Konusu (Nace)</td><td style="vertical-align:top;">: ${faaliyet}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">Uyruğu</td><td style="vertical-align:top;">: T.C.</td></tr>
-                    </table>
-                    <p style="font-size:12pt; font-weight:bold;">EKLER:</p>
-                    <ul style="font-size:12pt; line-height:1.5;">
-                        <li>Kuruluş Bildirim Formu</li>
-                        <li>Oda Kayıt Beyannamesi</li>
-                        <li>Sermaye Bloke Yazısı (A.Ş. ise) ve Dekontu</li>
-                        <li>Rekabet Kurumu Payı Dekontu</li>
-                    </ul>
-                    <br><br>
-                    <div style="text-align:right; width:100%; font-size:12pt;">
-                        <p><b>Kurucu / Şirket Yetkilisi</b></p>
-                        <p>İmza</p>
-                    </div>
-                `;
+<p class=right><b>TARİH:</b> ${tarih}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<h3>KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜ'NE<br>KOCAELİ<o:p></o:p></h3>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal>Kocaeli ili dahilinde, <b>${adres}</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p>
+<p class=MsoNormal>Kuruluş tescili için gerekli evraklar ektedir. Türk Ticaret Kanunu ve ilgili kanun ve diğer hükümler çerçevesinde kuruluşumuzun tescil ve ilanını arz ederiz.</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal>Saygılarımızla,</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal><b>UNVAN:</b> ${unvan}</p>
+<p class=MsoNormal><b>İMZA:</b></p>
+<p class=MsoNormal style='margin-bottom:12.0pt'><br style='mso-special-character:line-break'><o:p></o:p></p>
+<p class=MsoNormal><b>VERGİ DAİRESİ:</b> ${vergi}</p>
+<p class=MsoNormal><b>ADRES:</b> ${adres}</p>
+<p class=MsoNormal><b>TELEFON:</b> ${iletisim}</p>`;
             } else if(tur === 'koto_kayit') {
                 dosyaAdi = "KOTO_Kayit_Dilekcesi";
+                let nace = faaliyet.includes("-") ? faaliyet.split("-")[0].trim() : "...................";
+                let faaliyetAdi = faaliyet.includes("-") ? faaliyet.split("-")[1].trim() : faaliyet;
                 icerik = `
-                    <div style="text-align:right; margin-bottom:40px; font-size:12pt;">Tarih: ${tarih}</div>
-                    <h2 style="text-align:center; font-family: 'Times New Roman', Times, serif; margin-bottom:30px;">KOCAELİ TİCARET ODASI BAŞKANLIĞINA</h2>
-                    <p style="text-indent: 40px; text-align:justify; font-size:12pt; line-height:1.5;">
-                        Odanız sınırları içerisinde yeni kurulan ve aşağıda bilgileri yazılı olan <b>${unvan}</b> unvanlı firmamızın, 5174 sayılı Türkiye Odalar ve Borsalar Birliği Kanunu gereğince odanıza kayıt ve tescil işlemlerinin yapılmasını arz ederiz.
-                    </p>
-                    <br>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:40px; font-size:12pt; line-height:2;">
-                        <tr><td style="width:35%; font-weight:bold; vertical-align:top;">Ticaret Unvanı</td><td style="vertical-align:top;">: ${unvan}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">Ticari İkametgahı</td><td style="vertical-align:top;">: ${adres}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">İletişim / E-Posta</td><td style="vertical-align:top;">: ${iletisim}</td></tr>
-                        <tr><td style="font-weight:bold; vertical-align:top;">Vergi Dairesi ve No</td><td style="vertical-align:top;">: ${vergi}</td></tr>
-                    </table>
-                    <br><br><br>
-                    <div style="text-align:right; width:100%; font-size:12pt;">
-                        <p><b>Kaşe ve Yetkili İmza</b></p>
-                    </div>
-                `;
-            } else if(tur === 'taahhutname') {
-                dosyaAdi = "Taahhutname_Madde24";
-                icerik = `
-                    <h2 style="text-align:center; font-family: 'Times New Roman', Times, serif; margin-bottom:10px;">TAAHHÜTNAME</h2>
-                    <p style="text-align:center; font-size:11pt; font-weight:bold; margin-bottom:40px;">(Ticaret Sicili Yönetmeliği Madde 24 Gereğince)</p>
-                    
-                    <h3 style="font-family: 'Times New Roman', Times, serif;">KOCAELİ TİCARET SİCİLİ MÜDÜRLÜĞÜNE</h3>
-                    <br>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size:12pt; border: 1px solid #000;">
-                        <tr><td style="width:35%; padding:8px; border: 1px solid #000; font-weight:bold;">Ticaret Unvanı</td><td style="padding:8px; border: 1px solid #000;">${unvan}</td></tr>
-                        <tr><td style="padding:8px; border: 1px solid #000; font-weight:bold;">Sermayesi</td><td style="padding:8px; border: 1px solid #000;">${sermaye}</td></tr>
-                        <tr><td style="padding:8px; border: 1px solid #000; font-weight:bold;">Merkezi / Adresi</td><td style="padding:8px; border: 1px solid #000;">${adres}</td></tr>
-                        <tr><td style="padding:8px; border: 1px solid #000; font-weight:bold;">İşletme Konusu</td><td style="padding:8px; border: 1px solid #000;">${faaliyet}</td></tr>
-                        <tr><td style="padding:8px; border: 1px solid #000; font-weight:bold;">Vergi Dairesi ve No</td><td style="padding:8px; border: 1px solid #000;">${vergi}</td></tr>
-                        <tr><td style="padding:8px; border: 1px solid #000; font-weight:bold;">İletişim (Tel/Mail)</td><td style="padding:8px; border: 1px solid #000;">${iletisim}</td></tr>
-                    </table>
-                    <p style="text-indent: 40px; text-align:justify; font-size:12pt; line-height:1.5;">
-                        Yukarıda bilgileri yer alan firmamızın beyan ettiğimiz faaliyet konusu dışında bir faaliyette bulunmayacağını, beyan ettiğimiz adreste tebligatları kabul edeceğimizi, adreste bulunmadığımız takdirde bu adrese yapılacak tebligatların geçerli olacağını taahhüt ederiz. Aksine bir durum tespit edildiğinde Ticaret Sicili Yönetmeliği'nin ilgili maddeleri uyarınca hakkımızda yapılacak yasal işlemleri peşinen kabul ediyoruz.
-                    </p>
-                    <div style="text-align:right; width:100%; font-size:12pt; margin-top:50px;">
-                        <p>Tarih: ${tarih}</p>
-                        <p><b>Şirket Yetkilisi (İsim / İmza)</b></p>
-                    </div>
-                `;
-            } else if(tur === 'oda_beyanname') {
-                dosyaAdi = "Oda_Kayit_Beyannamesi";
-                icerik = `
-                    <h2 style="text-align:center; font-family: 'Times New Roman', Times, serif; text-decoration: underline; margin-bottom:30px;">ODA KAYIT BEYANNAMESİ</h2>
-                    
-                    <h4 style="background-color: #e0e0e0; padding: 5px;">I. İŞLETME/ŞİRKET BİLGİLERİ</h4>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:11pt; border: 1px solid #000;">
-                        <tr><td style="width:30%; padding:5px; border: 1px solid #000; font-weight:bold;">Ticaret Unvanı</td><td style="padding:5px; border: 1px solid #000;">${unvan}</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Ticaret Sicil No</td><td style="padding:5px; border: 1px solid #000;">.................................</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Hukuki Statüsü (Nevi)</td><td style="padding:5px; border: 1px solid #000;">${nevi}</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Sermayesi</td><td style="padding:5px; border: 1px solid #000;">${sermaye}</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Vergi Dairesi / No</td><td style="padding:5px; border: 1px solid #000;">${vergi}</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Adresi</td><td style="padding:5px; border: 1px solid #000;">${adres}</td></tr>
-                        <tr><td style="padding:5px; border: 1px solid #000; font-weight:bold;">Telefon / E-Posta</td><td style="padding:5px; border: 1px solid #000;">${iletisim}</td></tr>
-                    </table>
-
-                    <h4 style="background-color: #e0e0e0; padding: 5px;">II. ORTAKLAR VE YETKİLİLER BİLGİSİ</h4>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:11pt; border: 1px solid #000;">
-                        <tr>
-                            <td style="padding:5px; border: 1px solid #000; text-align:center; font-weight:bold;">Adı Soyadı / TCKN</td>
-                            <td style="padding:5px; border: 1px solid #000; text-align:center; font-weight:bold;">Görevi</td>
-                        </tr>
-                        <tr>
-                            <td style="padding:15px; border: 1px solid #000; vertical-align:top;">${ortaklar.replace(/\n/g, '<br>')}</td>
-                            <td style="padding:15px; border: 1px solid #000; vertical-align:top;">Müdür / Ortak</td>
-                        </tr>
-                    </table>
-
-                    <p style="text-align:justify; font-size:11pt; margin-top:20px;">
-                        5174 Sayılı Kanun gereğince Odanıza kaydedilmek üzere yukarıda tarafımızdan doldurulan bilgilerin doğru olduğunu beyan ederiz.
-                    </p>
-                    <div style="text-align:right; width:100%; margin-top:40px; font-size:12pt;">
-                        <p>Tarih: ${tarih}</p>
-                        <p><b>Şirket Kaşesi ve Yetkili İmza</b></p>
-                    </div>
-                `;
+<p class=right><b>TARİH:</b> ${tarih}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<h3>KOCAELİ TİCARET ODASI BAŞKANLIĞI'NA<br>KOCAELİ<o:p></o:p></h3>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal>Kocaeli ili dahilinde, <b>${adres}</b> mahallini ticaret ikametgahı ittihaz ederek <b>${unvan}</b> unvanı ile işletme kurduk.</p>
+<p class=MsoNormal>Yapmakta olduğum işlerden ağırlıklı iş konumuz <b>${faaliyetAdi}</b> işi olup, ağırlıklı iş koluma karşılık gelen NACE KODU <b>${nace}</b> dır. Odanıza kaydımın yapılmasını rica ederim.</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal>Saygılarımızla,</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal><b>UNVAN:</b> ${unvan}</p>
+<p class=MsoNormal><b>İMZA:</b></p>
+<p class=MsoNormal style='margin-bottom:12.0pt'><br style='mso-special-character:line-break'><o:p></o:p></p>
+<p class=MsoNormal><b>VERGİ DAİRESİ:</b> ${vergi}</p>
+<p class=MsoNormal><b>ADRES:</b> ${adres}</p>
+<p class=MsoNormal><b>TELEFON:</b> ${iletisim}</p>`;
             } else if(tur === 'kimlik_kart') {
                 dosyaAdi = "Uye_Kimlik_Karti_Talebi";
                 icerik = `
-                    <div style="text-align:right; margin-bottom:40px; font-size:12pt;">Tarih: ${tarih}</div>
-                    <h2 style="text-align:center; font-family: 'Times New Roman', Times, serif; margin-bottom:30px;">KOCAELİ TİCARET ODASI BAŞKANLIĞINA</h2>
-                    <p style="text-indent: 40px; text-align:justify; font-size:12pt; line-height:1.5;">
-                        Odanızın yeni kayıt olan / sicil numaralı üyesi <b>${unvan}</b> unvanlı firmamızın yetkililerine ve müdürlerine ait Ticaret Odası Üye Kimlik Kartlarının düzenlenerek tarafımıza verilmesini saygılarımla talep ederim.
-                    </p>
-                    <br>
-                    <p style="font-size:12pt;">Gereğini bilgilerinize arz ederim.</p>
-                    <br><br><br>
-                    <div style="text-align:right; width:100%; font-size:12pt;">
-                        <p><b>Şirket Yetkilisi Adı Soyadı</b></p>
-                        <p><b>İmza / Kaşe</b></p>
-                    </div>
-                `;
+<p class=center><u><b>KİMLİK KARTI TALEP DİLEKÇESİ.</b></u></p>
+<p class=right><b>TARİH :</b> ${tarih}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<h3>KOCAELİ TİCARET ODASI BAŞKANLIĞI NA<br>KOCAELİ<o:p></o:p></h3>
+<p class=MsoNormal style='text-align:justify'>Kocaeli Ticaret Odası üyeleri ile tüzel kişi ortak ve yetkilileri için düzenlenen kimlik kartları, gerçek kişilerin Odaya kayıtlı firmaları ile ilişkilerini gösterilmesi maksadıyla hazırlanmış olup, bu amaç dışındaki kullanımdan doğan sorumluluk kişilerin kendisine aittir. Adına kimlik kartı düzenlenen kişinin Oda ile ilişiğinin kesilmesi, kimlik kartı üzerinde yazılı bilgilerin değişmesi veya Odanın iadesini talep etmesi halinde kimliklerin 7 gün içerisinde Odaya teslimi zorunludur. 1/12/2017 tarihinden sonra Odaya kayıt olan her firma için 1 (bir) kimlik kartı ücretsiz olup, birden fazla talep edilen kimlikler ile 1/12/2017 tarihinden önce Odaya kayıt olmuş üyelere ait kimlik kartları ücrete tabidir. Gerçek kişinin ilişiği olan firma sayısına bakılmaksızın her gerçek kişiye 1 (bir) kimlik düzenlenebilmektedir. Kimliğin kullanım süresinin dolması, kaybolması veya kimlik üzerinde yazılı bilgilerin değişmesi halinde ücret mukabili yenisi düzenlenebilecektir.</p>
+<p class=MsoNormal style='text-align:justify'><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal style='text-align:justify'>Yukarıda yazılı şartları okuduğumu ve kabul ettiğimi beyan eder, Kocaeli Ticaret Odası tarafından <b>${unvan}</b> Firması ile ilgili olarak adıma kimlik kartı düzenlenmesini, düzenlenecek olan kimliğin şahsıma veya .................................................. T.C. Kimlik numaralı ..................................................teslim edilmesini rica ederim.</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0 style='width:100%;border-collapse:collapse'>
+ <tr><td style='width:50%;padding:0cm 5.4pt 0cm 5.4pt'><p class=center><b>İSİM SOY İSİM</b></p></td><td style='width:50%;padding:0cm 5.4pt 0cm 5.4pt'><p class=center><b>İMZA</b></p></td></tr>
+ <tr><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>..................................................</p></td><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>................................</p></td></tr>
+ <tr><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>..................................................</p></td><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>................................</p></td></tr>
+ <tr><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>..................................................</p></td><td style='padding:0cm 5.4pt 0cm 5.4pt'><p class=center>................................</p></td></tr>
+</table>`;
+            } else if(tur === 'taahhutname') {
+                dosyaAdi = "Taahhutname_Madde24";
+                icerik = `
+<h3>TAAHHÜTNAME</h3>
+<p class=center>(Ticaret Sicili Yönetmeliği Madde 24)</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal><b>Ticaret Unvanı:</b> ${unvan}</p>
+<p class=MsoNormal><b>Sermayesi:</b> ${sermaye}</p>
+<p class=MsoNormal><b>Merkezi / Adresi:</b> ${adres}</p>
+<p class=MsoNormal><b>İşletme Konusu:</b> ${faaliyet}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal style='text-align:justify'>Yukarıda bilgileri yer alan firmamızın beyan ettiğimiz faaliyet konusu dışında bir faaliyette bulunmayacağını, beyan ettiğimiz adreste tebligatları kabul edeceğimizi, adreste bulunmadığımız takdirde bu adrese yapılacak tebligatların geçerli olacağını taahhüt ederiz.</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=right><b>Tarih:</b> ${tarih}</p>
+<p class=right><b>Yetkili İmza</b></p>`;
+            } else if(tur === 'oda_beyanname') {
+                dosyaAdi = "Oda_Kayit_Beyannamesi";
+                icerik = `
+<h3>ODA KAYIT BEYANNAMESİ</h3>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal><b>Unvanı:</b> ${unvan}</p>
+<p class=MsoNormal><b>Adresi:</b> ${adres}</p>
+<p class=MsoNormal><b>Sermayesi:</b> ${sermaye}</p>
+<p class=MsoNormal><b>Vergi Dairesi ve No:</b> ${vergi}</p>
+<p class=MsoNormal><b>İletişim:</b> ${iletisim}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal><b>Ortaklar:</b></p>
+<p class=MsoNormal>${ortaklar.replace(/\n/g, '<br style="mso-special-character:line-break">')}</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=MsoNormal style='text-align:justify'>Yukarıda verilen bilgilerin doğruluğunu beyan ederiz.</p>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+<p class=right><b>Tarih:</b> ${tarih}</p>
+<p class=right><b>Kaşe ve İmza</b></p>`;
             }
 
-            let html = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>${dosyaAdi}</title></head>
-            <body style="font-family: 'Times New Roman', Times, serif; font-size:12pt; padding:40px 30px;">
-                ${icerik}
-            </body>
-            </html>`;
+            let msoHtmlWrapper = `
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<meta name=Originator content="Microsoft Word 15">
+<style>
+ <!--
+ @font-face {font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4; mso-font-charset:162; mso-generic-font-family:roman; mso-font-pitch:variable; mso-font-signature:-536869121 1107305727 33554432 0 415 0;}
+ p.MsoNormal, li.MsoNormal, div.MsoNormal {mso-style-unhide:no; mso-style-qformat:yes; mso-style-parent:""; margin:0cm; mso-pagination:widow-orphan; font-size:12.0pt; font-family:"Times New Roman",serif; mso-fareast-font-family:"Times New Roman"; mso-fareast-theme-font:minor-fareast;}
+ h3 {mso-style-priority:9; mso-style-unhide:no; mso-style-qformat:yes; mso-style-link:"Başlık 3 Char"; mso-margin-top-alt:auto; margin-right:0cm; margin-bottom:15.0pt; margin-left:0cm; text-align:center; mso-pagination:widow-orphan; mso-outline-level:3; font-size:14.0pt; font-family:"Times New Roman",serif; mso-fareast-font-family:"Times New Roman"; mso-fareast-theme-font:minor-fareast; font-weight:bold;}
+ p.right, li.right, div.right {mso-style-name:right; mso-style-unhide:no; margin:0cm; text-align:right; mso-pagination:widow-orphan; font-size:12.0pt; font-family:"Times New Roman",serif; mso-fareast-font-family:"Times New Roman"; mso-fareast-theme-font:minor-fareast;}
+ p.center, li.center, div.center {mso-style-name:center; mso-style-unhide:no; margin:0cm; text-align:center; mso-pagination:widow-orphan; font-size:12.0pt; font-family:"Times New Roman",serif; mso-fareast-font-family:"Times New Roman"; mso-fareast-theme-font:minor-fareast;}
+ @page WordSection1 {size:595.3pt 841.9pt; margin:70.85pt 70.85pt 70.85pt 70.85pt; mso-header-margin:35.4pt; mso-footer-margin:35.4pt; mso-paper-source:0;}
+ div.WordSection1 {page:WordSection1;}
+ table.MsoNormalTable {mso-style-name:"Normal Tablo"; mso-tstyle-rowband-size:0; mso-tstyle-colband-size:0; mso-style-noshow:yes; mso-style-priority:99; mso-style-parent:""; mso-padding-alt:0cm 5.4pt 0cm 5.4pt; mso-para-margin:0cm; mso-pagination:widow-orphan; font-size:10.0pt; font-family:"Times New Roman",serif;}
+ -->
+</style>
+</head>
+<body lang=TR style='tab-interval:35.4pt;word-wrap:break-word'>
+<div class=WordSection1>
+${icerik}
+</div>
+</body>
+</html>`;
 
-            let blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            let blob = new Blob(['\ufeff', msoHtmlWrapper], { type: 'application/msword' });
             let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
             a.href = url;
