@@ -2376,7 +2376,11 @@
             measurementId: "G-22FXXHKGBS"
         };
         
-        firebase.initializeApp(firebaseConfig);
+        // Firebase zaten başlatıldıysa tekrar başlatmasını engelleyen güvenlik kilidi
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -5890,54 +5894,47 @@
             "15. SGK Dosya Açılışı ve Şifre (Personel varsa)"
         ];
 
-        
         // Şirket Kuruluş Sekme Değiştirme Fonksiyonu
         function kurulusSekmeSec(tabId) {
-            // Tüm içerikleri gizle
-            document.getElementById('kurBilgiTab').style.display = 'none';
-            document.getElementById('kurAdimTab').style.display = 'none';
-            document.getElementById('kurMaliyetTab').style.display = 'none';
+            let tabs = ['kurBilgiTab', 'kurAdimTab', 'kurMaliyetTab'];
+            let btns = ['btnKurTab1', 'btnKurTab2', 'btnKurTab3'];
             
-            // Butonların aktiflik durumunu temizle
-            document.getElementById('btnKurTab1').classList.remove('active');
-            document.getElementById('btnKurTab2').classList.remove('active');
-            document.getElementById('btnKurTab3').classList.remove('active');
+            tabs.forEach(t => { if(document.getElementById(t)) document.getElementById(t).style.display = 'none'; });
+            btns.forEach(b => { if(document.getElementById(b)) document.getElementById(b).classList.remove('active'); });
             
-            // Seçilen sekmeyi göster ve butonunu aktif yap
-            document.getElementById(tabId).style.display = 'block';
-            if (tabId === 'kurBilgiTab') document.getElementById('btnKurTab1').classList.add('active');
-            else if (tabId === 'kurAdimTab') document.getElementById('btnKurTab2').classList.add('active');
-            else if (tabId === 'kurMaliyetTab') document.getElementById('btnKurTab3').classList.add('active');
+            if(document.getElementById(tabId)) document.getElementById(tabId).style.display = 'block';
+            if (tabId === 'kurBilgiTab' && document.getElementById('btnKurTab1')) document.getElementById('btnKurTab1').classList.add('active');
+            else if (tabId === 'kurAdimTab' && document.getElementById('btnKurTab2')) document.getElementById('btnKurTab2').classList.add('active');
+            else if (tabId === 'kurMaliyetTab' && document.getElementById('btnKurTab3')) document.getElementById('btnKurTab3').classList.add('active');
         }
 
         function yeniKurulusBaslat() {
             let id = "KUR_" + Date.now();
             kurulusVeritabani[id] = {
                 id: id, unvan: "", sermaye: "", ortaklar: "", adres: "", faaliyet: "", iletisim: "",
-                adımlar: {}, olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
+                adımlar: {}, masraflar: [], olusturmaTarihi: new Date().toLocaleDateString('tr-TR')
             };
             kurulusModalAc(id);
         }
 
         function kurulusModalAc(id) {
             let k = kurulusVeritabani[id];
-            if (!k) return; // Veri hatası güvenlik kontrolü
-            if (!k.adımlar) k.adımlar = {}; // Eski kayıtlar için güvenlik yaması
+            if (!k) return; 
+            if (!k.adımlar) k.adımlar = {}; 
             
-            document.getElementById("kurulusId").value = id;
-            document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
+            if(document.getElementById("kurulusId")) document.getElementById("kurulusId").value = id;
+            if(document.getElementById("mdlKurulusUnvan")) document.getElementById("mdlKurulusUnvan").textContent = k.unvan || "Yeni Kuruluş Süreci";
             
-            // Tüm Temel Bilgi Alanlarının Yüklenmesi
-            document.getElementById("kurUnvan").value = k.unvan || "";
-            document.getElementById("kurNevi").value = k.nevi || "Limited Şirket";
-            document.getElementById("kurSermaye").value = k.sermaye || "";
-            document.getElementById("kurVergi").value = k.vergi || "";
-            document.getElementById("kurSureTabiyet").value = k.sureTabiyet || "Süresiz / T.C.";
-            document.getElementById("kurAdres").value = k.adres || "";
-            document.getElementById("kurFaaliyet").value = k.faaliyet || "";
-            document.getElementById("kurOrtaklar").value = k.ortaklar || "";
-            document.getElementById("kurIletisim").value = k.iletisim || "";
-            document.getElementById("kurMuhasebeci").value = k.muhasebeci || "Tarık GÜN - 0542 323 74 77";
+            if(document.getElementById("kurUnvan")) document.getElementById("kurUnvan").value = k.unvan || "";
+            if(document.getElementById("kurNevi")) document.getElementById("kurNevi").value = k.nevi || "Limited Şirket";
+            if(document.getElementById("kurSermaye")) document.getElementById("kurSermaye").value = k.sermaye || "";
+            if(document.getElementById("kurVergi")) document.getElementById("kurVergi").value = k.vergi || "";
+            if(document.getElementById("kurSureTabiyet")) document.getElementById("kurSureTabiyet").value = k.sureTabiyet || "Süresiz / T.C.";
+            if(document.getElementById("kurAdres")) document.getElementById("kurAdres").value = k.adres || "";
+            if(document.getElementById("kurFaaliyet")) document.getElementById("kurFaaliyet").value = k.faaliyet || "";
+            if(document.getElementById("kurOrtaklar")) document.getElementById("kurOrtaklar").value = k.ortaklar || "";
+            if(document.getElementById("kurIletisim")) document.getElementById("kurIletisim").value = k.iletisim || "";
+            if(document.getElementById("kurMuhasebeci")) document.getElementById("kurMuhasebeci").value = k.muhasebeci || "Tarık GÜN - 0542 323 74 77";
 
             let chkHtml = "";
             kurulusAdimlariListe.forEach((adim, index) => {
@@ -5950,16 +5947,14 @@
                     <div style="color:#2c3e50; font-weight:${isChecked ? 'bold' : 'normal'};">${adim}</div>
                 </label>`;
             });
-            document.getElementById("kurulusChecklist").innerHTML = chkHtml;
+            if(document.getElementById("kurulusChecklist")) document.getElementById("kurulusChecklist").innerHTML = chkHtml;
 
-            // Masrafları Yükleme
             let masrafListesi = document.getElementById("kurulusMasrafListesi");
             if(masrafListesi) {
                 masrafListesi.innerHTML = "";
                 if (k.masraflar && k.masraflar.length > 0) {
                     k.masraflar.forEach(m => yeniKurulusMasrafiEkle(m.ad, m.tutar));
                 } else {
-                    // Ön Tanımlı Şablon Ekle (İlk kez açılanlar için)
                     yeniKurulusMasrafiEkle("Noter Masrafları", "");
                     yeniKurulusMasrafiEkle("Ticaret Odası Sicil ve Tescil", "");
                     yeniKurulusMasrafiEkle("Rekabet Kurumu Payı", "");
@@ -5973,30 +5968,30 @@
         }
 
         function kurulusKaydet() {
-            let id = document.getElementById("kurulusId").value;
+            let id = document.getElementById("kurulusId") ? document.getElementById("kurulusId").value : null;
+            if(!id || !kurulusVeritabani[id]) return;
             let k = kurulusVeritabani[id];
             
-            // Tüm Temel Bilgi Alanlarının Kaydedilmesi
-            k.unvan = document.getElementById("kurUnvan").value;
-            k.nevi = document.getElementById("kurNevi").value;
-            k.sermaye = document.getElementById("kurSermaye").value;
-            k.vergi = document.getElementById("kurVergi").value;
-            k.sureTabiyet = document.getElementById("kurSureTabiyet").value;
-            k.adres = document.getElementById("kurAdres").value;
-            k.faaliyet = document.getElementById("kurFaaliyet").value;
-            k.ortaklar = document.getElementById("kurOrtaklar").value;
-            k.iletisim = document.getElementById("kurIletisim").value;
-            k.muhasebeci = document.getElementById("kurMuhasebeci").value;
+            k.unvan = document.getElementById("kurUnvan") ? document.getElementById("kurUnvan").value : "";
+            k.nevi = document.getElementById("kurNevi") ? document.getElementById("kurNevi").value : "";
+            k.sermaye = document.getElementById("kurSermaye") ? document.getElementById("kurSermaye").value : "";
+            k.vergi = document.getElementById("kurVergi") ? document.getElementById("kurVergi").value : "";
+            k.sureTabiyet = document.getElementById("kurSureTabiyet") ? document.getElementById("kurSureTabiyet").value : "";
+            k.adres = document.getElementById("kurAdres") ? document.getElementById("kurAdres").value : "";
+            k.faaliyet = document.getElementById("kurFaaliyet") ? document.getElementById("kurFaaliyet").value : "";
+            k.ortaklar = document.getElementById("kurOrtaklar") ? document.getElementById("kurOrtaklar").value : "";
+            k.iletisim = document.getElementById("kurIletisim") ? document.getElementById("kurIletisim").value : "";
+            k.muhasebeci = document.getElementById("kurMuhasebeci") ? document.getElementById("kurMuhasebeci").value : "";
 
             kurulusAdimlariListe.forEach((adim, index) => {
-                k.adımlar["adim_"+index] = document.getElementById("kurChk_"+index).checked;
+                let chk = document.getElementById("kurChk_"+index);
+                if(chk) k.adımlar["adim_"+index] = chk.checked;
             });
 
-            // Masrafları Kaydetme
             k.masraflar = [];
             document.querySelectorAll('.kur-masraf-satir').forEach(satir => {
-                let ad = satir.querySelector('.kur-masraf-ad').value;
-                let tutar = parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0;
+                let ad = satir.querySelector('.kur-masraf-ad') ? satir.querySelector('.kur-masraf-ad').value : "";
+                let tutar = satir.querySelector('.kur-masraf-tutar') ? parseFloat(satir.querySelector('.kur-masraf-tutar').value) || 0 : 0;
                 if(ad || tutar > 0) {
                     k.masraflar.push({ad: ad, tutar: tutar});
                 }
@@ -6005,11 +6000,18 @@
             localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
             modalKapat('kurulusYonetimModal');
             kuruluslariListele();
+            
+            // Başarı Bildirimi
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#2ecc71;"></i> Kuruluş süreci başarıyla kaydedildi!`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
         }
 
         function kurulusSil() {
-            let id = document.getElementById("kurulusId").value;
-            if(confirm("Bu kuruluş sürecini tamamen silmek istediğinize emin misiniz?")) {
+            let id = document.getElementById("kurulusId") ? document.getElementById("kurulusId").value : null;
+            if(id && confirm("Bu kuruluş sürecini tamamen silmek istediğinize emin misiniz?")) {
                 delete kurulusVeritabani[id];
                 localStorage.setItem('kurulusVeritabani', JSON.stringify(kurulusVeritabani));
                 modalKapat('kurulusYonetimModal');
@@ -6018,7 +6020,8 @@
         }
 
         function kuruluslariListele() {
-            let arama = document.getElementById("kurulusArama").value.toLowerCase().trim();
+            let aramaEl = document.getElementById("kurulusArama");
+            let arama = aramaEl ? aramaEl.value.toLowerCase().trim() : "";
             let container = document.getElementById("kurulusKartlariAlani");
             if(!container) return;
             container.innerHTML = "";
@@ -6031,14 +6034,14 @@
                 listelenen++;
                 let tamamlananAdim = 0;
                 
-                if(!k.adımlar) k.adımlar = {}; // Liste çizerken güvenlik yaması
+                if(!k.adımlar) k.adımlar = {}; 
                 kurulusAdimlariListe.forEach((adim, i) => { if(k.adımlar["adim_"+i]) tamamlananAdim++; });
                 
                 let yuzde = Math.round((tamamlananAdim / 15) * 100);
                 let barRenk = yuzde === 100 ? "#27ae60" : (yuzde > 0 ? "#e74c3c" : "#95a5a6");
 
                 container.innerHTML += `
-                <div class="company-badge" onclick="kurulusModalAc('${k.id}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px;">
+                <div class="company-badge" onclick="kurulusModalAc('${k.id}')" style="border: 1px solid #eef2f5; border-top: 3px solid ${barRenk}; padding: 15px; background: #fff; border-radius: 8px; cursor:pointer;">
                     <div style="font-weight:bold; color:#2c3e50; font-size:14px; margin-bottom:5px;">${unvanLabel}</div>
                     <div style="font-size:11px; color:#7f8c8d; margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Dosya Açılış: ${k.olusturmaTarihi}</div>
                     
@@ -6057,6 +6060,7 @@
 
         function yeniKurulusMasrafiEkle(ad = "", tutar = "") {
             let container = document.getElementById("kurulusMasrafListesi");
+            if(!container) return;
             let id = "kMasraf_" + Date.now() + Math.floor(Math.random() * 1000);
             
             let html = `
@@ -6074,9 +6078,9 @@
                 let val = parseFloat(input.value) || 0;
                 toplam += val;
             });
-            document.getElementById("kurMalToplam").textContent = formatMoney(toplam) + " TL";
+            let totalEl = document.getElementById("kurMalToplam");
+            if(totalEl) totalEl.textContent = formatMoney(toplam) + " TL";
         }
-
         // --- SİHİRLİ KOTO WORD EVRAK ÜRETİM MOTORU (ORİJİNAL, KESİNTİSİZ TAM METİNLER) ---
         function kotoEvrakIndir(belgeTuru) {
             // Formdaki Verileri Çekme (Boşsa noktalı yer bırakır)
