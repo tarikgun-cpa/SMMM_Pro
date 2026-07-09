@@ -1653,15 +1653,14 @@
                     <!-- YENİ EKLENEN MASRAF İÇERİĞİ -->
                     <div id="kurMaliyetTab" style="display:none;">
                         <div style="background:white; padding:15px; border-radius:8px; border:1px solid #eee;">
-                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Mükelleften tahsil edilecek resmi harçları ve kuruluş hizmet bedelinizi takip edin:</p>
-                            <div class="form-grid">
-                                <div class="form-group"><label>Noter Masrafları (TL):</label><input type="number" id="kurMalNoter" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Ticaret Odası Sicil ve Tescil (TL):</label><input type="number" id="kurMalSicil" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Rekabet Kurumu Payı (TL):</label><input type="number" id="kurMalRekabet" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Oda Kayıt Ücreti (TL):</label><input type="number" id="kurMalOda" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>SMMM Kuruluş Hizmet Bedeli (TL):</label><input type="number" id="kurMalSmmm" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
-                                <div class="form-group"><label>Diğer Masraflar (TL):</label><input type="number" id="kurMalDiger" class="search-bar" value="0" oninput="kurulusMaliyetTopla()"></div>
+                            <p style="font-size:12px; color:#7f8c8d; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Şirket kuruluşunda oluşacak masrafları detaylıca ekleyip mükellefe sunabilirsiniz:</p>
+                            
+                            <div id="kurulusMasrafListesi">
+                                <!-- Dinamik satırlar buraya gelecek -->
                             </div>
+                            
+                            <button type="button" class="btn-secondary action-btn" onclick="yeniKurulusMasrafiEkle()" style="margin-top:10px; font-size:12px; background:#f39c12; color:white; border:none; margin-bottom: 0;">+ Yeni Masraf Kalemi Ekle</button>
+
                             <div style="background:#eafaf1; padding:15px; border-radius:6px; border:1px solid #2ecc71; margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-weight:bold; color:#27ae60; font-size:16px;">Mükelleften Alınacak Toplam:</span>
                                 <strong id="kurMalToplam" style="font-size:22px; color:#27ae60;">0.00 TL</strong>
@@ -5990,6 +5989,7 @@
             modalAc('kurulusYonetimModal');
         }
 
+        
         function kurulusKaydet() {
             let id = document.getElementById("kurulusId").value;
             let k = kurulusVeritabani[id];
