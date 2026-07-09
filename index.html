@@ -3301,11 +3301,19 @@
             }
             else if (hedefPaneli === 'odemelerPaneli') { 
                 if(odemelerPaneli) odemelerPaneli.style.display = 'block'; document.getElementById('menuOdemeler').classList.add('active');
-                let d = new Date(); let dStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-                if(!document.getElementById("odemePaneliDonem").value) document.getElementById("odemePaneliDonem").value = dStr;
+                
+                // --- DÜZELTME: Ödemeler sekmesi açıldığında varsayılan olarak GEÇEN AYI (1 ay öncesini) getir ---
+                let d = new Date(); 
+                d.setMonth(d.getMonth() - 1); // 1 ay geriye git
+                let dStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                
+                // Eğer input boşsa geçen ayı ata
+                if(!document.getElementById("odemePaneliDonem").value) {
+                    document.getElementById("odemePaneliDonem").value = dStr;
+                }
+                
                 odemeleriListele(); 
             }
-
             else if (hedefPaneli === 'kurulusPaneli') { 
                 if(kurulusPaneli) kurulusPaneli.style.display = 'block'; document.getElementById('menuKurulus').classList.add('active'); kuruluslariListele(); 
             }
