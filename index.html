@@ -3939,6 +3939,37 @@
                 if(odenecekKdv > 0) { kdvYazi.textContent = formatMoney(odenecekKdv) + " ₺ (Öd.)"; kdvYazi.style.color = "#8e44ad"; } 
                 else { kdvYazi.textContent = formatMoney(Math.abs(odenecekKdv)) + " ₺ (Dev.)"; kdvYazi.style.color = "#27ae60"; }
             }
+            // --- AI FİNANSAL ZEKA VE NAKİT AKIŞI GÜNCELLEMESİ ---
+            let aiFinansKutu = document.getElementById("aiFinansMetin");
+            if (aiFinansKutu) {
+                let tahsilatOrani = (tMakbuzBrut + tMakbuzKdv) > 0 ? ((tTahsilat / (tMakbuzBrut + tMakbuzKdv)) * 100).toFixed(1) : 0;
+                let aiYorum = "";
+
+                // 1. Piyasa Alacağı ve Nakit Akışı Analizi
+                if (genelPiyasaAlacagi > 50000) {
+                    aiYorum = `<b style="color:#e74c3c;">Kritik Nakit Riski:</b> Piyasada yüksek miktarda (${formatMoney(genelPiyasaAlacagi)} ₺) tahsilat bekliyor. Ödemelerinizi güvenceye almak için vade takibini sıkılaştırmalısınız. `;
+                } else if (genelPiyasaAlacagi > 10000) {
+                    aiYorum = `<b style="color:#f39c12;">Tahsilat Uyarısı:</b> Bekleyen alacaklarınız (${formatMoney(genelPiyasaAlacagi)} ₺) ofisin nakit akışını yavaşlatabilir. `;
+                } else {
+                    aiYorum = `<b style="color:#27ae60;">Nakit Akışı Stabil:</b> Piyasada biriken riskli bir alacağınız bulunmuyor. Tahsilat döngünüz sağlıklı ilerliyor. `;
+                }
+
+                // 2. Kârlılık ve Tahsilat Oranı Analizi
+                if (netKar < 0) {
+                    aiYorum += `<br><span style="color:#c0392b; margin-top:5px; display:inline-block;"><i class="fas fa-exclamation-circle"></i> Dikkat: Seçili dönemde giderleriniz gelirlerinizi aşmış durumda. Ofis kârlılığı negatif seviyede.</span>`;
+                } else if (netKar > 0 && tahsilatOrani < 50 && tMakbuzBrut > 0) {
+                    aiYorum += `<br><span style="color:#3498db; margin-top:5px; display:inline-block;"><i class="fas fa-info-circle"></i> Kârlılık pozitif olsa da, kestiğiniz makbuzların büyük kısmı henüz tahsil edilmemiş (Tahsilat Başarısı: %${tahsilatOrani}).</span>`;
+                } else if (tahsilatOrani >= 80) {
+                    aiYorum += `<br><span style="color:#27ae60; margin-top:5px; display:inline-block;"><i class="fas fa-check-circle"></i> Tahsilat performansınız çok yüksek (%${tahsilatOrani}). Finansal disiplininiz mükemmel.</span>`;
+                }
+
+                // 3. Veri Yok Durumu
+                if (tMakbuzBrut === 0 && tGiderNet === 0 && genelPiyasaAlacagi === 0) {
+                    aiYorum = "Seçili yıl için henüz gelir, gider veya devreden bakiye bulunmuyor. Nakit akışı analizi için veri işlenmesi bekleniyor.";
+                }
+
+                aiFinansKutu.innerHTML = aiYorum;
+            }
         }
 
         function modalAc(id) { document.getElementById(id).style.display = 'flex'; }
