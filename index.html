@@ -918,6 +918,7 @@
             <h1>Mükellef Takip Paneli</h1>
             <div class="list-header-actions">
                 <input type="text" id="aramaCubugu" class="search-bar" placeholder="Mükellef adı, unvanı veya VKN/TCKN ile ara..." oninput="mukellefAra()">
+                <button type="button" class="action-btn" style="background:#8e44ad; color:white;" onclick="sektorelFisiltiAc()"><i class="fas fa-bullhorn"></i> Sektörel Fısıltı</button>
                 <button type="button" class="action-btn btn-success" style="background:#27ae60; color:white;" onclick="triggerExcelYukle()"><i class="fas fa-file-excel"></i> Excel'den Aktar</button>
                 <input type="file" id="excelDosyaInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="excelDosyaOku(event)">
                 <button type="button" class="action-btn btn-primary" onclick="yeniMukellefFormuAc()">+ Yeni Mükellef Ekle</button>
@@ -3509,7 +3510,7 @@
             }
         }
 
-        // --- FİNANSAL İSTİHBARAT (KARA LİSTE) MOTORU ---
+        // --- FİNANSAL İSTİHBARAT (KARA LİSTE) MOTORU (GÜNCELLENDİ: TURUNCU / KIRMIZI ALARM) ---
         function istihbaratRaporuAc() {
             let container = document.getElementById("istihbaratRaporAlani");
             container.innerHTML = "";
@@ -3518,13 +3519,13 @@
             let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
 
             mukellefler.forEach(m => {
-                if(m.mukellefTuru === "SMMM") return;
+                if(m.mukellefTuru === "SMMM" || m.durum === "Pasif") return;
 
                 let mBakiye = 0;
                 let sonOdemeTarihi = null;
                 let sonOdemeDate = new Date(1900,0,1);
 
-                // Devreden bakiyeyi de hesaba katalım (Geçen yıldan borcu varsa affetmeyiz)
+                // Devreden bakiyeyi hesaba kat
                 let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
                 if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") mDevredenBakiye = -mDevredenBakiye;
                 mBakiye += mDevredenBakiye;
@@ -3543,29 +3544,36 @@
                     });
                 }
 
+                // Eğer firmanın borcu varsa riski hesapla
                 if(mBakiye > 0) {
                     let gecikenGun = 0;
                     if(sonOdemeTarihi) {
                         let bugun = new Date();
                         gecikenGun = Math.floor((bugun - sonOdemeDate) / (1000 * 60 * 60 * 24));
                     } else {
-                        // Hiç ödeme yapmamış, direkt kara listeye alıyoruz
-                        gecikenGun = 999;
+                        // Hiç ödeme yapmamış
+                        gecikenGun = 999; 
                     }
 
-                    let riskSeviyesi = "";
-                    let renk = "";
-                    if(gecikenGun > 90) { riskSeviyesi = "KARA LİSTE (Kritik)"; renk = "#c0392b"; }
-                    else if(gecikenGun > 45) { riskSeviyesi = "RİSKLİ (Gecikmeli)"; renk = "#e67e22"; }
-                    else { riskSeviyesi = "GÜVENLİ (Normal)"; renk = "#27ae60"; }
+                    // --- YENİ ALARM MANTIĞI ---
+                    let riskSeviyesi = ""; let renk = "";
+                    if(gecikenGun >= 60) { 
+                        // 2 Ayı Geçmiş (Kırmızı Alarm)
+                        riskSeviyesi = "KIRMIZI ALARM (Kriz / Terk Riski)"; renk = "#c0392b"; 
+                    }
+                    else if(gecikenGun >= 30) { 
+                        // 1 Ayı Geçmiş (Turuncu Alarm)
+                        riskSeviyesi = "TURUNCU ALARM (Gecikmeli Müşteri)"; renk = "#e67e22"; 
+                    }
+                    else { 
+                        // 1 Aydan az (Sorun Yok, Gizle veya Yeşil Göster)
+                        return; // Risk yoksa listeye hiç ekleme!
+                    }
 
                     riskliListesi.push({
-                        unvan: m.unvan,
-                        bakiye: mBakiye,
-                        gecikenGun: gecikenGun === 999 ? "Sistemde Tahsilat Yok" : gecikenGun + " Gün Önce",
-                        seviye: riskSeviyesi,
-                        renk: renk,
-                        sortVal: gecikenGun === 999 ? 1000 : gecikenGun
+                        unvan: m.unvan, bakiye: mBakiye,
+                        gecikenGun: gecikenGun === 999 ? "Sistemde Hiç Tahsilat Yok" : gecikenGun + " Gün Önce",
+                        seviye: riskSeviyesi, renk: renk, sortVal: gecikenGun === 999 ? 1000 : gecikenGun
                     });
                 }
             });
@@ -3574,9 +3582,9 @@
             riskliListesi.sort((a,b) => b.sortVal - a.sortVal);
 
             if(riskliListesi.length === 0) {
-                container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Piyasadaki tüm bakiyeler tıkır tıkır ödeniyor. Riskli alacağınız bulunmuyor.</div>";
+                container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Son 1 ayı geçen tahsilat probleminiz bulunmuyor. Kriz radarı temiz.</div>";
             } else {
-                let html = "";
+                let html = "<p style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-info-circle'></i> Sadece son ödemesi 30 günü geçen firmalar listelenmektedir.</p>";
                 riskliListesi.forEach(r => {
                     html += `
                     <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
@@ -3595,6 +3603,100 @@
             modalAc('istihbaratModal');
         }
 
+        // --- YENİ MODÜL: NACE KODUNA DUYARLI SEKTÖREL FISILTI (HEDEFLİ CRM) ---
+        function sektorelFisiltiAc() {
+            // Önce tüm NACE/Sektör kelimelerini topla ve benzersiz bir liste yap
+            let sektorler = [];
+            mukellefler.forEach(m => {
+                if(m.durum !== "Pasif" && m.naceKodu) {
+                    // NACE kodundan kelimeleri ayıkla (Örn: "12.34 - İnşaat İşleri" -> İnşaat)
+                    let kelime = m.naceKodu.split("-")[1] ? m.naceKodu.split("-")[1].trim() : m.naceKodu.trim();
+                    if(!sektorler.includes(kelime) && kelime.length > 2) sektorler.push(kelime);
+                }
+            });
+
+            let seceneklerHtml = "<option value=''>-- Seçiniz --</option>";
+            sektorler.sort().forEach(s => seceneklerHtml += `<option value="${s}">${s}</option>`);
+
+            let html = `
+                <div class="modal-overlay" id="sektorelFisiltiModal" style="display:flex; z-index:999999;">
+                    <div class="modal-box modal-box-sm">
+                        <div class="modal-header" style="background:#8e44ad;">
+                            <h3 style="font-size:16px; margin:0;"><i class="fas fa-bullhorn"></i> Sektörel Fısıltı & Toplu Bildirim</h3>
+                            <button class="modal-close" onclick="document.getElementById('sektorelFisiltiModal').remove()">X</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="font-size:13px; color:#555; margin-bottom:15px;">Resmi Gazete'de çıkan yeni bir tebliği veya haberi, <b>sadece o sektörde faaliyet gösteren (NACE Kodu uyan)</b> mükelleflerinize anında duyurun.</p>
+                            
+                            <div class="form-group mb-3">
+                                <label style="font-weight:bold; color:#8e44ad;">Hedef Sektör (NACE Kodundan Çekildi):</label>
+                                <select id="fisiltiSektor" class="search-bar" onchange="fisiltiMusterileriSay()" style="width:100%; border:2px solid #9b59b6;">
+                                    ${seceneklerHtml}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label style="font-weight:bold;">Gönderilecek Fısıltı Metni:</label>
+                                <textarea id="fisiltiMetin" class="search-bar" rows="5" style="width:100%; font-size:13px;" placeholder="Örn: Sayın yetkili, bugün yayınlanan tebliğ ile KDV oranlarında sizin sektörünüze özel bir değişiklik olmuştur..."></textarea>
+                            </div>
+
+                            <div id="fisiltiUyariKutusu" style="background:#f4ecf7; padding:10px; border-radius:6px; color:#8e44ad; font-size:12px; font-weight:bold; text-align:center; display:none;">
+                                Bu mesajı gönderebileceğiniz <span id="fisiltiSayi" style="font-size:16px;">0</span> adet firma bulundu.
+                            </div>
+                            <div id="fisiltiLinkKutusu" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="action-btn btn-primary" style="background:#8e44ad; width:100%;" onclick="fisiltiWhatsAppLinkleriOlustur()"><i class="fab fa-whatsapp"></i> Mesaj Linklerini Hazırla</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function fisiltiMusterileriSay() {
+            let sektor = document.getElementById("fisiltiSektor").value;
+            let sayi = 0;
+            if(sektor) {
+                mukellefler.forEach(m => {
+                    if(m.durum !== "Pasif" && m.naceKodu && m.naceKodu.includes(sektor)) sayi++;
+                });
+            }
+            document.getElementById("fisiltiUyariKutusu").style.display = sayi > 0 ? "block" : "none";
+            document.getElementById("fisiltiSayi").textContent = sayi;
+            document.getElementById("fisiltiLinkKutusu").innerHTML = ""; // Öncekileri temizle
+        }
+
+        function fisiltiWhatsAppLinkleriOlustur() {
+            let sektor = document.getElementById("fisiltiSektor").value;
+            let metin = document.getElementById("fisiltiMetin").value;
+            let linkKutusu = document.getElementById("fisiltiLinkKutusu");
+            
+            if(!sektor || !metin) { alert("Sektör ve mesaj metni boş olamaz!"); return; }
+
+            linkKutusu.innerHTML = "<h4 style='font-size:13px; color:#2c3e50; border-bottom:1px solid #ddd; padding-bottom:5px;'>Gönderim Bağlantıları:</h4>";
+            
+            let bulundu = false;
+            mukellefler.forEach(m => {
+                if(m.durum !== "Pasif" && m.naceKodu && m.naceKodu.includes(sektor) && m.telefon) {
+                    bulundu = true;
+                    // Müşterinin adını mesajın başına dinamik ekle
+                    let ozelMetin = `Sayın ${m.unvan} yetkilisi,\n\n${metin}\n\n- SMMM Tarık GÜN`;
+                    let wpLink = `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(ozelMetin)}`;
+                    
+                    linkKutusu.innerHTML += `
+                        <a href="${wpLink}" target="_blank" style="display:flex; justify-content:space-between; align-items:center; background:#eafaf1; padding:8px 12px; border-radius:4px; text-decoration:none; color:#27ae60; border:1px solid #2ecc71; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#eafaf1'">
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;">${m.unvan}</span>
+                            <span><i class="fab fa-whatsapp" style="font-size:16px;"></i> Gönder</span>
+                        </a>
+                    `;
+                }
+            });
+
+            if(!bulundu) {
+                linkKutusu.innerHTML += "<p style='color:#e74c3c; font-size:12px;'>Bu sektörde telefon numarası kayıtlı firma bulunamadı.</p>";
+            }
+        }
         // --- SEKME (TAB) VE PANO ÇİZİMİ ---
         function cariSekmeDegistir(tabId) {
             document.querySelectorAll('.cari-tab-content').forEach(el => el.style.display = 'none');
