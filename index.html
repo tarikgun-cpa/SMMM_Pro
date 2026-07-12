@@ -3510,7 +3510,7 @@
             }
         }
 
-        // --- FİNANSAL İSTİHBARAT (KARA LİSTE) MOTORU (GÜNCELLENDİ: TURUNCU / KIRMIZI ALARM) ---
+        // --- FİNANSAL İSTİHBARAT (KARA LİSTE) MOTORU (GÜNCELLENDİ: KARA LİSTE EKLENDİ) ---
         function istihbaratRaporuAc() {
             let container = document.getElementById("istihbaratRaporAlani");
             container.innerHTML = "";
@@ -3551,29 +3551,37 @@
                         let bugun = new Date();
                         gecikenGun = Math.floor((bugun - sonOdemeDate) / (1000 * 60 * 60 * 24));
                     } else {
-                        // Hiç ödeme yapmamış
+                        // Hiç ödeme yapmamış (Sadece makbuz kesilmiş veya devir borcu var)
                         gecikenGun = 999; 
                     }
 
-                    // --- YENİ ALARM MANTIĞI ---
+                    // --- YENİ KARA LİSTE VE ALARM MANTIĞI ---
                     let riskSeviyesi = ""; let renk = "";
-                    if(gecikenGun >= 60) { 
-                        // 2 Ayı Geçmiş (Kırmızı Alarm)
-                        riskSeviyesi = "KIRMIZI ALARM (Kriz / Terk Riski)"; renk = "#c0392b"; 
+                    
+                    if(gecikenGun === 999 || gecikenGun >= 90) {
+                        // Hiç ödememiş veya 3 aydan fazla geciktirmiş
+                        riskSeviyesi = "KARA LİSTE (Hiç Ödemedi / Eski Borç)"; 
+                        renk = "#0f172a"; // Antrasit Siyah
+                    }
+                    else if(gecikenGun >= 60) { 
+                        // 2 Ayı Geçmiş
+                        riskSeviyesi = "KIRMIZI ALARM (60+ Gün Gecikme)"; 
+                        renk = "#c0392b"; 
                     }
                     else if(gecikenGun >= 30) { 
-                        // 1 Ayı Geçmiş (Turuncu Alarm)
-                        riskSeviyesi = "TURUNCU ALARM (Gecikmeli Müşteri)"; renk = "#e67e22"; 
+                        // 1 Ayı Geçmiş
+                        riskSeviyesi = "TURUNCU ALARM (30+ Gün Gecikme)"; 
+                        renk = "#e67e22"; 
                     }
                     else { 
-                        // 1 Aydan az (Sorun Yok, Gizle veya Yeşil Göster)
-                        return; // Risk yoksa listeye hiç ekleme!
+                        // 1 Aydan az gecikme (Listeye girmez)
+                        return; 
                     }
 
                     riskliListesi.push({
                         unvan: m.unvan, bakiye: mBakiye,
-                        gecikenGun: gecikenGun === 999 ? "Sistemde Hiç Tahsilat Yok" : gecikenGun + " Gün Önce",
-                        seviye: riskSeviyesi, renk: renk, sortVal: gecikenGun === 999 ? 1000 : gecikenGun
+                        gecikenGun: gecikenGun === 999 ? "Hiç Tahsilat Yok" : gecikenGun + " Gün Önce",
+                        seviye: riskSeviyesi, renk: renk, sortVal: gecikenGun
                     });
                 }
             });
@@ -3584,17 +3592,21 @@
             if(riskliListesi.length === 0) {
                 container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Son 1 ayı geçen tahsilat probleminiz bulunmuyor. Kriz radarı temiz.</div>";
             } else {
-                let html = "<p style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-info-circle'></i> Sadece son ödemesi 30 günü geçen firmalar listelenmektedir.</p>";
+                let html = "<p style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-info-circle'></i> Sadece son ödemesi 30 günü geçen ve borcu olan firmalar listelenmektedir.</p>";
                 riskliListesi.forEach(r => {
+                    // Siyah renkse (Kara liste) arkaplanı hafif gri yapalım ki belli olsun
+                    let bgKutu = r.renk === "#0f172a" ? "#f8fafc" : "white";
+                    let yaziRenk = r.renk === "#0f172a" ? "white" : "white";
+                    
                     html += `
-                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:${bgKutu}; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
                         <div style="width: 60%;">
                             <div style="font-weight:bold; color:#2c3e50; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.unvan}">${r.unvan}</div>
                             <div style="font-size:11px; color:#7f8c8d; margin-top:6px;"><i class="fas fa-clock"></i> Son Tahsilat: <strong style="color:${r.renk};">${r.gecikenGun}</strong></div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:18px; font-weight:bold; color:${r.renk};">${formatMoney(r.bakiye)} ₺</div>
-                            <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:0.5px;">${r.seviye}</div>
+                            <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:${yaziRenk}; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:0.5px;">${r.seviye}</div>
                         </div>
                     </div>`;
                 });
