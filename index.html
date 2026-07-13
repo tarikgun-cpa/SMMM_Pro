@@ -3514,7 +3514,7 @@
             }
         }
 
-        // --- FİNANSAL İSTİHBARAT (GERÇEK BORÇ YAŞLANDIRMA) MOTORU ---
+        // --- FİNANSAL İSTİHBARAT (YAPAY ZEKA BORÇ YAŞLANDIRMA) MOTORU ---
         function istihbaratRaporuAc() {
             let container = document.getElementById("istihbaratRaporAlani");
             container.innerHTML = "";
@@ -3527,105 +3527,147 @@
             mukellefler.forEach(m => {
                 if(m.mukellefTuru === "SMMM" || m.durum === "Pasif") return;
 
-                let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
-                if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") mDevredenBakiye = -mDevredenBakiye;
-
-                // FIFO (İlk Giren İlk Çıkar) Yaşlandırma Algoritması
+                let devredenBorc = 0;
+                let buYilFatura = 0;
+                let buYilOdeme = 0;
+                
                 let borclar = [];
                 let toplamOdeme = 0;
 
-                // Devreden Bakiye varsa en eski borç olarak (geçen yılın son günü) listeye ekle
-                if (mDevredenBakiye > 0) {
-                    borclar.push({ tarih: new Date(seciliYil - 1, 11, 31), tutar: mDevredenBakiye });
-                } else if (mDevredenBakiye < 0) {
-                    toplamOdeme += Math.abs(mDevredenBakiye);
-                }
-
                 if(m.hareketler) {
                     let siraliHrk = [...m.hareketler].sort((a,b) => new Date(a.tarihDüzz) - new Date(b.tarihDüzz));
+                    
                     siraliHrk.forEach(h => {
                         let hYil = parseInt(h.tarih.split('.')[2]);
-                        if(hYil <= seciliYil) {
-                            if(h.tur === "Makbuz") {
-                                borclar.push({ tarih: new Date(h.tarihDüzz), tutar: (h.netTutar || h.tutar || 0) });
-                            }
-                            else if(h.tur === "Tahsilat") {
-                                toplamOdeme += (h.netTutar || h.tutar || 0);
-                            }
+                        let tutar = (h.netTutar || h.tutar || 0);
+
+                        // Kümülatif Yıllık Ayrımlar (İstatistik ve Yorum İçin)
+                        if (hYil < seciliYil) {
+                            if(h.tur === "Makbuz") devredenBorc += tutar;
+                            else if(h.tur === "Tahsilat") devredenBorc -= tutar;
+                        } else if (hYil === seciliYil) {
+                            if(h.tur === "Makbuz") buYilFatura += tutar;
+                            else if(h.tur === "Tahsilat") buYilOdeme += tutar;
+                        }
+
+                        // FIFO İçin Tüm Zamanların Ham Listesi
+                        if(h.tur === "Makbuz") {
+                            borclar.push({ tarih: new Date(h.tarihDüzz), tutar: tutar, aciklama: h.aciklama });
+                        } else if(h.tur === "Tahsilat") {
+                            toplamOdeme += tutar;
                         }
                     });
                 }
+                
+                // Toplam Net Bakiye
+                let mBakiye = (devredenBorc + buYilFatura) - buYilOdeme;
 
-                // Toplam borçtan toplam ödemeyi çıkararak net bakiyeyi bul
-                let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
-                let mBakiye = toplamBorc - toplamOdeme;
-
-                // Eğer firmanın borcu varsa yaşlandırma analizine sok
                 if(mBakiye > 0.5) {
-                    let enEskiOdenmeyenTarih = null;
+                    let enEskiOdenmeyen = null;
+                    let vadesiGecmisTutar = 0; 
                     let kalanKredi = toplamOdeme;
 
-                    // Ödemeleri eskiden yeniye faturalardan düş (Gerçek Yaşlandırma)
+                    // FIFO Algoritması: Ödemeleri en eski faturalardan düşerek ilerle
                     for (let i = 0; i < borclar.length; i++) {
-                        if (kalanKredi >= borclar[i].tutar) {
-                            kalanKredi -= borclar[i].tutar;
+                        let b = borclar[i];
+                        if (kalanKredi >= b.tutar) {
+                            kalanKredi -= b.tutar; // Fatura tamamen ödendi
                         } else {
-                            enEskiOdenmeyenTarih = borclar[i].tarih;
-                            break;
+                            let odenmeyenKisim = b.tutar - kalanKredi;
+                            kalanKredi = 0; // Kredi bitti
+
+                            if(!enEskiOdenmeyen) {
+                                enEskiOdenmeyen = { ...b, odenmeyenKisim };
+                            }
+
+                            // Fatura tarihi ile bugün arasındaki fark
+                            let gunFarki = Math.floor((bugun - b.tarih) / (1000 * 60 * 60 * 24));
+                            if(gunFarki > 30) {
+                                vadesiGecmisTutar += odenmeyenKisim; // 30 günü geçen açık borçları topla
+                            }
                         }
                     }
 
                     let gecikenGun = 0;
-                    if (enEskiOdenmeyenTarih) {
-                        gecikenGun = Math.floor((bugun - enEskiOdenmeyenTarih) / (1000 * 60 * 60 * 24));
+                    let sorunAy = "";
+                    let sorunYil = "";
+
+                    if (enEskiOdenmeyen) {
+                        gecikenGun = Math.floor((bugun - enEskiOdenmeyen.tarih) / (1000 * 60 * 60 * 24));
+                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                        sorunAy = aylar[enEskiOdenmeyen.tarih.getMonth()];
+                        sorunYil = enEskiOdenmeyen.tarih.getFullYear();
                     }
 
-                    // --- YENİ ALARM VE KARA LİSTE MANTIĞI ---
+                    // --- RİSK KATEGORİZASYONU ---
                     let riskSeviyesi = ""; let renk = "";
                     
-                    if(gecikenGun >= 90) {
-                        riskSeviyesi = "KARA LİSTE (90+ Gün Ödenmeyen Borç)"; 
-                        renk = "#0f172a"; 
+                    if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
+                    else if(gecikenGun >= 60) { riskSeviyesi = "KIRMIZI ALARM (60+ Gün)"; renk = "#c0392b"; }
+                    else if(gecikenGun >= 30) { riskSeviyesi = "TURUNCU ALARM (30+ Gün)"; renk = "#e67e22"; }
+                    else { riskSeviyesi = "VADESİ GELMEMİŞ (Düzenli)"; renk = "#27ae60"; } 
+                    
+                    // --- AI (YAPAY ZEKA) YORUM MOTORU ---
+                    let aiMetin = "";
+                    
+                    if (devredenBorc > 0) {
+                        if (buYilOdeme > 0) {
+                            if (buYilOdeme >= devredenBorc) {
+                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun tamamı bu yılki ödemelerle kapatılmış. `;
+                            } else {
+                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun sadece <b>${formatMoney(buYilOdeme)} TL</b>'si ödenebilmiş. `;
+                            }
+                        } else {
+                            aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borca karşılık bu yıl <u style="color:#c0392b;">hiç ödeme yapılmamış!</u> `;
+                        }
                     }
-                    else if(gecikenGun >= 60) { 
-                        riskSeviyesi = "KIRMIZI ALARM (60+ Gün Gecikme)"; 
-                        renk = "#c0392b"; 
+
+                    if (buYilFatura > 0) {
+                        aiMetin += `Bu yıl firmaya <b>${formatMoney(buYilFatura)} TL</b> fatura kesilmiş, `;
+                        if (buYilOdeme > 0) {
+                            aiMetin += `müşteri toplam <b>${formatMoney(buYilOdeme)} TL</b> ödeme yapmıştır. `;
+                        } else {
+                            aiMetin += `ancak müşteri <u style="color:#c0392b;">tek kuruş ödeme yapmamıştır.</u> `;
+                        }
                     }
-                    else if(gecikenGun >= 30) { 
-                        riskSeviyesi = "TURUNCU ALARM (30+ Gün Gecikme)"; 
-                        renk = "#e67e22"; 
-                    }
-                    else { 
-                        return; // 30 Günden azsa (Düzenli ödüyorsa) listeye alma
+
+                    if (enEskiOdenmeyen) {
+                        aiMetin += `<br><br><span style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Analizi:</b> Müşteri en son <b>${sorunAy} ${sorunYil}</b> faturasını ödemeyi atlamış. Toplam <b>${formatMoney(mBakiye)} TL</b> borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının vadesi (30 gün) dolmuştur.</span>`;
                     }
 
                     riskliListesi.push({
-                        unvan: m.unvan, bakiye: mBakiye,
-                        gecikenGun: gecikenGun + " Gün Önceki Faturadan",
-                        seviye: riskSeviyesi, renk: renk, sortVal: gecikenGun
+                        unvan: m.unvan, 
+                        bakiye: mBakiye,
+                        gecikenGun: gecikenGun,
+                        seviye: riskSeviyesi, 
+                        renk: renk,
+                        aiMetin: aiMetin
                     });
                 }
             });
 
             // En risklileri (Gecikmesi en yüksek olanları) en üste sırala
-            riskliListesi.sort((a,b) => b.sortVal - a.sortVal);
+            riskliListesi.sort((a,b) => b.gecikenGun - a.gecikenGun);
 
             if(riskliListesi.length === 0) {
-                container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Son 1 ayı geçen tahsilat probleminiz bulunmuyor. Kriz radarı temiz.</div>";
+                container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Sistemde borcu bulunan mükellef yok.</div>";
             } else {
-                let html = "<p style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-info-circle'></i> Sadece son ödemesi 30 günü geçen ve bakiyesi olan firmalar listelenmektedir.</p>";
+                let html = "<p style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-robot'></i> Sistem her müşterinin ödemelerini FIFO (İlk Giren İlk Çıkar) yöntemiyle tarayarak gerçek riskini hesaplar.</p>";
                 riskliListesi.forEach(r => {
-                    let yaziRenk = r.renk === "#0f172a" ? "white" : "white";
-                    
                     html += `
-                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="width: 60%;">
-                            <div style="font-weight:bold; color:#2c3e50; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.unvan}">${r.unvan}</div>
-                            <div style="font-size:11px; color:#7f8c8d; margin-top:6px;"><i class="fas fa-clock"></i> Son Tahsilat: <strong style="color:${r.renk};">${r.gecikenGun}</strong></div>
+                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                            <div style="width: 70%;">
+                                <div style="font-weight:bold; color:#2c3e50; font-size:15px; margin-bottom:4px;">${r.unvan}</div>
+                                <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 8px; border-radius:12px; display:inline-block; letter-spacing:0.5px;">${r.seviye}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:11px; color:#7f8c8d;">Toplam Bakiye</div>
+                                <div style="font-size:20px; font-weight:800; color:${r.renk};">${formatMoney(r.bakiye)} ₺</div>
+                            </div>
                         </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:18px; font-weight:bold; color:${r.renk};">${formatMoney(r.bakiye)} ₺</div>
-                            <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:${yaziRenk}; padding:3px 6px; border-radius:4px; display:inline-block; margin-top:4px; letter-spacing:0.5px;">${r.seviye}</div>
+                        <div style="background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #eef2f5; font-size:12.5px; color:#444; line-height:1.5;">
+                            ${r.aiMetin}
                         </div>
                     </div>`;
                 });
