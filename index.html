@@ -2218,12 +2218,12 @@
 
         <div id="ekstreModal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-header">
-                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-file-invoice"></i> Mükellef Ekstresi: <span id="eksUnvan" style="color:#f1c40f;"></span></h3>
-                    <div>
-                        <button class="action-btn" style="background:#2ecc71; color:white; padding:5px 10px; margin-right:10px;" onclick="kutuAc('tahsilatKutu')"><i class="fas fa-lira-sign"></i> Tahsilat Ekle</button>
-                        <button class="action-btn" style="background:#3498db; color:white; padding:5px 10px; margin-right:10px;" onclick="kutuAc('mutabakatKutu')"><i class="fas fa-handshake"></i> Mutabakat</button>
-                        <button class="modal-close" onclick="modalKapat('ekstreModal')">X</button>
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background:#2c3e50;">
+                    <h3 style="font-size:16px; margin:0; color:white; flex: 1; min-width: 250px;"><i class="fas fa-file-invoice"></i> Mükellef Ekstresi: <span id="eksUnvan" style="color:#f1c40f;"></span></h3>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="action-btn" style="background:#27ae60; color:white; padding:6px 12px; margin:0; font-size:13px;" onclick="kutuAc('tahsilatKutu')"><i class="fas fa-lira-sign"></i> Tahsilat İşle</button>
+                        <button class="action-btn" style="background:#3498db; color:white; padding:6px 12px; margin:0; font-size:13px;" onclick="kutuAc('mutabakatKutu')"><i class="fas fa-handshake"></i> Mutabakat</button>
+                        <button class="modal-close" onclick="modalKapat('ekstreModal')" style="margin-left: 5px;">X</button>
                     </div>
                 </div>
                 <div class="modal-body">
@@ -2276,9 +2276,13 @@
                         <div class="print-footer">Dumlupınar Mah. Şehit Turgut Çiçek Cad. ALTEK Plaza Kat:2 B-01 Kartepe / Kocaeli &nbsp; | &nbsp; 📞 0542 323 74 77 &nbsp; | &nbsp; 📧 tarikgun@cpa-ftc.com</div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="action-btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Ekstreyi Yazdır</button>
-                    <button class="action-btn btn-primary" onclick="modalKapat('ekstreModal')">Kapat</button>
+                <!-- YENİ DÜZENLENEN MODAL FOOTER (BUTONLAR BURAYA ALINDI) -->
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; background: #f8f9fa;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="action-btn btn-secondary" onclick="window.print()" style="margin:0;"><i class="fas fa-print"></i> Ekstreyi Yazdır</button>
+                        <span id="wpEkstreButonAlani"></span>
+                    </div>
+                    <button class="action-btn btn-primary" onclick="modalKapat('ekstreModal')" style="margin:0; background:#2c3e50;">Kapat</button>
                 </div>
             </div>
         </div>
@@ -4438,39 +4442,60 @@
             bakEl.textContent = formatMoney(anlikBakiye) + " ₺";
             bakEl.style.color = anlikBakiye > 0 ? "#e74c3c" : "#2ecc71";
 
-            // --- YENİ EKLENEN: WHATSAPP EKSTRE BUTONU MANTIĞI ---
-            // Modal başlığına WhatsApp butonunu inject ediyoruz
+            // --- YENİ EKLENEN: WHATSAPP DETAYLI EKSTRE BUTONU MANTIĞI ---
             let wpEkstreHtml = "";
             if(m.telefon) {
-                let wpMetin = `Sayın ${m.unvan} Yetkilisi,\n\nFirmanızın Mali Müşavirlik ofisimizdeki ${baslikDonem} cari hesap özeti aşağıdadır:\n\n`;
-                wpMetin += `🔸 Devreden Bakiye: ${formatMoney(devreden)} TL\n`;
-                wpMetin += `🔸 Kesilen Fatura/Makbuz: ${formatMoney(totalFat)} TL\n`;
+                let wpMetin = `*Sayın ${m.unvan} Yetkilisi,*\n\nFirmanızın Mali Müşavirlik ofisimizdeki *${baslikDonem}* Cari Hesap Özeti aşağıdadır:\n\n`;
+                wpMetin += `📊 *FİNANSAL ÖZET*\n`;
+                wpMetin += `🔸 Önceki Bakiye: ${formatMoney(devreden)} TL\n`;
+                wpMetin += `🔸 Kesilen Faturalar: ${formatMoney(totalFat)} TL\n`;
                 wpMetin += `🔸 Yapılan Ödemeleriniz: ${formatMoney(totalTah)} TL\n`;
                 wpMetin += `------------------------\n`;
                 
                 if(anlikBakiye > 0) {
                     wpMetin += `🔺 *GÜNCEL BORÇ BAKİYENİZ: ${formatMoney(anlikBakiye)} TL*\n\n`;
-                    wpMetin += `Müsaitliğinizde ödemenizi rica eder, iyi çalışmalar dileriz.\n- SMMM Tarık GÜN`;
                 } else if(anlikBakiye < 0) {
-                    wpMetin += `✅ *GÜNCEL ALACAK BAKİYENİZ: ${formatMoney(Math.abs(anlikBakiye))} TL*\n\n- SMMM Tarık GÜN`;
+                    wpMetin += `✅ *GÜNCEL ALACAĞINIZ: ${formatMoney(Math.abs(anlikBakiye))} TL*\n\n`;
                 } else {
-                    wpMetin += `✅ *BAKİYENİZ SIFIRDIR (Borcunuz Bulunmamaktadır).*\n\nDüzenli ödemeleriniz için teşekkür ederiz.\n- SMMM Tarık GÜN`;
+                    wpMetin += `✅ *BAKİYENİZ SIFIRDIR (Borcunuz Bulunmamaktadır).*\n\n`;
                 }
+
+                // HAREKET DETAYLARINI TABLO GİBİ LİSTELEME
+                wpMetin += `🗓 *HAREKET DETAYLARI*\n`;
+                wpMetin += `------------------------\n`;
+                if (devreden !== 0) wpMetin += `➖ ${baslikTarih.substring(0,5)} | DEVİR | ${formatMoney(devreden)} ₺\n`;
+
+                siraliHrk.forEach(h => {
+                    if (h._renderThis) {
+                        let isFatura = h.tur === "Makbuz";
+                        let isaret = isFatura ? "🔴" : "🟢"; // Makbuz/Fatura ise Kırmızı, Ödeme ise Yeşil nokta
+                        let kisaTarih = h.tarih.substring(0, 5); // Örn: 17.03
+                        let islemTur = isFatura ? "Fatura" : "Ödeme";
+                        let tutar = formatMoney(h.netTutar || h.tutar);
+                        wpMetin += `${isaret} ${kisaTarih} | ${islemTur} | ${tutar} ₺\n`;
+                    }
+                });
+                wpMetin += `------------------------\n\n`;
+
+                if(anlikBakiye > 0) {
+                    wpMetin += `Müsaitliğinizde ödemenizi rica eder, iyi çalışmalar dileriz.\n`;
+                } else {
+                    wpMetin += `Düzenli ödemeleriniz için teşekkür ederiz.\n`;
+                }
+                wpMetin += `- SMMM Tarık GÜN`;
                 
                 let temizTel = m.telefon.replace(/[^0-9]/g, '');
                 let wpLink = `https://wa.me/90${temizTel}?text=${encodeURIComponent(wpMetin)}`;
-                wpEkstreHtml = `<a href="${wpLink}" target="_blank" class="action-btn" style="background:#27ae60; color:white; padding:5px 10px; margin-right:10px; text-decoration:none; display:inline-block;"><i class="fab fa-whatsapp"></i> Ekstreyi Yolla</a>`;
+                
+                wpEkstreHtml = `<a href="${wpLink}" target="_blank" class="action-btn" style="background:#27ae60; color:white; padding:8px 15px; margin:0; text-decoration:none; display:inline-flex; align-items:center; gap:8px;"><i class="fab fa-whatsapp" style="font-size:16px;"></i> WhatsApp'tan Yolla</a>`;
+            } else {
+                wpEkstreHtml = `<button class="action-btn" style="background:#bdc3c7; color:white; padding:8px 15px; margin:0; cursor:not-allowed;" title="Müşterinin telefonu kayıtlı değil"><i class="fab fa-whatsapp"></i> Tel Yok</button>`;
             }
 
-            // Modal Header'ın sağ tarafına butonları bas (Eski HTML'in yapısını bozmadan)
-            let headerDiv = document.querySelector("#ekstreModal .modal-header div");
-            if(headerDiv) {
-                headerDiv.innerHTML = `
-                    ${wpEkstreHtml}
-                    <button class="action-btn" style="background:#2ecc71; color:white; padding:5px 10px; margin-right:10px;" onclick="kutuAc('tahsilatKutu')"><i class="fas fa-lira-sign"></i> Tahsilat Ekle</button>
-                    <button class="action-btn" style="background:#3498db; color:white; padding:5px 10px; margin-right:10px;" onclick="kutuAc('mutabakatKutu')"><i class="fas fa-handshake"></i> Mutabakat</button>
-                    <button class="modal-close" onclick="modalKapat('ekstreModal')">X</button>
-                `;
+            // Yeni Footer Alanına (wpEkstreButonAlani) basıyoruz
+            let footerAlan = document.getElementById("wpEkstreButonAlani");
+            if(footerAlan) {
+                footerAlan.innerHTML = wpEkstreHtml;
             }
 
             document.getElementById("tahTarih").valueAsDate = new Date();
