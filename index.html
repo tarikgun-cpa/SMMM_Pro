@@ -3522,16 +3522,16 @@
             let riskliListesi = [];
             let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
             
-            // DÜZELTME: Gelecek yılları (örn 2026) test ederken güncel tarihin gerçek yıl olması vade farklarını negatif gösteriyordu.
-            // Eğer seçili yıl güncel yıldan farklıysa, referans tarihini o yılın sonu kabul edelim.
+            // Gelecek simülasyonları için zaman makinesi düzeltmesi
             let bugun = new Date();
             if (seciliYil !== bugun.getFullYear()) {
-                bugun = new Date(seciliYil, 11, 31); // Seçilen yılın 31 Aralığı baz alınır
+                bugun = new Date(seciliYil, 11, 31); // Seçilen yılın son günü baz alınır
             }
             bugun.setHours(0,0,0,0);
 
             mukellefler.forEach(m => {
-                if(m.mukellefTuru === "SMMM" || m.durum === "Pasif") return;
+                // SMMM (Kendi firmamız) hariç. DİKKAT: Pasif firmaları ARTIK GİZLEMİYORUZ, borcu varsa çıksın!
+                if(m.mukellefTuru === "SMMM") return;
 
                 let devredenBorc = 0;
                 let buYilFatura = 0;
@@ -3552,14 +3552,12 @@
                         let hYil = parseInt(h.tarih.split('.')[2]);
                         let tutar = (h.netTutar || h.tutar || 0);
 
-                        // Geçerli bir tarih objesi oluştur (Bozuk format koruması)
                         let dObj = new Date(h.tarihDüzz);
                         if(isNaN(dObj)) {
                             let pts = h.tarih.split('.');
                             dObj = new Date(pts[2], pts[1]-1, pts[0]);
                         }
 
-                        // Kümülatif Yıllık Ayrımlar
                         if (hYil < seciliYil) {
                             if(h.tur === "Makbuz") devredenBorc += tutar;
                             else if(h.tur === "Tahsilat") devredenBorc -= tutar;
@@ -3568,30 +3566,29 @@
                             else if(h.tur === "Tahsilat") buYilOdeme += tutar;
                         }
 
-                        // FIFO İçin Tüm Zamanların Ham Listesi
                         if(h.tur === "Makbuz") {
-                            borclar.push({ tarih: dObj, tutar: tutar, aciklama: h.aciklama });
+                            borclar.push({ tarih: dObj, tutar: tutar, aciklama: h.aciklama, orjTarihTR: h.tarih });
                         } else if(h.tur === "Tahsilat") {
                             toplamOdeme += tutar;
                         }
                     });
                 }
                 
-                // Manuel girilmiş geçmiş devir varsa (sistemin en esnek hali için)
                 let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
                 if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") {
                     toplamOdeme += Math.abs(mDevredenBakiye);
                 }
 
-                // Toplam Net Bakiye
                 let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
                 let mBakiye = toplamBorc - toplamOdeme;
 
-                // 0.5 kuruş altı farkları sıfır kabul et
                 if(mBakiye > 0.5) {
                     let enEskiOdenmeyen = null;
                     let vadesiGecmisTutar = 0; 
                     let kalanKredi = toplamOdeme;
+
+                    // Akıllı Fatura Eşleştirme (Pegra Makina Vaka Çözümü)
+                    let tamElesenFatura = borclar.find(b => Math.abs(b.tutar - mBakiye) < 0.5);
 
                     // FIFO Algoritması
                     for (let i = 0; i < borclar.length; i++) {
@@ -3623,19 +3620,29 @@
                         sorunAy = aylar[enEskiOdenmeyen.tarih.getMonth()];
                         sorunYil = enEskiOdenmeyen.tarih.getFullYear();
                     }
+                    
+                    // Tam eşleşen fatura varsa gecikme gününü o faturaya göre ezebiliriz (daha mantıklı risk için)
+                    if (tamElesenFatura) {
+                        gecikenGun = Math.floor((bugun - tamElesenFatura.tarih) / (1000 * 60 * 60 * 24));
+                        vadesiGecmisTutar = mBakiye; // Eşleşen fatura tam mBakiye olduğu için
+                    }
 
-                    // --- RİSK KATEGORİZASYONU ---
                     let riskSeviyesi = ""; let renk = "";
                     
-                    if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
+                    // Eğer tamamen hiç ödeme yoksa doğrudan kara listeye at
+                    if (toplamOdeme === 0) {
+                        riskSeviyesi = "KARA LİSTE (Sıfır Ödeme)"; renk = "#0f172a";
+                    }
+                    else if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
                     else if(gecikenGun >= 60) { riskSeviyesi = "KIRMIZI ALARM (60+ Gün)"; renk = "#c0392b"; }
                     else if(gecikenGun >= 30) { riskSeviyesi = "TURUNCU ALARM (30+ Gün)"; renk = "#e67e22"; }
-                    else { riskSeviyesi = "VADESİ GELMEMİŞ (Risk Yok)"; renk = "#27ae60"; } 
+                    else { riskSeviyesi = "VADESİ GELMEMİŞ"; renk = "#27ae60"; } 
                     
-                    // SADECE borcu olan ve vadesi dolanları (veya sıfır ödeme yapanları) al
-                    if (gecikenGun >= 30 || toplamOdeme === 0) {
+                    // Pasif firmaysa ek bilgi ekle
+                    let pasifEtiketi = m.durum === "Pasif" ? `<span style="background:#e74c3c; color:white; padding:2px 5px; border-radius:4px; font-size:10px; margin-left:5px;">PASİF FİRMA</span>` : "";
+                    
+                    if (gecikenGun >= 30 || toplamOdeme === 0 || m.durum === "Pasif") {
                         
-                        // --- AI (YAPAY ZEKA) YORUM MOTORU ---
                         let aiMetin = `<div style="margin-bottom:8px;">🔹 <b>Finansal Geçmiş ve Kapanış Analizi:</b></div>`;
                         
                         let cariYilKalanOdemeGucu = toplamOdeme;
@@ -3643,32 +3650,34 @@
                             if (toplamOdeme >= devredenBorc) {
                                 cariYilKalanOdemeGucu -= devredenBorc;
                                 aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun <b>tamamı</b> yapılan tahsilatlarla kapatılmıştır. `;
-                                if (cariYilKalanOdemeGucu > 0) {
-                                    aiMetin += `Kalan <b>${formatMoney(cariYilKalanOdemeGucu)} TL</b>'lik ödeme, ${seciliYil} yılında kesilen faturalardan düşülmüştür. `;
-                                }
                             } else {
-                                aiMetin += `Yapılan toplam ödeme (<b>${formatMoney(toplamOdeme)} TL</b>), geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b>'lik borcu kapatmaya yetmemiştir! Bu yılın faturaları tamamen açıktadır. `;
+                                aiMetin += `Yapılan toplam ödeme (<b>${formatMoney(toplamOdeme)} TL</b>), geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b>'lik borcu bile kapatmaya yetmemiştir! `;
                                 cariYilKalanOdemeGucu = 0;
                             }
-                        } else {
-                            if (toplamOdeme > 0) {
-                                aiMetin += `Firmadan tüm zamanlarda toplam <b>${formatMoney(toplamOdeme)} TL</b> tahsilat yapılmıştır. `;
-                            } else {
-                                aiMetin += `<span style="color:#c0392b; font-weight:bold; background:#fdf2f2; padding:2px 5px;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır!</span> `;
-                            }
+                        }
+
+                        if (toplamOdeme === 0) {
+                            aiMetin += `<span style="color:#c0392b; font-weight:bold; background:#fdf2f2; padding:2px 5px;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır! Bakiye tamamen açıktadır.</span> `;
                         }
 
                         aiMetin += `<br><br><div style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Risk ve Vade Yorumu:</b><br>`;
-                        aiMetin += `Toplam <b>${formatMoney(mBakiye)} TL</b> güncel borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının yasal vadesi (30 gün) dolmuştur. `;
                         
-                        if (enEskiOdenmeyen && toplamOdeme > 0) {
-                            aiMetin += `Finansal kurallar gereği tahsilatlar daima <b>en eski faturadan (FIFO)</b> düşülerek kapatılır. Bu sebeple müşteri bazı ayları atlayıp güncel ayları ödediğini belirtse bile, sistemde açık kalan <u>ilk faturası ${sorunAy} ${sorunYil}</u> olarak görünmektedir.</div>`;
-                        } else if (enEskiOdenmeyen && toplamOdeme === 0) {
-                            aiMetin += `Hiç ödeme yapılmadığı için ilk borçlanma olan <u>${sorunAy} ${sorunYil}</u> ayından itibaren borç katlanarak artmaktadır.</div>`;
+                        // Kilit Kısım: Pegra Makina Mantığı (Nokta atışı eşleşme var mı?)
+                        if (tamElesenFatura && borclar.length > 1 && toplamOdeme > 0) {
+                            let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                            let tAy = aylar[tamElesenFatura.tarih.getMonth()];
+                            let tYil = tamElesenFatura.tarih.getFullYear();
+                            
+                            aiMetin += `🔍 <b>Nokta Atışı Tespit:</b> Firmanın kalan <b>${formatMoney(mBakiye)} TL</b> borcu, tam olarak <u>${tAy} ${tYil}</u> tarihinde kesilen '${tamElesenFatura.aciklama}' faturası ile kuruşu kuruşuna eşleşmektedir!<br>
+                            Sistem ödemeleri genel kural gereği eski faturalardan (FIFO) düşse de, müşterinin aradaki bu faturayı atlayıp diğer güncel faturaları ödediği tespit edilmiştir. `;
+                        } else if (toplamOdeme > 0) {
+                            aiMetin += `Muhasebe (FIFO) kuralları gereği, yapılan tahsilatlar daima <b>en eski faturalardan</b> düşülerek kapatılmıştır. Bu sebeple açık kalan <u>ilk faturası ${sorunAy} ${sorunYil}</u> dönemine aittir. `;
                         }
 
+                        aiMetin += `Toplam <b>${formatMoney(mBakiye)} TL</b> güncel borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının yasal vadesi (30 gün) dolmuştur.</div>`;
+
                         riskliListesi.push({
-                            unvan: m.unvan, 
+                            unvan: m.unvan + pasifEtiketi, 
                             bakiye: mBakiye,
                             gecikenGun: gecikenGun,
                             seviye: riskSeviyesi, 
@@ -3731,6 +3740,7 @@
             }
             modalAc('istihbaratModal');
         }
+        
         // --- YENİ MODÜL: NACE KODUNA DUYARLI SEKTÖREL FISILTI (HEDEFLİ CRM) ---
         function sektorelFisiltiAc() {
             // Önce tüm NACE/Sektör kelimelerini topla ve benzersiz bir liste yap
