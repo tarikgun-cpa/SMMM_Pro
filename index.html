@@ -3514,14 +3514,20 @@
             }
         }
 
-        // --- FİNANSAL İSTİHBARAT (YAPAY ZEKA BORÇ YAŞLANDIRMA) MOTORU ---
+       // --- FİNANSAL İSTİHBARAT (YAPAY ZEKA BORÇ YAŞLANDIRMA) MOTORU ---
         function istihbaratRaporuAc() {
             let container = document.getElementById("istihbaratRaporAlani");
             container.innerHTML = "";
 
             let riskliListesi = [];
             let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
+            
+            // DÜZELTME: Gelecek yılları (örn 2026) test ederken güncel tarihin gerçek yıl olması vade farklarını negatif gösteriyordu.
+            // Eğer seçili yıl güncel yıldan farklıysa, referans tarihini o yılın sonu kabul edelim.
             let bugun = new Date();
+            if (seciliYil !== bugun.getFullYear()) {
+                bugun = new Date(seciliYil, 11, 31); // Seçilen yılın 31 Aralığı baz alınır
+            }
             bugun.setHours(0,0,0,0);
 
             mukellefler.forEach(m => {
@@ -3553,7 +3559,7 @@
                             dObj = new Date(pts[2], pts[1]-1, pts[0]);
                         }
 
-                        // Kümülatif Yıllık Ayrımlar (İstatistik ve Yorum İçin)
+                        // Kümülatif Yıllık Ayrımlar
                         if (hYil < seciliYil) {
                             if(h.tur === "Makbuz") devredenBorc += tutar;
                             else if(h.tur === "Tahsilat") devredenBorc -= tutar;
@@ -3571,7 +3577,7 @@
                     });
                 }
                 
-                // Eğer geçmişten gelen net bir "Biz Borçluyuz" devri varsa (manuel eklenmişse diye güvenlik)
+                // Manuel girilmiş geçmiş devir varsa (sistemin en esnek hali için)
                 let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
                 if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") {
                     toplamOdeme += Math.abs(mDevredenBakiye);
@@ -3581,28 +3587,27 @@
                 let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
                 let mBakiye = toplamBorc - toplamOdeme;
 
-                // Kuruş farklarını göz ardı et (Tam sıfırlamalar için)
+                // 0.5 kuruş altı farkları sıfır kabul et
                 if(mBakiye > 0.5) {
                     let enEskiOdenmeyen = null;
                     let vadesiGecmisTutar = 0; 
                     let kalanKredi = toplamOdeme;
 
-                    // FIFO Algoritması: Ödemeleri en eski faturalardan düşerek ilerle
+                    // FIFO Algoritması
                     for (let i = 0; i < borclar.length; i++) {
                         let b = borclar[i];
                         if (kalanKredi >= b.tutar) {
-                            kalanKredi -= b.tutar; // Bu fatura tahsilatlarla tamamen kapandı
+                            kalanKredi -= b.tutar; 
                         } else {
                             let odenmeyenKisim = b.tutar - kalanKredi;
-                            kalanKredi = 0; // Kredi bitti, ilk açık faturayı bulduk
+                            kalanKredi = 0; 
 
                             if(!enEskiOdenmeyen) {
                                 enEskiOdenmeyen = { ...b, odenmeyenKisim };
                             }
 
-                            // Kalan açık faturaların vadesi 30 günü geçmiş mi?
                             let gunFarki = Math.floor((bugun - b.tarih) / (1000 * 60 * 60 * 24));
-                            if(gunFarki > 30) {
+                            if(gunFarki >= 30) {
                                 vadesiGecmisTutar += odenmeyenKisim; 
                             }
                         }
@@ -3625,30 +3630,42 @@
                     if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
                     else if(gecikenGun >= 60) { riskSeviyesi = "KIRMIZI ALARM (60+ Gün)"; renk = "#c0392b"; }
                     else if(gecikenGun >= 30) { riskSeviyesi = "TURUNCU ALARM (30+ Gün)"; renk = "#e67e22"; }
-                    else { riskSeviyesi = "VADESİ GELMEMİŞ"; renk = "#27ae60"; } 
+                    else { riskSeviyesi = "VADESİ GELMEMİŞ (Risk Yok)"; renk = "#27ae60"; } 
                     
-                    // Sadece vadesi geçen borcu (30+ gün) olanları listeye alıyoruz
-                    if (gecikenGun >= 30) {
-                        // --- AI (YAPAY ZEKA) YORUM MOTORU ---
-                        let aiMetin = "";
+                    // SADECE borcu olan ve vadesi dolanları (veya sıfır ödeme yapanları) al
+                    if (gecikenGun >= 30 || toplamOdeme === 0) {
                         
+                        // --- AI (YAPAY ZEKA) YORUM MOTORU ---
+                        let aiMetin = `<div style="margin-bottom:8px;">🔹 <b>Finansal Geçmiş ve Kapanış Analizi:</b></div>`;
+                        
+                        let cariYilKalanOdemeGucu = toplamOdeme;
                         if (devredenBorc > 0) {
                             if (toplamOdeme >= devredenBorc) {
-                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun tamamı ödemelerle kapatılmış. `;
+                                cariYilKalanOdemeGucu -= devredenBorc;
+                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun <b>tamamı</b> yapılan tahsilatlarla kapatılmıştır. `;
+                                if (cariYilKalanOdemeGucu > 0) {
+                                    aiMetin += `Kalan <b>${formatMoney(cariYilKalanOdemeGucu)} TL</b>'lik ödeme, ${seciliYil} yılında kesilen faturalardan düşülmüştür. `;
+                                }
                             } else {
-                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun sadece <b>${formatMoney(toplamOdeme)} TL</b>'si ödenebilmiş. `;
+                                aiMetin += `Yapılan toplam ödeme (<b>${formatMoney(toplamOdeme)} TL</b>), geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b>'lik borcu kapatmaya yetmemiştir! Bu yılın faturaları tamamen açıktadır. `;
+                                cariYilKalanOdemeGucu = 0;
+                            }
+                        } else {
+                            if (toplamOdeme > 0) {
+                                aiMetin += `Firmadan tüm zamanlarda toplam <b>${formatMoney(toplamOdeme)} TL</b> tahsilat yapılmıştır. `;
+                            } else {
+                                aiMetin += `<span style="color:#c0392b; font-weight:bold; background:#fdf2f2; padding:2px 5px;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır!</span> `;
                             }
                         }
 
-                        aiMetin += `<br><br><span style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Analizi:</b> Firmanın bugüne kadar yaptığı toplam <b>${formatMoney(toplamOdeme)} TL</b> tahsilat, FIFO (İlk Giren İlk Çıkar) kuralına göre en eski borçlardan düşülmüştür. `;
+                        aiMetin += `<br><br><div style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Risk ve Vade Yorumu:</b><br>`;
+                        aiMetin += `Toplam <b>${formatMoney(mBakiye)} TL</b> güncel borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının yasal vadesi (30 gün) dolmuştur. `;
                         
-                        if (toplamOdeme > 0) {
-                            aiMetin += `Müşteri ara ödemeler yapsa da, bu ödemeler tüm borcu kapatmaya yetmemiştir. `;
-                        } else {
-                            aiMetin += `<u style="color:#c0392b;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır!</u> `;
+                        if (enEskiOdenmeyen && toplamOdeme > 0) {
+                            aiMetin += `Finansal kurallar gereği tahsilatlar daima <b>en eski faturadan (FIFO)</b> düşülerek kapatılır. Bu sebeple müşteri bazı ayları atlayıp güncel ayları ödediğini belirtse bile, sistemde açık kalan <u>ilk faturası ${sorunAy} ${sorunYil}</u> olarak görünmektedir.</div>`;
+                        } else if (enEskiOdenmeyen && toplamOdeme === 0) {
+                            aiMetin += `Hiç ödeme yapılmadığı için ilk borçlanma olan <u>${sorunAy} ${sorunYil}</u> ayından itibaren borç katlanarak artmaktadır.</div>`;
                         }
-
-                        aiMetin += `Şu an itibariyle ödemenin gücünün yetmediği ve <b>açık kalan en eski faturası ${sorunAy} ${sorunYil}</b> dönemine aittir. Toplam <b>${formatMoney(mBakiye)} TL</b> borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının vadesi 30 günü geçmiştir.</span>`;
 
                         riskliListesi.push({
                             unvan: m.unvan, 
@@ -3668,33 +3685,35 @@
             if(riskliListesi.length === 0) {
                 container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Sistemde vadesi (30 gün) geçmiş borcu bulunan mükellef yok.</div>";
             } else {
+                let dStr = bugun.toLocaleDateString('tr-TR');
                 let html = "<div id='printIstihbaratAlan'>";
                 
-                // Sadece yazdırma anında görünecek resmi başlık
+                // Sadece yazdırma anında görünecek resmi başlık (Antetli Format)
                 html += `
-                <div class="print-header" style="display:none; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:10px;">
-                    <img src="SMMM Logo.png" alt="Logo" style="width: 75px; float: left; margin-right: 15px;">
-                    <h2 style="color:#2c3e50; font-size:18px; margin:0; padding-top:10px;">Finansal İstihbarat & Borç Yaşlandırma Raporu</h2>
-                    <p style="color:#7f8c8d; font-size:12px; margin:5px 0 0 0;">Tarih: ${bugun.toLocaleDateString('tr-TR')} - Tüm Firmalar Risk Analizi</p>
-                    <div style="clear:both;"></div>
+                <div class="print-header" style="display:none; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:10px; align-items:center;">
+                    <img src="SMMM Logo.png" alt="Logo" style="width: 75px; margin-right: 15px; border-radius:6px;">
+                    <div>
+                        <h2 style="color:#2c3e50; font-size:18px; margin:0;">Tarık GÜN SMMM | Finansal İstihbarat & Borç Yaşlandırma Raporu</h2>
+                        <p style="color:#7f8c8d; font-size:12px; margin:2px 0 0 0; font-weight:bold;">Tarih: ${dStr} - Tüm Firmalar Risk Analizi (Yapay Zeka Destekli)</p>
+                    </div>
                 </div>
-                <p class='no-print' style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-robot'></i> Sistem her müşterinin ödemelerini FIFO (İlk Giren İlk Çıkar) yöntemiyle tarayarak gerçek riskini hesaplar.</p>
+                <p class='no-print' style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-robot'></i> Sistem tahsilatları otomatik eşleştirir ve FIFO kuralına göre yorumlar.</p>
                 <div style="display:flex; flex-direction:column; gap:15px;">`;
 
                 riskliListesi.forEach(r => {
                     html += `
-                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); page-break-inside: avoid;">
+                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); page-break-inside: avoid; border-top:1px solid #eee; border-right:1px solid #eee; border-bottom:1px solid #eee;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                             <div style="width: 70%;">
                                 <div style="font-weight:bold; color:#2c3e50; font-size:15px; margin-bottom:4px;">${r.unvan}</div>
-                                <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 8px; border-radius:12px; display:inline-block; letter-spacing:0.5px;">${r.seviye}</div>
+                                <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 8px; border-radius:12px; display:inline-block; letter-spacing:0.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${r.seviye}</div>
                             </div>
                             <div style="text-align:right;">
                                 <div style="font-size:11px; color:#7f8c8d;">Toplam Bakiye</div>
-                                <div style="font-size:20px; font-weight:800; color:${r.renk};">${formatMoney(r.bakiye)} ₺</div>
+                                <div style="font-size:20px; font-weight:800; color:${r.renk}; -webkit-print-color-adjust: exact;">${formatMoney(r.bakiye)} ₺</div>
                             </div>
                         </div>
-                        <div style="background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #eef2f5; font-size:12.5px; color:#444; line-height:1.5;">
+                        <div style="background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #eef2f5; font-size:12.5px; color:#444; line-height:1.5; -webkit-print-color-adjust: exact;">
                             ${r.aiMetin}
                         </div>
                     </div>`;
@@ -3703,16 +3722,15 @@
                 container.innerHTML = html;
             }
 
-            // Yazdır butonunu alt kısma dinamik olarak ekle
             let modalFooter = document.querySelector('#istihbaratModal .modal-footer');
-            modalFooter.innerHTML = `
-                <button class="action-btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Raporu Yazdır</button>
-                <button class="action-btn btn-primary" onclick="modalKapat('istihbaratModal')" style="background:#2c3e50;">Kapat</button>
-            `;
-
+            if(modalFooter) {
+                modalFooter.innerHTML = `
+                    <button class="action-btn btn-secondary" onclick="window.print()" style="background:#34495e; color:white; border:none;"><i class="fas fa-print"></i> Raporu Yazdır</button>
+                    <button class="action-btn btn-primary" onclick="modalKapat('istihbaratModal')" style="background:#e74c3c;">Kapat</button>
+                `;
+            }
             modalAc('istihbaratModal');
         }
-
         // --- YENİ MODÜL: NACE KODUNA DUYARLI SEKTÖREL FISILTI (HEDEFLİ CRM) ---
         function sektorelFisiltiAc() {
             // Önce tüm NACE/Sektör kelimelerini topla ve benzersiz bir liste yap
