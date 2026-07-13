@@ -3514,77 +3514,94 @@
             }
         }
 
-        // --- FİNANSAL İSTİHBARAT (KARA LİSTE) MOTORU (GÜNCELLENDİ) ---
+        // --- FİNANSAL İSTİHBARAT (GERÇEK BORÇ YAŞLANDIRMA) MOTORU ---
         function istihbaratRaporuAc() {
             let container = document.getElementById("istihbaratRaporAlani");
             container.innerHTML = "";
 
             let riskliListesi = [];
             let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
+            let bugun = new Date();
+            bugun.setHours(0,0,0,0);
 
             mukellefler.forEach(m => {
                 if(m.mukellefTuru === "SMMM" || m.durum === "Pasif") return;
 
-                let mBakiye = 0;
-                let sonOdemeTarihi = null;
-                let sonOdemeDate = new Date(1900,0,1);
-
-                // Devreden bakiyeyi hesaba kat
                 let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
                 if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") mDevredenBakiye = -mDevredenBakiye;
-                mBakiye += mDevredenBakiye;
+
+                // FIFO (İlk Giren İlk Çıkar) Yaşlandırma Algoritması
+                let borclar = [];
+                let toplamOdeme = 0;
+
+                // Devreden Bakiye varsa en eski borç olarak (geçen yılın son günü) listeye ekle
+                if (mDevredenBakiye > 0) {
+                    borclar.push({ tarih: new Date(seciliYil - 1, 11, 31), tutar: mDevredenBakiye });
+                } else if (mDevredenBakiye < 0) {
+                    toplamOdeme += Math.abs(mDevredenBakiye);
+                }
 
                 if(m.hareketler) {
-                    m.hareketler.forEach(h => {
+                    let siraliHrk = [...m.hareketler].sort((a,b) => new Date(a.tarihDüzz) - new Date(b.tarihDüzz));
+                    siraliHrk.forEach(h => {
                         let hYil = parseInt(h.tarih.split('.')[2]);
                         if(hYil <= seciliYil) {
-                            if(h.tur === "Makbuz") mBakiye += (h.netTutar || h.tutar || 0);
+                            if(h.tur === "Makbuz") {
+                                borclar.push({ tarih: new Date(h.tarihDüzz), tutar: (h.netTutar || h.tutar || 0) });
+                            }
                             else if(h.tur === "Tahsilat") {
-                                mBakiye -= (h.netTutar || h.tutar || 0);
-                                let d = new Date(h.tarihDüzz);
-                                if(d > sonOdemeDate) { sonOdemeDate = d; sonOdemeTarihi = h.tarihDüzz; }
+                                toplamOdeme += (h.netTutar || h.tutar || 0);
                             }
                         }
                     });
                 }
 
-                // Eğer firmanın borcu varsa riski hesapla (1 TL bile borcu varsa)
+                // Toplam borçtan toplam ödemeyi çıkararak net bakiyeyi bul
+                let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
+                let mBakiye = toplamBorc - toplamOdeme;
+
+                // Eğer firmanın borcu varsa yaşlandırma analizine sok
                 if(mBakiye > 0.5) {
+                    let enEskiOdenmeyenTarih = null;
+                    let kalanKredi = toplamOdeme;
+
+                    // Ödemeleri eskiden yeniye faturalardan düş (Gerçek Yaşlandırma)
+                    for (let i = 0; i < borclar.length; i++) {
+                        if (kalanKredi >= borclar[i].tutar) {
+                            kalanKredi -= borclar[i].tutar;
+                        } else {
+                            enEskiOdenmeyenTarih = borclar[i].tarih;
+                            break;
+                        }
+                    }
+
                     let gecikenGun = 0;
-                    if(sonOdemeTarihi) {
-                        let bugun = new Date();
-                        gecikenGun = Math.floor((bugun - sonOdemeDate) / (1000 * 60 * 60 * 24));
-                    } else {
-                        // Hiç ödeme yapmamış (Devirden borcu var veya sadece makbuz kesilmiş)
-                        gecikenGun = 999; 
+                    if (enEskiOdenmeyenTarih) {
+                        gecikenGun = Math.floor((bugun - enEskiOdenmeyenTarih) / (1000 * 60 * 60 * 24));
                     }
 
                     // --- YENİ ALARM VE KARA LİSTE MANTIĞI ---
                     let riskSeviyesi = ""; let renk = "";
                     
-                    if(gecikenGun === 999 || gecikenGun >= 90) {
-                        // Hiç ödememiş veya 3 aydan fazla (90 gün) geciktirmiş
-                        riskSeviyesi = "KARA LİSTE (Hiç Ödemedi / Çok Eski Borç)"; 
-                        renk = "#0f172a"; // Antrasit Siyah
+                    if(gecikenGun >= 90) {
+                        riskSeviyesi = "KARA LİSTE (90+ Gün Ödenmeyen Borç)"; 
+                        renk = "#0f172a"; 
                     }
                     else if(gecikenGun >= 60) { 
-                        // 2 Ayı Geçmiş
                         riskSeviyesi = "KIRMIZI ALARM (60+ Gün Gecikme)"; 
                         renk = "#c0392b"; 
                     }
                     else if(gecikenGun >= 30) { 
-                        // 1 Ayı Geçmiş
                         riskSeviyesi = "TURUNCU ALARM (30+ Gün Gecikme)"; 
                         renk = "#e67e22"; 
                     }
                     else { 
-                        // 1 Aydan az gecikme (Listeye girmez)
-                        return; 
+                        return; // 30 Günden azsa (Düzenli ödüyorsa) listeye alma
                     }
 
                     riskliListesi.push({
                         unvan: m.unvan, bakiye: mBakiye,
-                        gecikenGun: gecikenGun === 999 ? "Sistemde Hiç Tahsilat Yok!" : gecikenGun + " Gün Önce",
+                        gecikenGun: gecikenGun + " Gün Önceki Faturadan",
                         seviye: riskSeviyesi, renk: renk, sortVal: gecikenGun
                     });
                 }
