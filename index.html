@@ -4488,7 +4488,7 @@
                 wpMetin += `- SMMM Tarık GÜN`;
 
                 let temizTel = m.telefon.replace(/[^0-9]/g, '');
-                let wpLink = `[https://wa.me/90$](https://wa.me/90$){temizTel}?text=${encodeURIComponent(wpMetin)}`;
+                let wpLink = `https://wa.me/90${temizTel}?text=${encodeURIComponent(wpMetin)}`;
 
                 wpEkstreHtml = `<a href="${wpLink}" target="_blank" class="action-btn" style="background:#27ae60; color:white; padding:6px 12px; margin:0; text-decoration:none; display:inline-flex; align-items:center; gap:8px;"><i class="fab fa-whatsapp" style="font-size:16px;"></i> Ekstreyi Yolla</a>`;
             } else {
