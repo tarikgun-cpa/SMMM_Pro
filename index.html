@@ -4383,7 +4383,6 @@
                 let islemUygun = false;
                 let devirUygun = false;
 
-                // Seçilen tarih aralığı veya yıllara göre Devreden ve Gösterilecekleri ayırıyoruz
                 if (basTarihRaw && bitTarihRaw) {
                     if (h.tarihDüzz < basTarihRaw) devirUygun = true;
                     if (h.tarihDüzz >= basTarihRaw && h.tarihDüzz <= bitTarihRaw) islemUygun = true;
@@ -4393,13 +4392,11 @@
                     if (hYil === yil) islemUygun = true;
                 }
 
-                // Devreden bakiyeyi hesapla
                 if (devirUygun) {
                     if(h.tur === "Makbuz") devreden += (h.netTutar || h.tutar);
                     else devreden -= (h.netTutar || h.tutar);
                 }
 
-                // Sadece uygun işlemleri ekrana basmak için işaretle
                 h._renderThis = islemUygun;
             });
 
@@ -4442,57 +4439,63 @@
             bakEl.textContent = formatMoney(anlikBakiye) + " ₺";
             bakEl.style.color = anlikBakiye > 0 ? "#e74c3c" : "#2ecc71";
 
-            // --- YENİ EKLENEN: WHATSAPP DETAYLI EKSTRE BUTONU MANTIĞI ---
+            // --- YENİ EKLENEN: WHATSAPP DETAYLI TABLO (MONOSPACE) MANTIĞI ---
             let wpEkstreHtml = "";
             if(m.telefon) {
-                let wpMetin = `*Sayın ${m.unvan} Yetkilisi,*\n\nFirmanızın Mali Müşavirlik ofisimizdeki *${baslikDonem}* Cari Hesap Özeti aşağıdadır:\n\n`;
+                let wpMetin = `*Sayın ${m.unvan} Yetkilisi,*\n\nFirmanızın *${baslikDonem}* dönemi Cari Hesap Özeti aşağıdadır:\n\n`;
                 wpMetin += `📊 *FİNANSAL ÖZET*\n`;
-                wpMetin += `🔸 Önceki Bakiye: ${formatMoney(devreden)} TL\n`;
+                wpMetin += `🔸 Devreden Bakiye: ${formatMoney(devreden)} TL\n`;
                 wpMetin += `🔸 Kesilen Faturalar: ${formatMoney(totalFat)} TL\n`;
-                wpMetin += `🔸 Yapılan Ödemeleriniz: ${formatMoney(totalTah)} TL\n`;
-                wpMetin += `------------------------\n`;
-                
-                if(anlikBakiye > 0) {
-                    wpMetin += `🔺 *GÜNCEL BORÇ BAKİYENİZ: ${formatMoney(anlikBakiye)} TL*\n\n`;
-                } else if(anlikBakiye < 0) {
-                    wpMetin += `✅ *GÜNCEL ALACAĞINIZ: ${formatMoney(Math.abs(anlikBakiye))} TL*\n\n`;
-                } else {
-                    wpMetin += `✅ *BAKİYENİZ SIFIRDIR (Borcunuz Bulunmamaktadır).*\n\n`;
-                }
+                wpMetin += `🔸 Yapılan Ödemeler: ${formatMoney(totalTah)} TL\n`;
+                wpMetin += `━━━━━━━━━━━━━━━━━━━━\n`;
+                if(anlikBakiye > 0) wpMetin += `🔺 *GÜNCEL BORCUNUZ: ${formatMoney(anlikBakiye)} TL*\n`;
+                else if(anlikBakiye < 0) wpMetin += `🟢 *GÜNCEL ALACAĞINIZ: ${formatMoney(Math.abs(anlikBakiye))} TL*\n`;
+                else wpMetin += `✅ *BAKİYENİZ SIFIRDIR*\n`;
+                wpMetin += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-                // HAREKET DETAYLARINI TABLO GİBİ LİSTELEME
-                wpMetin += `🗓 *HAREKET DETAYLARI*\n`;
-                wpMetin += `------------------------\n`;
-                if (devreden !== 0) wpMetin += `➖ ${baslikTarih.substring(0,5)} | DEVİR | ${formatMoney(devreden)} ₺\n`;
+                wpMetin += `📋 *HAREKET DETAYLARI*\n`;
+                
+                // Tablo düzeninin cep telefonunda kaymaması için Monospace (```) bloğu kullanıyoruz.
+                wpMetin += "```text\n"; 
+                wpMetin += "TARİH | İŞLEM  |  TUTAR | BAKİYE\n";
+                wpMetin += "--------------------------------\n";
+
+                let cBakiye = devreden;
+                if (devreden !== 0) {
+                    let bStr = devreden.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                    wpMetin += `${baslikTarih.substring(0,5)} | DEVİR  |        | ${bStr.padStart(6)}\n`;
+                }
 
                 siraliHrk.forEach(h => {
                     if (h._renderThis) {
                         let isFatura = h.tur === "Makbuz";
-                        let isaret = isFatura ? "🔴" : "🟢"; // Makbuz/Fatura ise Kırmızı, Ödeme ise Yeşil nokta
-                        let kisaTarih = h.tarih.substring(0, 5); // Örn: 17.03
-                        let islemTur = isFatura ? "Fatura" : "Ödeme";
-                        let tutar = formatMoney(h.netTutar || h.tutar);
-                        wpMetin += `${isaret} ${kisaTarih} | ${islemTur} | ${tutar} ₺\n`;
+                        let kisaTarih = h.tarih.substring(0, 5); // 07.02 gibi
+                        let islemTur = isFatura ? "FATURA" : "ÖDEME ";
+                        let t = h.netTutar || h.tutar;
+                        cBakiye += (isFatura ? t : -t);
+
+                        let tStr = (isFatura ? "+" : "-") + t.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                        let bStr = cBakiye.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+                        // Boşluklarla (pad) tablo hizalaması yapıyoruz
+                        wpMetin += `${kisaTarih} | ${islemTur} | ${tStr.padStart(6)} | ${bStr.padStart(6)}\n`;
                     }
                 });
-                wpMetin += `------------------------\n\n`;
+                wpMetin += "```\n\n";
 
-                if(anlikBakiye > 0) {
-                    wpMetin += `Müsaitliğinizde ödemenizi rica eder, iyi çalışmalar dileriz.\n`;
-                } else {
-                    wpMetin += `Düzenli ödemeleriniz için teşekkür ederiz.\n`;
-                }
+                if(anlikBakiye > 0) wpMetin += `📌 Müsaitliğinizde ödemenizi rica eder, iyi çalışmalar dileriz.\n`;
+                else wpMetin += `📌 Düzenli ödemeleriniz için teşekkür ederiz.\n`;
                 wpMetin += `- SMMM Tarık GÜN`;
-                
+
                 let temizTel = m.telefon.replace(/[^0-9]/g, '');
-                let wpLink = `https://wa.me/90${temizTel}?text=${encodeURIComponent(wpMetin)}`;
-                
-                wpEkstreHtml = `<a href="${wpLink}" target="_blank" class="action-btn" style="background:#27ae60; color:white; padding:8px 15px; margin:0; text-decoration:none; display:inline-flex; align-items:center; gap:8px;"><i class="fab fa-whatsapp" style="font-size:16px;"></i> WhatsApp'tan Yolla</a>`;
+                let wpLink = `[https://wa.me/90$](https://wa.me/90$){temizTel}?text=${encodeURIComponent(wpMetin)}`;
+
+                wpEkstreHtml = `<a href="${wpLink}" target="_blank" class="action-btn" style="background:#27ae60; color:white; padding:6px 12px; margin:0; text-decoration:none; display:inline-flex; align-items:center; gap:8px;"><i class="fab fa-whatsapp" style="font-size:16px;"></i> Ekstreyi Yolla</a>`;
             } else {
-                wpEkstreHtml = `<button class="action-btn" style="background:#bdc3c7; color:white; padding:8px 15px; margin:0; cursor:not-allowed;" title="Müşterinin telefonu kayıtlı değil"><i class="fab fa-whatsapp"></i> Tel Yok</button>`;
+                wpEkstreHtml = `<button class="action-btn" style="background:#bdc3c7; color:white; padding:6px 12px; margin:0; cursor:not-allowed;" title="Müşterinin telefonu kayıtlı değil"><i class="fab fa-whatsapp"></i> Tel Yok</button>`;
             }
 
-            // Yeni Footer Alanına (wpEkstreButonAlani) basıyoruz
+            // Yeni Footer Alanına WhatsApp butonunu basıyoruz
             let footerAlan = document.getElementById("wpEkstreButonAlani");
             if(footerAlan) {
                 footerAlan.innerHTML = wpEkstreHtml;
@@ -4502,7 +4505,6 @@
             document.getElementById("mutTarih").valueAsDate = new Date();
             modalAc('ekstreModal');
         }
-
         function tahsilatKaydetBtn() {
             let tarihRaw = document.getElementById("tahTarih").value;
             let tutar = parseFloat(document.getElementById("tahTutar").value);
