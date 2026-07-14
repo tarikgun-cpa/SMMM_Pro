@@ -5892,7 +5892,7 @@
             };
             reader.readAsArrayBuffer(dosya);
         }
-        // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
+        
         // --- PREMIUM PLUS MASTER DASHBOARD MOTORU ---
         function masterDashboardCiz() {
             let bugun = new Date();
@@ -5952,19 +5952,46 @@
             
             let aylikDefterTop = 0, aylikDefterTamam = 0;
             let ucAylikDefterTop = 0, ucAylikDefterTamam = 0;
+            let bekleyenAylikDefterler = [];
+            let bekleyenUcDefterler = [];
+            let aktifProjelerGruplu = {}; // Danışmanlık projelerini firmaya göre gruplamak için
 
-            // --- YENİ: AI İçin Zaman Çizelgesi Değişkenleri ---
             let minGun = 999;
             let gecikmisGorevVar = false;
 
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; 
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") {
+                    // Sadece danışmanlık olan firmanın projelerini topla
+                    if(danismanlikVeritabani[m.vkn]) {
+                        let pList = danismanlikVeritabani[m.vkn].filter(p => !p.tamamlandi);
+                        if(pList.length > 0) {
+                            aktifProjelerGruplu[m.unvan] = pList.map(p => {
+                                let tAsama = p.asamalar ? p.asamalar.length : 0;
+                                let bAsama = p.asamalar ? p.asamalar.filter(a => a.durum).length : 0;
+                                return { ad: p.projeAdi, oran: tAsama===0 ? 0 : Math.round((bAsama/tAsama)*100) };
+                            });
+                        }
+                    }
+                    return; 
+                }
                 
                 let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : {};
 
                 let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
                 let isDefterUc = (m.eDefterDurum === "Evet - Üç Aylık");
+
+                // Danışmanlık Projelerini Topla (Normal mükellefler için)
+                if(danismanlikVeritabani[m.vkn]) {
+                    let pList = danismanlikVeritabani[m.vkn].filter(p => !p.tamamlandi);
+                    if(pList.length > 0) {
+                        aktifProjelerGruplu[m.unvan] = pList.map(p => {
+                            let tAsama = p.asamalar ? p.asamalar.length : 0;
+                            let bAsama = p.asamalar ? p.asamalar.filter(a => a.durum).length : 0;
+                            return { ad: p.projeAdi, oran: tAsama===0 ? 0 : Math.round((bAsama/tAsama)*100) };
+                        });
+                    }
+                }
 
                 function kontrolAlarm(isim, isDone, targetDate, isYok) {
                     if(targetDate && !isYok) {
@@ -5973,8 +6000,6 @@
                             fGorevTamam++;
                         } else {
                             let gun = gunFarkiHesapla(targetDate);
-                            
-                            // AI Analizi İçin En Yakın Tarihi Yakala
                             if(gun !== null && gun >= 0 && gun < minGun) minGun = gun;
                             if(gun !== null && gun < 0) gecikmisGorevVar = true;
 
@@ -6001,8 +6026,13 @@
                     else defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
                     
                     if(defterTarihiDash) {
-                        if(isDefterUc) { ucAylikDefterTop++; if(f.DEFTER) ucAylikDefterTamam++; }
-                        else { aylikDefterTop++; if(f.DEFTER) aylikDefterTamam++; }
+                        if(isDefterUc) { 
+                            ucAylikDefterTop++; 
+                            if(f.DEFTER) ucAylikDefterTamam++; else bekleyenUcDefterler.push(m.unvan);
+                        } else { 
+                            aylikDefterTop++; 
+                            if(f.DEFTER) aylikDefterTamam++; else bekleyenAylikDefterler.push(m.unvan);
+                        }
                     }
                 }
                 if(defterTarihiDash) {
@@ -6057,80 +6087,111 @@
 
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
-            document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik veya geciken görev bulunmuyor. Süreç stabil.</div>`;
+            document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
+
+            // --- YENİ: E-DEFTER YÜKLEME MERKEZİ (PREMİUM DETAY) ---
+            let dPca = donem.split("-");
+            let dBaslik = dPca.length === 2 ? `${dPca[1]}/${dPca[0]} Dönemi E-Defter Yükleme Merkezi` : "E-Defter Yükleme Merkezi";
             
-            if(document.getElementById("mdDefterBaslik")) {
-                document.getElementById("mdDefterBaslik").innerHTML = "Bu ay yüklenmesi gereken beratlar";
-            }
-            if(document.getElementById("mdDefterAylikDurum")) document.getElementById("mdDefterAylikDurum").textContent = `${aylikDefterTamam} / ${aylikDefterTop}`;
-            if(document.getElementById("mdDefterUcDurum")) document.getElementById("mdDefterUcDurum").textContent = `${ucAylikDefterTamam} / ${ucAylikDefterTop}`;
+            let aylikYuzde = aylikDefterTop === 0 ? 100 : Math.round((aylikDefterTamam / aylikDefterTop) * 100);
+            let ucAylikYuzde = ucAylikDefterTop === 0 ? 100 : Math.round((ucAylikDefterTamam / ucAylikDefterTop) * 100);
+            
+            // Bekleyenleri tooltip formatında veya mini listede gösterme hazırlığı
+            let aylikBekleyenHtml = bekleyenAylikDefterler.length > 0 ? `<div style="font-size:10px; color:#e74c3c; margin-top:5px; line-height:1.3; max-height:45px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenAylikDefterler.slice(0,3).join(', ')}${bekleyenAylikDefterler.length > 3 ? ` ve ${bekleyenAylikDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:10px; color:#2ecc71; margin-top:5px;">Tümü Yüklendi ✅</div>`;
+            
+            let ucAylikBekleyenHtml = bekleyenUcDefterler.length > 0 ? `<div style="font-size:10px; color:#e74c3c; margin-top:5px; line-height:1.3; max-height:45px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenUcDefterler.slice(0,3).join(', ')}${bekleyenUcDefterler.length > 3 ? ` ve ${bekleyenUcDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:10px; color:#2ecc71; margin-top:5px;">Tümü Yüklendi ✅</div>`;
 
-            // 3. Danışmanlık Projeleri İzleme Listesi
-            let aktifSayac = 0; let bitenSayac = 0;
-            let projelerHTML = "";
+            // Sadece başlık kısmını bul ve değiştir
+            let defterKutusu = document.getElementById("mdDefterBaslik").parentElement.parentElement;
+            defterKutusu.innerHTML = `
+                <div style="flex:1; min-width:250px;">
+                    <h3 style="font-size:15px; margin-bottom:8px; color:#f1c40f;"><i class="fas fa-book"></i> ${dBaslik}</h3>
+                    <p style="font-size:12px; color:#bdc3c7; margin:0; line-height:1.5;">GİB (Gelir İdaresi Başkanlığı) sistemlerine berat yükleme ve onay işlemlerinizin canlı ilerleme durumu.</p>
+                </div>
+                <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:stretch;">
+                    <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:8px; min-width:180px; width:220px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11px; color:#bdc3c7; font-weight:bold; text-transform:uppercase;">Aylık Yüklemeler</span>
+                            <span style="font-size:16px; font-weight:bold; color:#2ecc71;">${aylikDefterTamam} / ${aylikDefterTop}</span>
+                        </div>
+                        <div style="width:100%; background:rgba(0,0,0,0.3); height:6px; border-radius:3px; overflow:hidden; margin-bottom:5px;">
+                            <div style="width:${aylikYuzde}%; background:#2ecc71; height:100%;"></div>
+                        </div>
+                        ${aylikDefterTop > 0 ? aylikBekleyenHtml : '<div style="font-size:10px; color:#95a5a6; margin-top:5px;">Bu aya ait kayıt yok.</div>'}
+                    </div>
+                    
+                    <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:8px; min-width:180px; width:220px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11px; color:#bdc3c7; font-weight:bold; text-transform:uppercase;">3 Aylık Yüklemeler</span>
+                            <span style="font-size:16px; font-weight:bold; color:#3498db;">${ucAylikDefterTamam} / ${ucAylikDefterTop}</span>
+                        </div>
+                        <div style="width:100%; background:rgba(0,0,0,0.3); height:6px; border-radius:3px; overflow:hidden; margin-bottom:5px;">
+                            <div style="width:${ucAylikYuzde}%; background:#3498db; height:100%;"></div>
+                        </div>
+                        ${ucAylikDefterTop > 0 ? ucAylikBekleyenHtml : '<div style="font-size:10px; color:#95a5a6; margin-top:5px;">Bu döneme ait kayıt yok.</div>'}
+                    </div>
+                </div>
+            `;
 
-            mukellefler.forEach(m => {
-                if(m.durum === "Pasif") return;
-                
-                let hasProject = danismanlikVeritabani[m.vkn] && danismanlikVeritabani[m.vkn].length > 0;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami !== "Danışmanlık" && !hasProject) return;
-                
-                let projeler = danismanlikVeritabani[m.vkn] || [];
-                projeler.forEach(p => {
-                    if(p.tamamlandi) {
-                        bitenSayac++;
-                    } else {
-                        aktifSayac++;
-                        let topA = p.asamalar ? p.asamalar.length : 0;
-                        let bitA = p.asamalar ? p.asamalar.filter(a => a.durum).length : 0;
-                        let yz = topA === 0 ? 0 : Math.round((bitA / topA) * 100);
-                        
-                        projelerHTML += `
-                        <div style="background:#fcfaff; border:1px solid #e8e2f7; border-left:3px solid #8e44ad; padding:6px 10px; border-radius:5px; margin-bottom:5px;">
-                            <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:600; color:#2c3e50; margin-bottom:3px;">
-                                <div style="max-width:75%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.unvan} <span style="font-weight:normal; color:#7f8c8d; font-size:10px;">(${p.projeAdi})</span></div>
-                                <div style="color:#8e44ad;">%${yz}</div>
+            // --- YENİ: DANIŞMANLIK PROJELERİ GRUPLU LİSTE (PREMİUM DETAY) ---
+            let dListesi = document.getElementById("mdAktifProjelerListesi");
+            dListesi.innerHTML = "";
+            let renkPaleti = ["#8e44ad", "#2980b9", "#27ae60", "#d35400", "#c0392b", "#16a085", "#34495e"];
+            let rIndex = 0;
+
+            let anahtarFirmalar = Object.keys(aktifProjelerGruplu);
+            
+            if(anahtarFirmalar.length === 0) {
+                dListesi.innerHTML = `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Aktif yürütülen bir danışmanlık projesi bulunmuyor.</div>`;
+            } else {
+                anahtarFirmalar.forEach(firmaAd => {
+                    let projeler = aktifProjelerGruplu[firmaAd];
+                    let renk = renkPaleti[rIndex % renkPaleti.length];
+                    rIndex++;
+
+                    let projelerHtml = "";
+                    projeler.forEach(p => {
+                        let barRenk = p.oran === 100 ? "#27ae60" : renk;
+                        projelerHtml += `
+                        <div style="margin-top:10px; background:#fcfbfc; border:1px solid #f4f6f9; padding:8px 10px; border-radius:6px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:5px; color:#444;">
+                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:85%;"><i class="fas fa-caret-right" style="color:#bdc3c7; margin-right:5px;"></i> ${p.ad}</span>
+                                <strong style="color:${barRenk};">%${p.oran}</strong>
                             </div>
-                            <div style="width:100%; background:#f4ecf7; height:4px; border-radius:2px; overflow:hidden;">
-                                <div style="width:${yz}%; background:#8e44ad; height:100%;"></div>
+                            <div style="width:100%; background:#e1e8ed; height:4px; border-radius:2px; overflow:hidden;">
+                                <div style="width:${p.oran}%; background:${barRenk}; height:100%;"></div>
                             </div>
                         </div>`;
-                    }
+                    });
+
+                    dListesi.innerHTML += `
+                    <div style="margin-bottom:12px; border-left:4px solid ${renk}; background:#ffffff; border-radius:6px; padding:12px; box-shadow:0 2px 5px rgba(0,0,0,0.03); border-top:1px solid #f4f6f9; border-right:1px solid #f4f6f9; border-bottom:1px solid #f4f6f9;">
+                        <h4 style="font-size:12.5px; color:#2c3e50; margin:0; display:flex; align-items:center; gap:6px;">
+                            <i class="fas fa-building" style="color:${renk};"></i> ${firmaAd}
+                        </h4>
+                        ${projelerHtml}
+                    </div>`;
                 });
-            });
+            }
 
-            document.getElementById("mdAktifProje").textContent = aktifSayac;
-            document.getElementById("mdBitenProje").textContent = bitenSayac;
-            document.getElementById("mdAktifProjelerListesi").innerHTML = projelerHTML || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Şu an devam eden aktif bir danışmanlık projesi bulunmuyor.</div>`;
-
-            // 4. --- YAPAY ZEKA YÖNETİCİ ÖZETİ YAZDIRMA ---
-            let aiMetin = "";
-            let bekleyen = fGorevTop - fGorevTamam;
-
-            if(fGorevTop === 0) {
-                aiMetin += "Bu ay için henüz görev veya beyanname planlaması yapılmamış. ";
-            } else if(bekleyen === 0) {
-                aiMetin += "<span style='color:#27ae60; font-weight:bold;'>Tebrikler!</span> Seçili döneme ait tüm beyanname ve bildirimleri başarıyla tamamladınız. Operasyonel yükünüz kalmadı. ";
-            } else {
-                if(gecikmisGorevVar) {
-                    aiMetin += "<b style='color:#c0392b;'><i class='fas fa-exclamation-triangle'></i> Acil Müdahale:</b> Yasal süresi geçmiş beyanname/bildirimleriniz var! Cezalı duruma düşmemek için acilen kontrol etmelisiniz. ";
+            // --- YENİ AI YÖNETİCİ ÖZETİ YAZISI ---
+            let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
+            if(aiYoneticiKutu) {
+                let aiText = "";
+                if (gecikmisGorevVar) {
+                    aiText = `<b style="color:#c0392b;">Acil Aksiyon Gerekiyor:</b> Yasal bildirim süresi geçmiş (veya bugün dolan) kritik beyannameleriniz bulunmaktadır! Olası vergi ziyaı cezalarını önlemek için acilen Görev & Projeler matrisini kontrol ediniz.`;
                 } else if (minGun <= 3) {
-                    aiMetin += `<b style="color:#e74c3c;"><i class="fas fa-fire"></i> Kritik Süreç:</b> Beyannamelerin son günlerine (${minGun} gün) girdik! Bekleyen ${bekleyen} adet göreve acil odaklanmalısınız. `;
-                } else if (minGun <= 7) {
-                    aiMetin += `Beyanname teslimlerine ${minGun} gün kaldı. Evrak kayıtlarını bitirip yavaştan onay ve gönderim aşamalarına geçmeniz tavsiye edilir. `;
+                    aiText = `<b style="color:#e67e22;">Yoğun Mesai Uyarısı:</b> Önümüzdeki ${minGun} gün içerisinde teslim edilmesi gereken kritik bildirimler var. İş planınızı bu beyannamelere göre optimize etmelisiniz.`;
                 } else {
-                    aiMetin += `Beyanname teslimlerine henüz ${minGun} gün var. Muhasebe meslek pratiğine uygun olarak; önünüzde geniş bir vakit bulunuyor, şu an önceliğiniz <b>evrak toplama ve fiş işleme</b> olmalıdır. `;
+                    aiText = `Beyanname teslimlerine henüz ${minGun === 999 ? "uzun bir süre" : minGun + " gün"} var. Muhasebe meslek pratiğine uygun olarak; önünüzde geniş bir vakit bulunuyor, şu an önceliğiniz <b>evrak toplama ve fiş işleme</b> olmalıdır.`;
                 }
-            }
 
-            if (totalAlacak > 5000) {
-                aiMetin += `<br><br><i class='fas fa-info-circle' style='color:#3498db;'></i> Finansal olarak piyasada tahsil edilmeyi bekleyen <b style="color:#e74c3c;">${formatMoney(totalAlacak)} TL</b> alacağınız birikmiş durumda. Ay sonu gelmeden vade takibi yaparak tahsilatlara hız vermelisiniz.`;
-            } else {
-                aiMetin += `<br><br><i class='fas fa-info-circle' style='color:#3498db;'></i> Tahsilat performansınız gayet sağlıklı görünüyor.`;
+                if (totalAlacak > 50000) {
+                    aiText += `<br><span style="color:#3498db; font-size:12px; margin-top:5px; display:inline-block;"><i class="fas fa-info-circle"></i> Finansal olarak piyasada tahsil edilmeyi bekleyen <b style="color:#e74c3c;">${formatMoney(totalAlacak)} TL</b> alacağınız birikmiş durumda. Ay sonu gelmeden vade takibi yaparak tahsilatlara hız vermelisiniz.</span>`;
+                }
+                
+                aiYoneticiKutu.innerHTML = aiText;
             }
-
-            let aiKutu = document.getElementById("aiYoneticiMetin");
-            if(aiKutu) aiKutu.innerHTML = aiMetin;
         }
 
         function acDanismanlikEkleModal() {
