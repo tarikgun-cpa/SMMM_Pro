@@ -426,74 +426,70 @@
         .print-footer { display: none; } /* Normal ekranda alt bilgiyi gizle */
 
         @media print {
-            @page { margin: 0.5cm; size: A4; } /* A4 Kağıda Maksimum Alan Kullanımı */
-            
-            html, body { height: auto !important; overflow: visible !important; background: white !important; }
-            .sidebar, .mobile-header, #loginEkran, .main-content > *:not(.modal-overlay) { display: none !important; }
+    /* 1. Sayfa genişliğini zorla A4 boyutuna kilitle ve taşmaları gizle */
+    @page { 
+        size: A4 portrait; 
+        margin: 1cm; 
+    }
+    
+    html, body { 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        height: auto !important; 
+        overflow: visible !important; /* Kaydırma çubuğunu yok eder */
+        background: white !important; 
+    }
 
-            .print-footer {
-                display: block !important; position: fixed; bottom: 0; left: 0; width: 100%;
-                text-align: center; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd;
-                padding-top: 4px; background: white;
-            }
+    /* 2. Modal (Açılır pencere) içindeki kaydırma çubuğunu (Scrollbar) iptal et ve tam aç */
+    .modal-box, #istihbaratRaporAlani, div[style*="max-height"] { 
+        max-height: none !important; 
+        height: auto !important; 
+        overflow: visible !important; 
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        position: static !important;
+    }
+    
+    .modal-overlay { 
+        position: static !important; 
+        display: block !important; 
+        background: transparent !important; 
+        padding: 0 !important; 
+    }
 
-            .modal-overlay { display: none !important; }
-            .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
-            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-            .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
-            .modal-header, .modal-footer, .no-print, button, #tahsilatKutu, #mutabakatKutu, #giderOdemeKutu { display: none !important; }
-            
-            /* EKLENEN YENİ SATIR: İstihbarat raporunun yazdırılırken yarıda kesilmesini engeller */
-            #istihbaratRaporAlani { max-height: none !important; overflow: visible !important; }
+    /* 3. Tabloların sayfaya taşmadan tam oturmasını sağla */
+    .mukellef-table, table {
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: fixed !important; /* Sütunları eşit ve taşmayacak şekilde böler */
+        word-wrap: break-word !important;
+    }
+    
+    /* 4. Tablo içindeki yazıların sütun dışına taşmasını engelle */
+    th, td {
+        white-space: normal !important; /* Tek satırda kalmaya zorlamaz, alt satıra geçer */
+        word-break: break-word !important;
+        padding: 4px 6px !important;
+        font-size: 8pt !important;
+    }
 
-            /* Antetli Kısım Daraltıldı (Yer Tasarrufu) */
-            .print-header { 
-                display: flex !important; flex-direction: row !important; align-items: center; 
-                border-bottom: 2px solid #2c3e50; padding-bottom: 8px; margin-bottom: 10px; 
-            }
-            .print-header img { width: 75px; height: auto; margin-right: 15px; border-radius: 6px; }
-            .print-header-text h2 { margin: 0; font-size: 16pt; color: #2c3e50; }
-            .print-header-text p { margin: 2px 0 0 0; font-size: 9pt; color: #7f8c8d; font-weight: bold; }
-
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-            /* Lüks Fakat Kompakt Rapor Tablosu (Tek Sayfaya Sığdırılmış) */
-            table { width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; margin-bottom: 10px !important; border: 1px solid #bdc3c7 !important; }
-            tr { page-break-inside: avoid !important; }
-            th, td { word-wrap: break-word !important; overflow-wrap: break-word !important; }
-            th { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #2c3e50 !important; font-weight: bold !important; text-align: left !important; background-color: #f4f6f9 !important; height: 16px !important; }
-            td { border: 1px solid #bdc3c7 !important; padding: 4px 6px !important; font-size: 9.5pt !important; color: #34495e !important; height: 16px !important; }
-            
-            /* Sadece Mükellef Profili Tablosuna Özel Genişlik (2 Sütunlu Form) */
-            #printProfilAlan table th { width: 35% !important; }
-            #printProfilAlan table td { width: 65% !important; }
-            #printProfilAlan table td[colspan="2"] { width: 100% !important; text-align: center !important; }
-
-            /* Ekstre Tablolarına (6 Sütunlu) Özel Orantılı Genişlikler */
-            #eksTablo th:nth-child(1), #eksTablo td:nth-child(1) { width: 12% !important; } /* Tarih */
-            #eksTablo th:nth-child(2), #eksTablo td:nth-child(2) { width: 12% !important; } /* Tipi */
-            #eksTablo th:nth-child(3), #eksTablo td:nth-child(3) { width: 34% !important; } /* Açıklama */
-            #eksTablo th:nth-child(4), #eksTablo td:nth-child(4) { width: 14% !important; } /* Borç */
-            #eksTablo th:nth-child(5), #eksTablo td:nth-child(5) { width: 14% !important; } /* Alacak */
-            #eksTablo th:nth-child(6), #eksTablo td:nth-child(6) { width: 14% !important; } /* Bakiye */
-
-            /* Gider Ekstresi İçin Aynı Orantılar */
-            #giderEkstreTablo th:nth-child(1), #giderEkstreTablo td:nth-child(1) { width: 12% !important; }
-            #giderEkstreTablo th:nth-child(2), #giderEkstreTablo td:nth-child(2) { width: 12% !important; }
-            #giderEkstreTablo th:nth-child(3), #giderEkstreTablo td:nth-child(3) { width: 34% !important; }
-            #giderEkstreTablo th:nth-child(4), #giderEkstreTablo td:nth-child(4) { width: 14% !important; }
-            #giderEkstreTablo th:nth-child(5), #giderEkstreTablo td:nth-child(5) { width: 14% !important; }
-            #giderEkstreTablo th:nth-child(6), #giderEkstreTablo td:nth-child(6) { width: 14% !important; }
-
-            tr.kategori-baslik th { text-align: center !important; font-size: 10.5pt !important; letter-spacing: 1px !important; padding: 5px !important; background-color: #2c3e50 !important; color: white !important; border-bottom: 2px solid #34495e !important; }
-            /* (SORUN 1'İN ÇÖZÜMÜ) Üstteki özet bilgi kutularını yazdırırken zorla yan yana (row) diz */
-            #printEkstreAlan > div:nth-child(2), #printGiderEkstreAlan > div:nth-child(2), 
-            div[style*="justify-content:space-between"] { 
-                display: flex !important; 
-                flex-direction: row !important; 
-                justify-content: space-between !important; 
-            }
-        }
+    /* 5. Yazdırmada görünmemesi gereken alanları gizle */
+    .sidebar, .mobile-header, #loginEkran, .no-print, button, input, .modal-header .modal-close {
+        display: none !important;
+    }
+    
+    /* Sadece İstihbarat/Ekstre için özel ayarlar */
+    .print-header { 
+        display: flex !important; flex-direction: row !important; align-items: center; 
+        border-bottom: 2px solid #2c3e50; padding-bottom: 8px; margin-bottom: 10px; 
+    }
+    .print-footer {
+        display: block !important; position: fixed; bottom: 0; left: 0; width: 100%;
+        text-align: center; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd;
+        padding-top: 4px; background: white;
+    }
+}
 
         /* --- LOGİN (GİRİŞ) EKRANI STİLLERİ --- */
         #loginEkran {
@@ -3517,232 +3513,237 @@
             }
         }
 
-       // --- FİNANSAL İSTİHBARAT (YAPAY ZEKA BORÇ YAŞLANDIRMA) MOTORU ---
-        function istihbaratRaporuAc() {
-            let container = document.getElementById("istihbaratRaporAlani");
-            container.innerHTML = "";
+      function istihbaratRaporuAc() {
+    let container = document.getElementById("istihbaratRaporAlani");
+    container.innerHTML = "";
 
-            let riskliListesi = [];
-            let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
+    let riskliListesi = [];
+    let seciliYil = document.getElementById("cariYilSecim") ? parseInt(document.getElementById("cariYilSecim").value) : new Date().getFullYear();
+    
+    let bugun = new Date();
+    if (seciliYil !== bugun.getFullYear()) {
+        bugun = new Date(seciliYil, 11, 31);
+    }
+    bugun.setHours(0,0,0,0);
+
+    mukellefler.forEach(m => {
+        if(m.mukellefTuru === "SMMM") return;
+
+        let devredenBorc = 0;
+        let buYilFatura = 0;
+        let buYilOdeme = 0;
+        
+        let borclar = [];
+        let toplamOdeme = 0;
+
+        if(m.hareketler && m.hareketler.length > 0) {
+            let siraliHrk = [...m.hareketler].sort((a,b) => {
+                let d1 = new Date(a.tarihDüzz); if(isNaN(d1)) d1 = new Date(a.tarih.split('.')[2], a.tarih.split('.')[1]-1, a.tarih.split('.')[0]);
+                let d2 = new Date(b.tarihDüzz); if(isNaN(d2)) d2 = new Date(b.tarih.split('.')[2], b.tarih.split('.')[1]-1, b.tarih.split('.')[0]);
+                return d1 - d2;
+            });
             
-            // Gelecek simülasyonları için zaman makinesi düzeltmesi
-            let bugun = new Date();
-            if (seciliYil !== bugun.getFullYear()) {
-                bugun = new Date(seciliYil, 11, 31); // Seçilen yılın son günü baz alınır
-            }
-            bugun.setHours(0,0,0,0);
+            siraliHrk.forEach(h => {
+                let hYil = parseInt(h.tarih.split('.')[2]);
+                let tutar = (h.netTutar || h.tutar || 0);
 
-            mukellefler.forEach(m => {
-                // SMMM (Kendi firmamız) hariç. DİKKAT: Pasif firmaları ARTIK GİZLEMİYORUZ, borcu varsa çıksın!
-                if(m.mukellefTuru === "SMMM") return;
-
-                let devredenBorc = 0;
-                let buYilFatura = 0;
-                let buYilOdeme = 0;
-                
-                let borclar = [];
-                let toplamOdeme = 0;
-
-                if(m.hareketler && m.hareketler.length > 0) {
-                    // Tarihlerin eski/manuel kayıtlardan dolayı NaN olmasını önleyen güvenli sıralama
-                    let siraliHrk = [...m.hareketler].sort((a,b) => {
-                        let d1 = new Date(a.tarihDüzz); if(isNaN(d1)) d1 = new Date(a.tarih.split('.')[2], a.tarih.split('.')[1]-1, a.tarih.split('.')[0]);
-                        let d2 = new Date(b.tarihDüzz); if(isNaN(d2)) d2 = new Date(b.tarih.split('.')[2], b.tarih.split('.')[1]-1, b.tarih.split('.')[0]);
-                        return d1 - d2;
-                    });
-                    
-                    siraliHrk.forEach(h => {
-                        let hYil = parseInt(h.tarih.split('.')[2]);
-                        let tutar = (h.netTutar || h.tutar || 0);
-
-                        let dObj = new Date(h.tarihDüzz);
-                        if(isNaN(dObj)) {
-                            let pts = h.tarih.split('.');
-                            dObj = new Date(pts[2], pts[1]-1, pts[0]);
-                        }
-
-                        if (hYil < seciliYil) {
-                            if(h.tur === "Makbuz") devredenBorc += tutar;
-                            else if(h.tur === "Tahsilat") devredenBorc -= tutar;
-                        } else if (hYil === seciliYil) {
-                            if(h.tur === "Makbuz") buYilFatura += tutar;
-                            else if(h.tur === "Tahsilat") buYilOdeme += tutar;
-                        }
-
-                        if(h.tur === "Makbuz") {
-                            borclar.push({ tarih: dObj, tutar: tutar, aciklama: h.aciklama, orjTarihTR: h.tarih });
-                        } else if(h.tur === "Tahsilat") {
-                            toplamOdeme += tutar;
-                        }
-                    });
-                }
-                
-                let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
-                if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") {
-                    toplamOdeme += Math.abs(mDevredenBakiye);
+                let dObj = new Date(h.tarihDüzz);
+                if(isNaN(dObj)) {
+                    let pts = h.tarih.split('.');
+                    dObj = new Date(pts[2], pts[1]-1, pts[0]);
                 }
 
-                let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
-                let mBakiye = toplamBorc - toplamOdeme;
+                if (hYil < seciliYil) {
+                    if(h.tur === "Makbuz") devredenBorc += tutar;
+                    else if(h.tur === "Tahsilat") devredenBorc -= tutar;
+                } else if (hYil === seciliYil) {
+                    if(h.tur === "Makbuz") buYilFatura += tutar;
+                    else if(h.tur === "Tahsilat") buYilOdeme += tutar;
+                }
 
-                if(mBakiye > 0.5) {
-                    let enEskiOdenmeyen = null;
-                    let vadesiGecmisTutar = 0; 
-                    let kalanKredi = toplamOdeme;
-
-                    // Akıllı Fatura Eşleştirme (Pegra Makina Vaka Çözümü)
-                    let tamElesenFatura = borclar.find(b => Math.abs(b.tutar - mBakiye) < 0.5);
-
-                    // FIFO Algoritması
-                    for (let i = 0; i < borclar.length; i++) {
-                        let b = borclar[i];
-                        if (kalanKredi >= b.tutar) {
-                            kalanKredi -= b.tutar; 
-                        } else {
-                            let odenmeyenKisim = b.tutar - kalanKredi;
-                            kalanKredi = 0; 
-
-                            if(!enEskiOdenmeyen) {
-                                enEskiOdenmeyen = { ...b, odenmeyenKisim };
-                            }
-
-                            let gunFarki = Math.floor((bugun - b.tarih) / (1000 * 60 * 60 * 24));
-                            if(gunFarki >= 30) {
-                                vadesiGecmisTutar += odenmeyenKisim; 
-                            }
-                        }
-                    }
-
-                    let gecikenGun = 0;
-                    let sorunAy = "";
-                    let sorunYil = "";
-
-                    if (enEskiOdenmeyen) {
-                        gecikenGun = Math.floor((bugun - enEskiOdenmeyen.tarih) / (1000 * 60 * 60 * 24));
-                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                        sorunAy = aylar[enEskiOdenmeyen.tarih.getMonth()];
-                        sorunYil = enEskiOdenmeyen.tarih.getFullYear();
-                    }
-                    
-                    // Tam eşleşen fatura varsa gecikme gününü o faturaya göre ezebiliriz (daha mantıklı risk için)
-                    if (tamElesenFatura) {
-                        gecikenGun = Math.floor((bugun - tamElesenFatura.tarih) / (1000 * 60 * 60 * 24));
-                        vadesiGecmisTutar = mBakiye; // Eşleşen fatura tam mBakiye olduğu için
-                    }
-
-                    let riskSeviyesi = ""; let renk = "";
-                    
-                    // Eğer tamamen hiç ödeme yoksa doğrudan kara listeye at
-                    if (toplamOdeme === 0) {
-                        riskSeviyesi = "KARA LİSTE (Sıfır Ödeme)"; renk = "#0f172a";
-                    }
-                    else if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
-                    else if(gecikenGun >= 60) { riskSeviyesi = "KIRMIZI ALARM (60+ Gün)"; renk = "#c0392b"; }
-                    else if(gecikenGun >= 30) { riskSeviyesi = "TURUNCU ALARM (30+ Gün)"; renk = "#e67e22"; }
-                    else { riskSeviyesi = "VADESİ GELMEMİŞ"; renk = "#27ae60"; } 
-                    
-                    // Pasif firmaysa ek bilgi ekle
-                    let pasifEtiketi = m.durum === "Pasif" ? `<span style="background:#e74c3c; color:white; padding:2px 5px; border-radius:4px; font-size:10px; margin-left:5px;">PASİF FİRMA</span>` : "";
-                    
-                    if (gecikenGun >= 30 || toplamOdeme === 0 || m.durum === "Pasif") {
-                        
-                        let aiMetin = `<div style="margin-bottom:8px;">🔹 <b>Finansal Geçmiş ve Kapanış Analizi:</b></div>`;
-                        
-                        let cariYilKalanOdemeGucu = toplamOdeme;
-                        if (devredenBorc > 0) {
-                            if (toplamOdeme >= devredenBorc) {
-                                cariYilKalanOdemeGucu -= devredenBorc;
-                                aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun <b>tamamı</b> yapılan tahsilatlarla kapatılmıştır. `;
-                            } else {
-                                aiMetin += `Yapılan toplam ödeme (<b>${formatMoney(toplamOdeme)} TL</b>), geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b>'lik borcu bile kapatmaya yetmemiştir! `;
-                                cariYilKalanOdemeGucu = 0;
-                            }
-                        }
-
-                        if (toplamOdeme === 0) {
-                            aiMetin += `<span style="color:#c0392b; font-weight:bold; background:#fdf2f2; padding:2px 5px;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır! Bakiye tamamen açıktadır.</span> `;
-                        }
-
-                        aiMetin += `<br><br><div style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Risk ve Vade Yorumu:</b><br>`;
-                        
-                        // Kilit Kısım: Pegra Makina Mantığı (Nokta atışı eşleşme var mı?)
-                        if (tamElesenFatura && borclar.length > 1 && toplamOdeme > 0) {
-                            let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                            let tAy = aylar[tamElesenFatura.tarih.getMonth()];
-                            let tYil = tamElesenFatura.tarih.getFullYear();
-                            
-                            aiMetin += `🔍 <b>Nokta Atışı Tespit:</b> Firmanın kalan <b>${formatMoney(mBakiye)} TL</b> borcu, tam olarak <u>${tAy} ${tYil}</u> tarihinde kesilen '${tamElesenFatura.aciklama}' faturası ile kuruşu kuruşuna eşleşmektedir!<br>
-                            Sistem ödemeleri genel kural gereği eski faturalardan (FIFO) düşse de, müşterinin aradaki bu faturayı atlayıp diğer güncel faturaları ödediği tespit edilmiştir. `;
-                        } else if (toplamOdeme > 0) {
-                            aiMetin += `Muhasebe (FIFO) kuralları gereği, yapılan tahsilatlar daima <b>en eski faturalardan</b> düşülerek kapatılmıştır. Bu sebeple açık kalan <u>ilk faturası ${sorunAy} ${sorunYil}</u> dönemine aittir. `;
-                        }
-
-                        aiMetin += `Toplam <b>${formatMoney(mBakiye)} TL</b> güncel borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının yasal vadesi (30 gün) dolmuştur.</div>`;
-
-                        riskliListesi.push({
-                            unvan: m.unvan + pasifEtiketi, 
-                            bakiye: mBakiye,
-                            gecikenGun: gecikenGun,
-                            seviye: riskSeviyesi, 
-                            renk: renk,
-                            aiMetin: aiMetin
-                        });
-                    }
+                if(h.tur === "Makbuz") {
+                    borclar.push({ tarih: dObj, tutar: tutar, aciklama: h.aciklama, orjTarihTR: h.tarih });
+                } else if(h.tur === "Tahsilat") {
+                    toplamOdeme += tutar;
                 }
             });
+        }
+        
+        let mDevredenBakiye = parseFloat(m.cariDevirTutar || 0);
+        if(m.cariDevirYönu === "Alacaklı (Biz Borçlu)") {
+            toplamOdeme += Math.abs(mDevredenBakiye);
+        }
 
-            // En risklileri (Gecikmesi en yüksek olanları) en üste sırala
-            riskliListesi.sort((a,b) => b.gecikenGun - a.gecikenGun);
+        let toplamBorc = borclar.reduce((sum, b) => sum + b.tutar, 0);
+        let mBakiye = toplamBorc - toplamOdeme;
 
-            if(riskliListesi.length === 0) {
-                container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Sistemde vadesi (30 gün) geçmiş borcu bulunan mükellef yok.</div>";
-            } else {
-                let dStr = bugun.toLocaleDateString('tr-TR');
-                let html = "<div id='printIstihbaratAlan'>";
+        if(mBakiye > 0.5) {
+            let enEskiOdenmeyen = null;
+            let vadesiGecmisTutar = 0; 
+            let kalanKredi = toplamOdeme;
+
+            borclar.sort((a, b) => a.tarih - b.tarih);
+
+            let odenmeyenFaturalar = [];
+
+            // 1. ADIM: Normal FIFO İşlemi
+            for (let i = 0; i < borclar.length; i++) {
+                let b = borclar[i];
+                if (kalanKredi >= b.tutar) {
+                    kalanKredi -= b.tutar; 
+                } else {
+                    let odenmeyenKisim = b.tutar - kalanKredi;
+                    kalanKredi = 0; 
+
+                    odenmeyenFaturalar.push({
+                        ...b,
+                        odenmeyenKisim: odenmeyenKisim
+                    });
+                }
+            }
+
+            // 2. ADIM: Kalan Faturaların Analizi
+            if (odenmeyenFaturalar.length > 0) {
+                enEskiOdenmeyen = odenmeyenFaturalar[0];
                 
-                // Sadece yazdırma anında görünecek resmi başlık (Antetli Format)
-                html += `
-                <div class="print-header" style="display:none; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:10px; align-items:center;">
-                    <img src="SMMM Logo.png" alt="Logo" style="width: 75px; margin-right: 15px; border-radius:6px;">
-                    <div>
-                        <h2 style="color:#2c3e50; font-size:18px; margin:0;">Tarık GÜN SMMM | Finansal İstihbarat & Borç Yaşlandırma Raporu</h2>
-                        <p style="color:#7f8c8d; font-size:12px; margin:2px 0 0 0; font-weight:bold;">Tarih: ${dStr} - Tüm Firmalar Risk Analizi (Yapay Zeka Destekli)</p>
+                odenmeyenFaturalar.forEach(of => {
+                    let gunFarki = Math.floor((bugun - of.tarih) / (1000 * 60 * 60 * 24));
+                    if (gunFarki >= 30) {
+                        vadesiGecmisTutar += of.odenmeyenKisim;
+                    }
+                });
+            }
+
+            let gecikenGun = 0;
+            let sorunAy = "";
+            let sorunYil = "";
+
+            if (enEskiOdenmeyen) {
+                gecikenGun = Math.floor((bugun - enEskiOdenmeyen.tarih) / (1000 * 60 * 60 * 24));
+                let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                sorunAy = aylar[enEskiOdenmeyen.tarih.getMonth()];
+                sorunYil = enEskiOdenmeyen.tarih.getFullYear();
+            }
+
+            // 3. ADIM: Nokta Atışı Tespit (Pegra & Anadolu Döküm Çözümü)
+            // Eğer aynı tutarda fatura varsa, aramayı SONDAN BAŞA doğru (reverse) yaparak YENİ olanı seç!
+            let tamElesenFatura = null;
+            if (odenmeyenFaturalar.length > 1) {
+                tamElesenFatura = [...borclar].reverse().find(b => Math.abs(b.tutar - mBakiye) < 0.5);
+
+                if (tamElesenFatura) {
+                    gecikenGun = Math.floor((bugun - tamElesenFatura.tarih) / (1000 * 60 * 60 * 24));
+                    vadesiGecmisTutar = mBakiye;
+                }
+            }
+
+            let riskSeviyesi = ""; let renk = "";
+            
+            if (toplamOdeme === 0) {
+                riskSeviyesi = "KARA LİSTE (Sıfır Ödeme)"; renk = "#0f172a";
+            }
+            else if(gecikenGun >= 90) { riskSeviyesi = "KARA LİSTE (90+ Gün)"; renk = "#0f172a"; }
+            else if(gecikenGun >= 60) { riskSeviyesi = "KIRMIZI ALARM (60+ Gün)"; renk = "#c0392b"; }
+            else if(gecikenGun >= 30) { riskSeviyesi = "TURUNCU ALARM (30+ Gün)"; renk = "#e67e22"; }
+            else { riskSeviyesi = "VADESİ GELMEMİŞ"; renk = "#27ae60"; } 
+            
+            let pasifEtiketi = m.durum === "Pasif" ? `<span style="background:#e74c3c; color:white; padding:2px 5px; border-radius:4px; font-size:10px; margin-left:5px;">PASİF FİRMA</span>` : "";
+            
+            if (gecikenGun >= 30 || toplamOdeme === 0 || m.durum === "Pasif") {
+                let aiMetin = `<div style="margin-bottom:8px;">🔹 <b>Finansal Geçmiş ve Kapanış Analizi:</b></div>`;
+                
+                let cariYilKalanOdemeGucu = toplamOdeme;
+                if (devredenBorc > 0) {
+                    if (toplamOdeme >= devredenBorc) {
+                        cariYilKalanOdemeGucu -= devredenBorc;
+                        aiMetin += `Geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b> borcun <b>tamamı</b> yapılan tahsilatlarla kapatılmıştır. `;
+                    } else {
+                        aiMetin += `Yapılan toplam ödeme (<b>${formatMoney(toplamOdeme)} TL</b>), geçmiş yıllardan devreden <b>${formatMoney(devredenBorc)} TL</b>'lik borcu bile kapatmaya yetmemiştir! `;
+                        cariYilKalanOdemeGucu = 0;
+                    }
+                }
+
+                if (toplamOdeme === 0) {
+                    aiMetin += `<span style="color:#c0392b; font-weight:bold; background:#fdf2f2; padding:2px 5px;">Müşteri bugüne kadar tek kuruş ödeme yapmamıştır! Bakiye tamamen açıktadır.</span> `;
+                }
+
+                aiMetin += `<br><br><div style="color:#2c3e50;"><i class="fas fa-brain" style="color:#8e44ad;"></i> <b>Yapay Zeka Risk ve Vade Yorumu:</b><br>`;
+                
+                if (tamElesenFatura && odenmeyenFaturalar.length > 1 && toplamOdeme > 0) {
+                    let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                    let tAy = aylar[tamElesenFatura.tarih.getMonth()];
+                    let tYil = tamElesenFatura.tarih.getFullYear();
+                    
+                    aiMetin += `🔍 <b>Nokta Atışı Tespit:</b> Firmanın kalan <b>${formatMoney(mBakiye)} TL</b> borcu, tam olarak <u>${tAy} ${tYil}</u> tarihinde kesilen '${tamElesenFatura.aciklama}' faturası ile kuruşu kuruşuna eşleşmektedir!<br>
+                    Sistem ödemeleri genel kural gereği eski faturalardan (FIFO) düşse de, müşterinin aradaki bu faturayı atlayıp diğer güncel faturaları ödediği tespit edilmiştir. `;
+                } else if (toplamOdeme > 0) {
+                    aiMetin += `Muhasebe (FIFO) kuralları gereği, yapılan tahsilatlar daima <b>en eski faturalardan</b> düşülerek kapatılmıştır. Bu sebeple açık kalan <u>ilk faturası ${sorunAy} ${sorunYil}</u> dönemine aittir. `;
+                }
+
+                aiMetin += `Toplam <b>${formatMoney(mBakiye)} TL</b> güncel borcun, <b>${formatMoney(vadesiGecmisTutar)} TL</b>'lik kısmının yasal vadesi (30 gün) dolmuştur.</div>`;
+
+                riskliListesi.push({
+                    unvan: m.unvan + pasifEtiketi, 
+                    bakiye: mBakiye,
+                    gecikenGun: gecikenGun,
+                    seviye: riskSeviyesi, 
+                    renk: renk,
+                    aiMetin: aiMetin
+                });
+            }
+        }
+    });
+
+    riskliListesi.sort((a,b) => b.gecikenGun - a.gecikenGun);
+
+    if(riskliListesi.length === 0) {
+        container.innerHTML = "<div style='text-align:center; padding:30px; color:#27ae60; font-weight:bold; background:white; border-radius:8px;'><i class='fas fa-shield-alt' style='font-size:30px; margin-bottom:10px;'></i><br>Harika! Sistemde vadesi (30 gün) geçmiş borcu bulunan mükellef yok.</div>";
+    } else {
+        let dStr = bugun.toLocaleDateString('tr-TR');
+        let html = "<div id='printIstihbaratAlan'>";
+        
+        html += `
+        <div class="print-header" style="display:none; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:10px; align-items:center;">
+            <img src="SMMM Logo.png" alt="Logo" style="width: 75px; margin-right: 15px; border-radius:6px;">
+            <div>
+                <h2 style="color:#2c3e50; font-size:18px; margin:0;">Tarık GÜN SMMM | Finansal İstihbarat & Borç Yaşlandırma Raporu</h2>
+                <p style="color:#7f8c8d; font-size:12px; margin:2px 0 0 0; font-weight:bold;">Tarih: ${dStr} - Tüm Firmalar Risk Analizi (Yapay Zeka Destekli)</p>
+            </div>
+        </div>
+        <p class='no-print' style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-robot'></i> Sistem tahsilatları otomatik eşleştirir ve FIFO kuralına göre yorumlar.</p>
+        <div style="display:flex; flex-direction:column; gap:15px;">`;
+
+        riskliListesi.forEach(r => {
+            html += `
+            <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); page-break-inside: avoid; border-top:1px solid #eee; border-right:1px solid #eee; border-bottom:1px solid #eee;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                    <div style="width: 70%;">
+                        <div style="font-weight:bold; color:#2c3e50; font-size:15px; margin-bottom:4px;">${r.unvan}</div>
+                        <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 8px; border-radius:12px; display:inline-block; letter-spacing:0.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${r.seviye}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:#7f8c8d;">Toplam Bakiye</div>
+                        <div style="font-size:20px; font-weight:800; color:${r.renk}; -webkit-print-color-adjust: exact;">${formatMoney(r.bakiye)} ₺</div>
                     </div>
                 </div>
-                <p class='no-print' style='font-size:12px; color:#7f8c8d; margin-bottom:15px;'><i class='fas fa-robot'></i> Sistem tahsilatları otomatik eşleştirir ve FIFO kuralına göre yorumlar.</p>
-                <div style="display:flex; flex-direction:column; gap:15px;">`;
+                <div style="background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #eef2f5; font-size:12.5px; color:#444; line-height:1.5; -webkit-print-color-adjust: exact;">
+                    ${r.aiMetin}
+                </div>
+            </div>`;
+        });
+        html += "</div></div>";
+        container.innerHTML = html;
+    }
 
-                riskliListesi.forEach(r => {
-                    html += `
-                    <div style="background:white; border-left:5px solid ${r.renk}; padding:15px; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); page-break-inside: avoid; border-top:1px solid #eee; border-right:1px solid #eee; border-bottom:1px solid #eee;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                            <div style="width: 70%;">
-                                <div style="font-weight:bold; color:#2c3e50; font-size:15px; margin-bottom:4px;">${r.unvan}</div>
-                                <div style="font-size:10px; font-weight:bold; background:${r.renk}; color:white; padding:3px 8px; border-radius:12px; display:inline-block; letter-spacing:0.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${r.seviye}</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-size:11px; color:#7f8c8d;">Toplam Bakiye</div>
-                                <div style="font-size:20px; font-weight:800; color:${r.renk}; -webkit-print-color-adjust: exact;">${formatMoney(r.bakiye)} ₺</div>
-                            </div>
-                        </div>
-                        <div style="background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #eef2f5; font-size:12.5px; color:#444; line-height:1.5; -webkit-print-color-adjust: exact;">
-                            ${r.aiMetin}
-                        </div>
-                    </div>`;
-                });
-                html += "</div></div>";
-                container.innerHTML = html;
-            }
-
-            let modalFooter = document.querySelector('#istihbaratModal .modal-footer');
-            if(modalFooter) {
-                modalFooter.innerHTML = `
-                    <button class="action-btn btn-secondary" onclick="window.print()" style="background:#34495e; color:white; border:none;"><i class="fas fa-print"></i> Raporu Yazdır</button>
-                    <button class="action-btn btn-primary" onclick="modalKapat('istihbaratModal')" style="background:#e74c3c;">Kapat</button>
-                `;
-            }
-            modalAc('istihbaratModal');
-        }
+    let modalFooter = document.querySelector('#istihbaratModal .modal-footer');
+    if(modalFooter) {
+        modalFooter.innerHTML = `
+            <button class="action-btn btn-secondary" onclick="window.print()" style="background:#34495e; color:white; border:none;"><i class="fas fa-print"></i> Raporu Yazdır</button>
+            <button class="action-btn btn-primary" onclick="modalKapat('istihbaratModal')" style="background:#e74c3c;">Kapat</button>
+        `;
+    }
+    modalAc('istihbaratModal');
+}
         
         // --- YENİ MODÜL: NACE KODUNA DUYARLI SEKTÖREL FISILTI (HEDEFLİ CRM) ---
         function sektorelFisiltiAc() {
