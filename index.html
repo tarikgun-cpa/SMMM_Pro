@@ -426,7 +426,7 @@
         .print-footer { display: none; } /* Normal ekranda alt bilgiyi gizle */
 
         @media print {
-    /* 1. Sayfa genişliğini zorla A4 boyutuna kilitle */
+    /* 1. Sayfa genişliğini zorla A4 boyutuna kilitle ve taşmaları gizle */
     @page { 
         size: A4 portrait; 
         margin: 1cm; 
@@ -435,24 +435,11 @@
     html, body { 
         width: 100% !important; 
         max-width: 100% !important; 
-        height: auto !important; 
-        overflow: visible !important; 
-        background: white !important; 
+        overflow-x: hidden !important; /* Kaydırma çubuğunu yok eder */
+        font-size: 8.5pt !important; /* Fontları A4'e sığacak şekilde küçültür */
     }
 
-    /* 2. KRİTİK ÇÖZÜM: Tüm modalleri gizle, SADECE ekranda aktif olanı (display:flex) yazdır */
-    .modal-overlay { 
-        display: none !important; 
-    }
-    .modal-overlay[style*="display: flex"], 
-    .modal-overlay[style*="display:flex"] { 
-        display: block !important; 
-        position: static !important; 
-        background: transparent !important; 
-        padding: 0 !important; 
-    }
-
-    /* 3. Modal (Açılır pencere) içindeki kaydırma çubuğunu iptal et ve tam aç */
+    /* 2. Modal (Açılır pencere) içindeki kaydırma çubuğunu (Scrollbar) iptal et ve tam aç */
     .modal-box, #istihbaratRaporAlani, div[style*="max-height"] { 
         max-height: none !important; 
         height: auto !important; 
@@ -460,42 +447,30 @@
         width: 100% !important;
         box-shadow: none !important;
         border: none !important;
-        position: static !important;
-        margin: 0 !important;
     }
 
-    /* 4. Tabloların sayfaya taşmadan tam oturmasını sağla */
+    /* 3. Tabloların sayfaya taşmadan tam oturmasını sağla */
     .mukellef-table, table {
         width: 100% !important;
         max-width: 100% !important;
-        table-layout: fixed !important; 
+        table-layout: fixed !important; /* Sütunları eşit ve taşmayacak şekilde böler */
         word-wrap: break-word !important;
     }
     
-    /* 5. Tablo içindeki yazıların sütun dışına taşmasını engelle */
+    /* 4. Tablo içindeki yazıların sütun dışına taşmasını engelle */
     th, td {
-        white-space: normal !important; 
+        white-space: normal !important; /* Tek satırda kalmaya zorlamaz, alt satıra geçer */
         word-break: break-word !important;
         padding: 4px 6px !important;
         font-size: 8pt !important;
     }
 
-    /* 6. Yazdırmada görünmemesi gereken alanları (Arka plan, input, buton) gizle */
-    .sidebar, .main-content > *:not(.modal-overlay), .mobile-header, #loginEkran, .no-print, button, input, select, textarea, .modal-header .modal-close {
+    /* 5. Yazdırmada görünmemesi gereken buton, input vb. gizle */
+    .no-print, button, input, .modal-header .modal-close {
         display: none !important;
     }
-    
-    /* Antetli Başlık ve Alt Bilgi Ayarları */
-    .print-header { 
-        display: flex !important; flex-direction: row !important; align-items: center; 
-        border-bottom: 2px solid #2c3e50; padding-bottom: 8px; margin-bottom: 10px; 
-    }
-    .print-footer {
-        display: block !important; position: fixed; bottom: 0; left: 0; width: 100%;
-        text-align: center; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd;
-        padding-top: 4px; background: white;
-    }
 }
+
 
         /* --- LOGİN (GİRİŞ) EKRANI STİLLERİ --- */
         #loginEkran {
