@@ -426,7 +426,7 @@
         .print-footer { display: none; } /* Normal ekranda alt bilgiyi gizle */
 
         @media print {
-    /* 1. Sayfa genişliğini zorla A4 boyutuna kilitle ve taşmaları gizle */
+    /* 1. Sayfa genişliğini zorla A4 boyutuna kilitle */
     @page { 
         size: A4 portrait; 
         margin: 1cm; 
@@ -436,11 +436,23 @@
         width: 100% !important; 
         max-width: 100% !important; 
         height: auto !important; 
-        overflow: visible !important; /* Kaydırma çubuğunu yok eder */
+        overflow: visible !important; 
         background: white !important; 
     }
 
-    /* 2. Modal (Açılır pencere) içindeki kaydırma çubuğunu (Scrollbar) iptal et ve tam aç */
+    /* 2. KRİTİK ÇÖZÜM: Tüm modalleri gizle, SADECE ekranda aktif olanı (display:flex) yazdır */
+    .modal-overlay { 
+        display: none !important; 
+    }
+    .modal-overlay[style*="display: flex"], 
+    .modal-overlay[style*="display:flex"] { 
+        display: block !important; 
+        position: static !important; 
+        background: transparent !important; 
+        padding: 0 !important; 
+    }
+
+    /* 3. Modal (Açılır pencere) içindeki kaydırma çubuğunu iptal et ve tam aç */
     .modal-box, #istihbaratRaporAlani, div[style*="max-height"] { 
         max-height: none !important; 
         height: auto !important; 
@@ -449,37 +461,31 @@
         box-shadow: none !important;
         border: none !important;
         position: static !important;
-    }
-    
-    .modal-overlay { 
-        position: static !important; 
-        display: block !important; 
-        background: transparent !important; 
-        padding: 0 !important; 
+        margin: 0 !important;
     }
 
-    /* 3. Tabloların sayfaya taşmadan tam oturmasını sağla */
+    /* 4. Tabloların sayfaya taşmadan tam oturmasını sağla */
     .mukellef-table, table {
         width: 100% !important;
         max-width: 100% !important;
-        table-layout: fixed !important; /* Sütunları eşit ve taşmayacak şekilde böler */
+        table-layout: fixed !important; 
         word-wrap: break-word !important;
     }
     
-    /* 4. Tablo içindeki yazıların sütun dışına taşmasını engelle */
+    /* 5. Tablo içindeki yazıların sütun dışına taşmasını engelle */
     th, td {
-        white-space: normal !important; /* Tek satırda kalmaya zorlamaz, alt satıra geçer */
+        white-space: normal !important; 
         word-break: break-word !important;
         padding: 4px 6px !important;
         font-size: 8pt !important;
     }
 
-    /* 5. Yazdırmada görünmemesi gereken alanları gizle */
-    .sidebar, .mobile-header, #loginEkran, .no-print, button, input, .modal-header .modal-close {
+    /* 6. Yazdırmada görünmemesi gereken alanları (Arka plan, input, buton) gizle */
+    .sidebar, .main-content > *:not(.modal-overlay), .mobile-header, #loginEkran, .no-print, button, input, select, textarea, .modal-header .modal-close {
         display: none !important;
     }
     
-    /* Sadece İstihbarat/Ekstre için özel ayarlar */
+    /* Antetli Başlık ve Alt Bilgi Ayarları */
     .print-header { 
         display: flex !important; flex-direction: row !important; align-items: center; 
         border-bottom: 2px solid #2c3e50; padding-bottom: 8px; margin-bottom: 10px; 
