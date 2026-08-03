@@ -4791,7 +4791,8 @@
                 
                 let fToplam = 0; let fTamam = 0; let kartKirmiziMi = false;
 
-                function rozetEkle(isim, isDone, targetDate, isYok) {
+                // ozelTip parametresi eklenerek defterlere Mavi/Mor renk ataması yapıldı
+                function rozetEkle(isim, isDone, targetDate, isYok, ozelTip = "standart") {
                     if(isYok) {
                         return `<span style="background:#f1f5f9; color:#64748b; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:4px; margin-bottom:6px; margin-right:4px;"><i class="fas fa-minus-circle"></i> ${isim}</span>`;
                     }
@@ -4800,9 +4801,18 @@
                     } else {
                         let gun = gunFarkiHesapla(targetDate);
                         let text = gun !== null ? (gun < 0 ? `Gecikti` : (gun === 0 ? `Bugün` : `${gun} gün`)) : "-";
+                        
                         let color = (gun !== null && gun <= 3) ? "#dc2626" : "#d97706";
                         let bg = (gun !== null && gun <= 3) ? "#fee2e2" : "#fef3c7";
                         let icon = (gun !== null && gun < 0) ? "fa-exclamation-triangle" : "fa-hourglass-half";
+                        
+                        // E-Defterlere Özel Renklendirme
+                        if (ozelTip === 'aylikDefter' && (gun === null || gun > 3)) {
+                            color = "#0284c7"; bg = "#e0f2fe"; icon = "fa-book";
+                        } else if (ozelTip === 'ucAylikDefter' && (gun === null || gun > 3)) {
+                            color = "#7c3aed"; bg = "#ede9fe"; icon = "fa-book-open";
+                        }
+
                         if(gun !== null && gun <= 3) kartKirmiziMi = true; 
                         return `<span style="background:${bg}; color:${color}; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:4px; margin-bottom:6px; margin-right:4px;"><i class="fas ${icon}"></i> ${isim} (${text})</span>`;
                     }
@@ -4810,7 +4820,6 @@
 
                 let rozetlerHTML = `<div style="display:flex; flex-wrap:wrap; margin-top:5px;">`;
                 
-                // ... (Bu aradaki KDV/Muhtasar if blokları aynı kalacak, sadece üstteki let rozetlerHTML tanımı değişti) ...
                 if(tTarih.kdv1) { 
                     if(!f.KDV1_Yok) { fToplam++; if(f.KDV1) fTamam++; rozetlerHTML += rozetEkle("1 Nolu KDV", f.KDV1, tTarih.kdv1, false); }
                     else { rozetlerHTML += rozetEkle("1 Nolu KDV", false, tTarih.kdv1, true); }
@@ -4832,14 +4841,24 @@
                 }
                 if(defterTarihi) { 
                     fToplam++; if(f.DEFTER) fTamam++; 
-                    let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
-                    if(isDefterUc) {
-                        if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
-                        else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
-                        else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
-                        else dAd = "4. Dönem E-Defter Beratı";
+                    
+                    let p = donem.split("-");
+                    let dAy = parseInt(p[1]) - 3;
+                    if(dAy <= 0) dAy += 12;
+                    
+                    let dAd = "E-Defteri";
+                    let defterTip = isDefterUc ? "ucAylikDefter" : "aylikDefter";
+
+                    if(!isDefterUc) {
+                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                        dAd = aylar[dAy - 1] + " E-Defteri"; // Biraz kısalttık ki rozete sığsın
+                    } else {
+                        if(dAy >= 1 && dAy <= 3) dAd = "1. Dönem E-Defteri"; 
+                        else if(dAy >= 4 && dAy <= 6) dAd = "2. Dönem E-Defteri"; 
+                        else if(dAy >= 7 && dAy <= 9) dAd = "3. Dönem E-Defteri"; 
+                        else dAd = "4. Dönem E-Defteri";
                     }
-                    rozetlerHTML += rozetEkle(dAd, f.DEFTER, defterTarihi, false); 
+                    rozetlerHTML += rozetEkle(dAd, f.DEFTER, defterTarihi, false, defterTip); 
                 }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) { 
@@ -5961,34 +5980,17 @@
             let ucAylikDefterTop = 0, ucAylikDefterTamam = 0;
             let bekleyenAylikDefterler = [];
             let bekleyenUcDefterler = [];
-            let aktifProjelerGruplu = {}; // Danışmanlık projelerini firmaya göre gruplamak için
+            let aktifProjelerGruplu = {};
 
-            let minGun = 999;
-            let gecikmisGorevVar = false;
+            let minGunBeyanname = 999;
+            let minGunDefter = 999;
+            let gecikmisBeyannameVar = false;
+            let gecikmisDefterVar = false;
 
             mukellefler.forEach(m => {
                 if(m.durum === "Pasif") return;
-                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") {
-                    // Sadece danışmanlık olan firmanın projelerini topla
-                    if(danismanlikVeritabani[m.vkn]) {
-                        let pList = danismanlikVeritabani[m.vkn].filter(p => !p.tamamlandi);
-                        if(pList.length > 0) {
-                            aktifProjelerGruplu[m.unvan] = pList.map(p => {
-                                let tAsama = p.asamalar ? p.asamalar.length : 0;
-                                let bAsama = p.asamalar ? p.asamalar.filter(a => a.durum).length : 0;
-                                return { ad: p.projeAdi, oran: tAsama===0 ? 0 : Math.round((bAsama/tAsama)*100) };
-                            });
-                        }
-                    }
-                    return; 
-                }
                 
-                let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : {};
-
-                let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
-                let isDefterUc = (m.eDefterDurum === "Evet - Üç Aylık");
-
-                // Danışmanlık Projelerini Topla (Normal mükellefler için)
+                // Danışmanlık Projelerini Topla (Aydan bağımsız, BİTMEMİŞ tüm projeler)
                 if(danismanlikVeritabani[m.vkn]) {
                     let pList = danismanlikVeritabani[m.vkn].filter(p => !p.tamamlandi);
                     if(pList.length > 0) {
@@ -6000,15 +6002,30 @@
                     }
                 }
 
-                function kontrolAlarm(isim, isDone, targetDate, isYok) {
+                if(m.mukellefTuru !== "SMMM" && m.hizmetKapsami === "Danışmanlık") return; 
+                
+                let f = (takvimVeritabanı[donem] && takvimVeritabanı[donem][m.vkn]) ? takvimVeritabanı[donem][m.vkn] : {};
+
+                let isKurum = (m.mukellefTuru === "Limited Şirket" || m.mukellefTuru === "Anonim Şirket" || m.mukellefTuru === "Kooperatif");
+                let isDefterUc = (m.eDefterDurum === "Evet - Üç Aylık");
+
+                function kontrolAlarm(isim, isDone, targetDate, isYok, isDefter = false) {
                     if(targetDate && !isYok) {
                         fGorevTop++; 
                         if(isDone) {
                             fGorevTamam++;
                         } else {
                             let gun = gunFarkiHesapla(targetDate);
-                            if(gun !== null && gun >= 0 && gun < minGun) minGun = gun;
-                            if(gun !== null && gun < 0) gecikmisGorevVar = true;
+                            if(gun !== null) {
+                                // Gün sayılarını tiplere göre ayır
+                                if(isDefter) {
+                                    if(gun >= 0 && gun < minGunDefter) minGunDefter = gun;
+                                    if(gun < 0) gecikmisDefterVar = true;
+                                } else {
+                                    if(gun >= 0 && gun < minGunBeyanname) minGunBeyanname = gun;
+                                    if(gun < 0) gecikmisBeyannameVar = true;
+                                }
+                            }
 
                             if(gun !== null && gun <= 7) {
                                 let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
@@ -6022,10 +6039,10 @@
                     }
                 }
 
-                if(tTarih.kdv1) kontrolAlarm("1 Nolu KDV", f.KDV1, tTarih.kdv1, f.KDV1_Yok);
-                if(tTarih.kdv2) kontrolAlarm("2 Nolu KDV", f.KDV2, tTarih.kdv2, f.KDV2_Yok);
-                if(tTarih.muhsgk) kontrolAlarm("Muhtasar", f.MUHSGK, tTarih.muhsgk, f.MUHSGK_Yok);
-            if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false);
+                if(tTarih.kdv1) kontrolAlarm("1 Nolu KDV", f.KDV1, tTarih.kdv1, f.KDV1_Yok, false);
+                if(tTarih.kdv2) kontrolAlarm("2 Nolu KDV", f.KDV2, tTarih.kdv2, f.KDV2_Yok, false);
+                if(tTarih.muhsgk) kontrolAlarm("Muhtasar", f.MUHSGK, tTarih.muhsgk, f.MUHSGK_Yok, false);
+                if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false, false);
                 
                 let defterTarihiDash = null;
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
@@ -6043,37 +6060,37 @@
                     }
                 }
                 
-                // DEĞİŞEN KISIM 1: Alarmlar bölümündeki Defter Başlığı (3 ay geriden)
                 if(defterTarihiDash) {
-                    let dPca = donem.split("-");
-                    let seciliAy = parseInt(dPca[1]);
-                    
-                    let defterAyi = seciliAy - 3;
-                    if(defterAyi <= 0) defterAyi += 12;
-                    
-                    let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                    let dAd = aylar[defterAyi - 1] + " E-Defter Beratı";
-                    
+                    let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
                     if(isDefterUc) {
-                        if(defterAyi >= 1 && defterAyi <= 3) dAd = "1. Dönem E-Defter Beratı"; 
-                        else if(defterAyi >= 4 && defterAyi <= 6) dAd = "2. Dönem E-Defter Beratı"; 
-                        else if(defterAyi >= 7 && defterAyi <= 9) dAd = "3. Dönem E-Defter Beratı"; 
+                        if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
+                        else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
+                        else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
                         else dAd = "4. Dönem E-Defter Beratı";
                     }
-                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false);
+                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false, true); // true = defter
                 }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
-                    kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
+                    kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false, false);
                 }
-                if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false);
+                if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false, false);
+                if(tTarih.tuik) kontrolAlarm("TÜİK", f.TUIK, tTarih.tuik, false, false);
+                if(tTarih.iskur) kontrolAlarm("İŞKUR", f.ISKUR, tTarih.iskur, false, false);
                 
-                if((tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn)) {
-                    kontrolAlarm(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false);
+                let ozelGorevler = tTarih.ozelGorevler || [];
+                if(ozelGorevler.length === 0 && (tTarih.ozel1Ad || tTarih.ozel2Ad)) {
+                    if(tTarih.ozel1Ad) ozelGorevler.push({id: "og_1", ad: tTarih.ozel1Ad, tarih: tTarih.ozel1Tarih, vkn: tTarih.ozel1Vkn || "HEPSI"});
+                    if(tTarih.ozel2Ad) ozelGorevler.push({id: "og_2", ad: tTarih.ozel2Ad, tarih: tTarih.ozel2Tarih, vkn: tTarih.ozel2Vkn || "HEPSI"});
                 }
-                if((tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === m.vkn)) {
-                    kontrolAlarm(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false);
-                }
+                ozelGorevler.forEach(og => {
+                    if(!og.vkn || og.vkn === "HEPSI" || og.vkn === m.vkn) {
+                        let isDone = (f.ozelGorevDurumlari && f.ozelGorevDurumlari[og.id]) ? true : false;
+                        if(og.id === "og_1" && f.OZEL1) isDone = true; 
+                        if(og.id === "og_2" && f.OZEL2) isDone = true;
+                        kontrolAlarm(og.ad, isDone, og.tarih, false, false);
+                    }
+                });
 
                 if(m.muhurBitis) {
                     let mGun = gunFarkiHesapla(m.muhurBitis);
@@ -6104,6 +6121,24 @@
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
 
+            // YENİ AI YÖNETİCİ ÖZETİ YAZISI
+            let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
+            if(aiYoneticiKutu) {
+                let aiMesaj = "";
+                let dMetin = "";
+                let bMetin = "";
+                
+                if (gecikmisDefterVar) dMetin = "E-Defter yükleme süresi dolmuş firmalar var!";
+                else if (minGunDefter !== 999) dMetin = `E-Defter teslimine <b>${minGunDefter} gün</b> kaldı.`;
+                else dMetin = "Bekleyen e-Defter işlemi görünmüyor.";
+
+                if (gecikmisBeyannameVar) bMetin = "Gecikmiş beyannameler mevcut, lütfen kontrol edin!";
+                else if (minGunBeyanname !== 999) bMetin = `Beyanname teslimlerine <b>${minGunBeyanname} gün</b> var.`;
+                else bMetin = "Tüm beyannameler tamamlandı.";
+
+                aiMesaj = `${dMetin} ${bMetin} Finansal tablonuza göre hareket ederek önceliklerinizi belirleyebilirsiniz.`;
+                aiYoneticiKutu.innerHTML = aiMesaj;
+            }
             // --- YENİ: E-DEFTER YÜKLEME MERKEZİ (PREMİUM DETAY) ---
             
             // DEĞİŞEN KISIM 2: E-Defter siyah pano başlığı (3 ay geriden)
@@ -6119,41 +6154,40 @@
             let ucAylikYuzde = ucAylikDefterTop === 0 ? 100 : Math.round((ucAylikDefterTamam / ucAylikDefterTop) * 100);
             
             // Bekleyenleri tooltip formatında veya mini listede gösterme hazırlığı
-            let aylikBekleyenHtml = bekleyenAylikDefterler.length > 0 ? `<div style="font-size:10px; color:#e74c3c; margin-top:5px; line-height:1.3; max-height:45px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenAylikDefterler.slice(0,3).join(', ')}${bekleyenAylikDefterler.length > 3 ? ` ve ${bekleyenAylikDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:10px; color:#2ecc71; margin-top:5px;">Tümü Yüklendi ✅</div>`;
+            let aylikBekleyenHtml = bekleyenAylikDefterler.length > 0 ? `<div style="font-size:11px; color:#f87171; margin-top:8px; line-height:1.4; max-height:55px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenAylikDefterler.slice(0,3).join(', ')}${bekleyenAylikDefterler.length > 3 ? ` ve ${bekleyenAylikDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:11px; color:#38bdf8; margin-top:8px; font-weight:bold;">Tümü Yüklendi ✅</div>`;
             
-            let ucAylikBekleyenHtml = bekleyenUcDefterler.length > 0 ? `<div style="font-size:10px; color:#e74c3c; margin-top:5px; line-height:1.3; max-height:45px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenUcDefterler.slice(0,3).join(', ')}${bekleyenUcDefterler.length > 3 ? ` ve ${bekleyenUcDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:10px; color:#2ecc71; margin-top:5px;">Tümü Yüklendi ✅</div>`;
+            let ucAylikBekleyenHtml = bekleyenUcDefterler.length > 0 ? `<div style="font-size:11px; color:#f87171; margin-top:8px; line-height:1.4; max-height:55px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenUcDefterler.slice(0,3).join(', ')}${bekleyenUcDefterler.length > 3 ? ` ve ${bekleyenUcDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:11px; color:#a855f7; margin-top:8px; font-weight:bold;">Tümü Yüklendi ✅</div>`;
 
-            // Sadece başlık kısmını bul ve değiştir
             let defterKutusu = document.getElementById("mdDefterBaslik").parentElement.parentElement;
             defterKutusu.innerHTML = `
-                <div style="flex:1; min-width:250px;">
-                    <h3 style="font-size:15px; margin-bottom:8px; color:#f1c40f;"><i class="fas fa-book"></i> ${dBaslik}</h3>
-                    <p style="font-size:12px; color:#bdc3c7; margin:0; line-height:1.5;">GİB (Gelir İdaresi Başkanlığı) sistemlerine berat yükleme ve onay işlemlerinizin canlı ilerleme durumu.</p>
+                <div style="flex:1; min-width:300px; padding-right:20px;">
+                    <h3 style="font-size:17px; margin-bottom:10px; color:#fcd34d;"><i class="fas fa-book"></i> ${dBaslik}</h3>
+                    <p style="font-size:13px; color:#94a3b8; margin:0; line-height:1.6;">GİB (Gelir İdaresi Başkanlığı) sistemlerine berat yükleme ve onay işlemlerinizin canlı ilerleme durumu.</p>
                 </div>
-                <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:stretch;">
-                    <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:8px; min-width:180px; width:220px; display:flex; flex-direction:column; justify-content:space-between;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:11px; color:#bdc3c7; font-weight:bold; text-transform:uppercase;">Aylık Yüklemeler</span>
-                            <span style="font-size:16px; font-weight:bold; color:#2ecc71;">${aylikDefterTamam} / ${aylikDefterTop}</span>
+                <div style="display:flex; flex:2; gap:20px; flex-wrap:wrap; align-items:stretch;">
+                    <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:12px; color:#bae6fd; font-weight:700; text-transform:uppercase; letter-spacing:1px;"><i class="fas fa-book"></i> Aylık Yüklemeler</span>
+                            <span style="font-size:24px; font-weight:900; color:#38bdf8;">${aylikDefterTamam} <span style="font-size:14px; color:#7dd3fc;">/ ${aylikDefterTop}</span></span>
                         </div>
-                        <div style="width:100%; background:rgba(0,0,0,0.3); height:6px; border-radius:3px; overflow:hidden; margin-bottom:5px;">
-                            <div style="width:${aylikYuzde}%; background:#2ecc71; height:100%;"></div>
+                        <div style="width:100%; background:rgba(0,0,0,0.4); height:8px; border-radius:4px; overflow:hidden; margin-bottom:5px;">
+                            <div style="width:${aylikYuzde}%; background:linear-gradient(90deg, #0284c7, #38bdf8); height:100%; box-shadow:0 0 10px rgba(56,189,248,0.5);"></div>
                         </div>
-                        ${aylikDefterTop > 0 ? aylikBekleyenHtml : '<div style="font-size:10px; color:#95a5a6; margin-top:5px;">Bu aya ait kayıt yok.</div>'}
+                        ${aylikDefterTop > 0 ? aylikBekleyenHtml : '<div style="font-size:11px; color:#64748b; margin-top:8px;">Bu aya ait kayıt yok.</div>'}
                     </div>
                     
-                    <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:8px; min-width:180px; width:220px; display:flex; flex-direction:column; justify-content:space-between;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:11px; color:#bdc3c7; font-weight:bold; text-transform:uppercase;">3 Aylık Yüklemeler</span>
-                            <span style="font-size:16px; font-weight:bold; color:#3498db;">${ucAylikDefterTamam} / ${ucAylikDefterTop}</span>
+                    <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:12px; color:#e9d5ff; font-weight:700; text-transform:uppercase; letter-spacing:1px;"><i class="fas fa-book-open"></i> 3 Aylık Yüklemeler</span>
+                            <span style="font-size:24px; font-weight:900; color:#c084fc;">${ucAylikDefterTamam} <span style="font-size:14px; color:#d8b4fe;">/ ${ucAylikDefterTop}</span></span>
                         </div>
-                        <div style="width:100%; background:rgba(0,0,0,0.3); height:6px; border-radius:3px; overflow:hidden; margin-bottom:5px;">
-                            <div style="width:${ucAylikYuzde}%; background:#3498db; height:100%;"></div>
+                        <div style="width:100%; background:rgba(0,0,0,0.4); height:8px; border-radius:4px; overflow:hidden; margin-bottom:5px;">
+                            <div style="width:${ucAylikYuzde}%; background:linear-gradient(90deg, #9333ea, #c084fc); height:100%; box-shadow:0 0 10px rgba(192,132,252,0.5);"></div>
                         </div>
-                        ${ucAylikDefterTop > 0 ? ucAylikBekleyenHtml : '<div style="font-size:10px; color:#95a5a6; margin-top:5px;">Bu döneme ait kayıt yok.</div>'}
+                        ${ucAylikDefterTop > 0 ? ucAylikBekleyenHtml : '<div style="font-size:11px; color:#64748b; margin-top:8px;">Bu döneme ait kayıt yok.</div>'}
                     </div>
                 </div>
-            `;    
+            `;   
 
             // --- YENİ AI YÖNETİCİ ÖZETİ YAZISI ---
             let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
