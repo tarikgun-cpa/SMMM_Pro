@@ -4727,24 +4727,29 @@
             return Math.ceil((hedef - bugun) / (1000 * 60 * 60 * 24));
         }
 
-        // YENİ EKLENEN AKILLI TARİH MOTORU (Beyannameleri sabit tutar, SADECE E-Defterleri tarihe göre kaydırır)
         function hedefAyaAitTarihleriGetir(donem) {
             let ayarlar = sistemAyarlari.takvimGunleri || {};
-            // 1. Beyannameler ve Özel Görevler seçili dönemin ayarlarından birebir alınır (Bozulmayı ve kaybolmayı önler)
+            // 1. Beyannameler seçili ayın ayarlarından alınır.
             let tTarih = ayarlar[donem] ? JSON.parse(JSON.stringify(ayarlar[donem])) : { ozelGorevler: [] };
             if (!tTarih.ozelGorevler) tTarih.ozelGorevler = [];
-
-            // 2. Sadece E-Defterleri tüm aylardan tarayıp, son günü seçilen aya (donem) düşenleri yakalar
-            tTarih.defterAylikSahis = ""; tTarih.defterAylikKurum = "";
-            tTarih.defterUcSahis = ""; tTarih.defterUcKurum = "";
             
-            Object.keys(ayarlar).forEach(key => {
-                let b = ayarlar[key];
-                if(b.defterAylikSahis && b.defterAylikSahis.startsWith(donem)) tTarih.defterAylikSahis = b.defterAylikSahis;
-                if(b.defterAylikKurum && b.defterAylikKurum.startsWith(donem)) tTarih.defterAylikKurum = b.defterAylikKurum;
-                if(b.defterUcSahis && b.defterUcSahis.startsWith(donem)) tTarih.defterUcSahis = b.defterUcSahis;
-                if(b.defterUcKurum && b.defterUcKurum.startsWith(donem)) tTarih.defterUcKurum = b.defterUcKurum;
-            });
+            // 2. E-Defterler 3 Ay geriye gidip o ayın ayarlarından çekilir (Örn: Temmuz seçiliyse Nisan'dan alınır)
+            let p = donem.split("-");
+            let dYil = parseInt(p[0]);
+            let dAy = parseInt(p[1]) - 3;
+            if (dAy <= 0) { dAy += 12; dYil -= 1; }
+            let defterDonem = dYil + "-" + dAy.toString().padStart(2, '0');
+            
+            let defterAyarlari = ayarlar[defterDonem] || {};
+            tTarih.defterAylikSahis = defterAyarlari.defterAylikSahis || "";
+            tTarih.defterAylikKurum = defterAyarlari.defterAylikKurum || "";
+            tTarih.defterUcSahis = defterAyarlari.defterUcSahis || "";
+            tTarih.defterUcKurum = defterAyarlari.defterUcKurum || "";
+            
+            // Ay ismini ekrana doğru basmak için hafızaya alıyoruz
+            let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            tTarih._defterAyAdi = aylar[dAy - 1];
+            tTarih._defterAyNum = dAy;
 
             return tTarih;
         }
@@ -4827,14 +4832,12 @@
                 }
                 if(defterTarihi) { 
                     fToplam++; if(f.DEFTER) fTamam++; 
-                    let ayNum = parseInt(defterTarihi.split("-")[1]);
-                    let dAd = "E-Defter";
-                    if(!isDefterUc) {
-                        let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
-                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                        dAd = aylar[hAy - 1];
-                    } else {
-                        if(ayNum === 5) dAd = "1. Dönem"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem"; else if(ayNum === 11) dAd = "3. Dönem"; else if(ayNum === 2) dAd = "4. Dönem";
+                    let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
+                    if(isDefterUc) {
+                        if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
+                        else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
+                        else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
+                        else dAd = "4. Dönem E-Defter Beratı";
                     }
                     rozetlerHTML += rozetEkle(dAd, f.DEFTER, defterTarihi, false); 
                 }
@@ -4948,14 +4951,12 @@
             document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
             
             if(defterTarihVarmı) {
-                let ayNum = parseInt(defterTarihVarmı.split("-")[1]);
-                let dAd = "E-Defter Beratı";
-                if(!isDefterUcModal) {
-                    let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
-                    let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                    dAd = aylar[hAy - 1] + " E-Defter Beratı";
-                } else {
-                    if(ayNum === 5) dAd = "1. Dönem Defter Beratı"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defter Beratı"; else if(ayNum === 11) dAd = "3. Dönem Defter Beratı"; else if(ayNum === 2) dAd = "4. Dönem Defter Beratı";
+                let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
+                if(isDefterUcModal) {
+                    if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
+                    else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
+                    else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
+                    else dAd = "4. Dönem E-Defter Beratı";
                 }
                 document.querySelector("#lbl_Gorev_DEFTER div").textContent = dAd;
             }
@@ -6024,7 +6025,7 @@
                 if(tTarih.kdv1) kontrolAlarm("1 Nolu KDV", f.KDV1, tTarih.kdv1, f.KDV1_Yok);
                 if(tTarih.kdv2) kontrolAlarm("2 Nolu KDV", f.KDV2, tTarih.kdv2, f.KDV2_Yok);
                 if(tTarih.muhsgk) kontrolAlarm("Muhtasar", f.MUHSGK, tTarih.muhsgk, f.MUHSGK_Yok);
-                if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false);
+            if(m.muhasebeSistemi === "Bilanço Esası" && tTarih.babs) kontrolAlarm("Ba/Bs", f.BABS, tTarih.babs, false);
                 
                 let defterTarihiDash = null;
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
@@ -6041,15 +6042,23 @@
                         }
                     }
                 }
+                
+                // DEĞİŞEN KISIM 1: Alarmlar bölümündeki Defter Başlığı (3 ay geriden)
                 if(defterTarihiDash) {
-                    let ayNum = parseInt(defterTarihiDash.split("-")[1]);
-                    let dAd = "Defter";
-                    if(!isDefterUc) {
-                        let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
-                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-                        dAd = aylar[hAy - 1] + " Defteri";
-                    } else {
-                        if(ayNum === 5) dAd = "1. Dönem Defter"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defter"; else if(ayNum === 11) dAd = "3. Dönem Defter"; else if(ayNum === 2) dAd = "4. Dönem Defter";
+                    let dPca = donem.split("-");
+                    let seciliAy = parseInt(dPca[1]);
+                    
+                    let defterAyi = seciliAy - 3;
+                    if(defterAyi <= 0) defterAyi += 12;
+                    
+                    let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                    let dAd = aylar[defterAyi - 1] + " E-Defter Beratı";
+                    
+                    if(isDefterUc) {
+                        if(defterAyi >= 1 && defterAyi <= 3) dAd = "1. Dönem E-Defter Beratı"; 
+                        else if(defterAyi >= 4 && defterAyi <= 6) dAd = "2. Dönem E-Defter Beratı"; 
+                        else if(defterAyi >= 7 && defterAyi <= 9) dAd = "3. Dönem E-Defter Beratı"; 
+                        else dAd = "4. Dönem E-Defter Beratı";
                     }
                     kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false);
                 }
@@ -6096,8 +6105,15 @@
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
 
             // --- YENİ: E-DEFTER YÜKLEME MERKEZİ (PREMİUM DETAY) ---
+            
+            // DEĞİŞEN KISIM 2: E-Defter siyah pano başlığı (3 ay geriden)
             let dPca = donem.split("-");
-            let dBaslik = dPca.length === 2 ? `${dPca[1]}/${dPca[0]} Dönemi E-Defter Yükleme Merkezi` : "E-Defter Yükleme Merkezi";
+            let pYil = parseInt(dPca[0]);
+            let pAy = parseInt(dPca[1]) - 3;
+            if (pAy <= 0) { pAy += 12; pYil -= 1; }
+            
+            let pAylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            let dBaslik = pAylar[pAy - 1] + " " + pYil + " Dönemi E-Defter Yükleme Merkezi";
             
             let aylikYuzde = aylikDefterTop === 0 ? 100 : Math.round((aylikDefterTamam / aylikDefterTop) * 100);
             let ucAylikYuzde = ucAylikDefterTop === 0 ? 100 : Math.round((ucAylikDefterTamam / ucAylikDefterTop) * 100);
@@ -6137,48 +6153,7 @@
                         ${ucAylikDefterTop > 0 ? ucAylikBekleyenHtml : '<div style="font-size:10px; color:#95a5a6; margin-top:5px;">Bu döneme ait kayıt yok.</div>'}
                     </div>
                 </div>
-            `;
-
-            // --- YENİ: DANIŞMANLIK PROJELERİ GRUPLU LİSTE (PREMİUM DETAY) ---
-            let dListesi = document.getElementById("mdAktifProjelerListesi");
-            dListesi.innerHTML = "";
-            let renkPaleti = ["#8e44ad", "#2980b9", "#27ae60", "#d35400", "#c0392b", "#16a085", "#34495e"];
-            let rIndex = 0;
-
-            let anahtarFirmalar = Object.keys(aktifProjelerGruplu);
-            
-            if(anahtarFirmalar.length === 0) {
-                dListesi.innerHTML = `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Aktif yürütülen bir danışmanlık projesi bulunmuyor.</div>`;
-            } else {
-                anahtarFirmalar.forEach(firmaAd => {
-                    let projeler = aktifProjelerGruplu[firmaAd];
-                    let renk = renkPaleti[rIndex % renkPaleti.length];
-                    rIndex++;
-
-                    let projelerHtml = "";
-                    projeler.forEach(p => {
-                        let barRenk = p.oran === 100 ? "#27ae60" : renk;
-                        projelerHtml += `
-                        <div style="margin-top:10px; background:#fcfbfc; border:1px solid #f4f6f9; padding:8px 10px; border-radius:6px;">
-                            <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:5px; color:#444;">
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:85%;"><i class="fas fa-caret-right" style="color:#bdc3c7; margin-right:5px;"></i> ${p.ad}</span>
-                                <strong style="color:${barRenk};">%${p.oran}</strong>
-                            </div>
-                            <div style="width:100%; background:#e1e8ed; height:4px; border-radius:2px; overflow:hidden;">
-                                <div style="width:${p.oran}%; background:${barRenk}; height:100%;"></div>
-                            </div>
-                        </div>`;
-                    });
-
-                    dListesi.innerHTML += `
-                    <div style="margin-bottom:12px; border-left:4px solid ${renk}; background:#ffffff; border-radius:6px; padding:12px; box-shadow:0 2px 5px rgba(0,0,0,0.03); border-top:1px solid #f4f6f9; border-right:1px solid #f4f6f9; border-bottom:1px solid #f4f6f9;">
-                        <h4 style="font-size:12.5px; color:#2c3e50; margin:0; display:flex; align-items:center; gap:6px;">
-                            <i class="fas fa-building" style="color:${renk};"></i> ${firmaAd}
-                        </h4>
-                        ${projelerHtml}
-                    </div>`;
-                });
-            }
+            `;    
 
             // --- YENİ AI YÖNETİCİ ÖZETİ YAZISI ---
             let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
