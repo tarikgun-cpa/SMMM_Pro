@@ -4727,12 +4727,25 @@
             return Math.ceil((hedef - bugun) / (1000 * 60 * 60 * 24));
         }
 
+        // YENİ EKLENEN AKILLI TARİH MOTORU (Beyannameleri sabit tutar, SADECE E-Defterleri tarihe göre kaydırır)
         function hedefAyaAitTarihleriGetir(donem) {
             let ayarlar = sistemAyarlari.takvimGunleri || {};
-            // Tüm beyannameler, defterler ve özel görevler doğrudan seçili dönemin ayarlarından uyumlu şekilde alınır.
+            // 1. Beyannameler ve Özel Görevler seçili dönemin ayarlarından birebir alınır (Bozulmayı ve kaybolmayı önler)
             let tTarih = ayarlar[donem] ? JSON.parse(JSON.stringify(ayarlar[donem])) : { ozelGorevler: [] };
             if (!tTarih.ozelGorevler) tTarih.ozelGorevler = [];
+
+            // 2. Sadece E-Defterleri tüm aylardan tarayıp, son günü seçilen aya (donem) düşenleri yakalar
+            tTarih.defterAylikSahis = ""; tTarih.defterAylikKurum = "";
+            tTarih.defterUcSahis = ""; tTarih.defterUcKurum = "";
             
+            Object.keys(ayarlar).forEach(key => {
+                let b = ayarlar[key];
+                if(b.defterAylikSahis && b.defterAylikSahis.startsWith(donem)) tTarih.defterAylikSahis = b.defterAylikSahis;
+                if(b.defterAylikKurum && b.defterAylikKurum.startsWith(donem)) tTarih.defterAylikKurum = b.defterAylikKurum;
+                if(b.defterUcSahis && b.defterUcSahis.startsWith(donem)) tTarih.defterUcSahis = b.defterUcSahis;
+                if(b.defterUcKurum && b.defterUcKurum.startsWith(donem)) tTarih.defterUcKurum = b.defterUcKurum;
+            });
+
             return tTarih;
         }
 
@@ -6028,10 +6041,16 @@
                         }
                     }
                 }
-                
                 if(defterTarihiDash) {
-                    let dAd = "E-Defter";
-                    // E-Defter ay gösterimini basitleştiriyoruz, doğrudan o aya ait rozet çıkar.
+                    let ayNum = parseInt(defterTarihiDash.split("-")[1]);
+                    let dAd = "Defter";
+                    if(!isDefterUc) {
+                        let hAy = ayNum - 4; if(hAy <= 0) hAy += 12;
+                        let aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+                        dAd = aylar[hAy - 1] + " Defteri";
+                    } else {
+                        if(ayNum === 5) dAd = "1. Dönem Defter"; else if(ayNum === 8 || ayNum === 9) dAd = "2. Dönem Defter"; else if(ayNum === 11) dAd = "3. Dönem Defter"; else if(ayNum === 2) dAd = "4. Dönem Defter";
+                    }
                     kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false);
                 }
                 
@@ -6039,22 +6058,13 @@
                     kontrolAlarm("Geçici/Yıllık", f.GECICI, isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis), false);
                 }
                 if(tTarih.sgk) kontrolAlarm("SGK", f.SGK, tTarih.sgk, false);
-                if(tTarih.tuik) kontrolAlarm("TÜİK", f.TUIK, tTarih.tuik, false);
-                if(tTarih.iskur) kontrolAlarm("İŞKUR", f.ISKUR, tTarih.iskur, false);
                 
-                let ozelGorevler = tTarih.ozelGorevler || [];
-                if(ozelGorevler.length === 0 && (tTarih.ozel1Ad || tTarih.ozel2Ad)) {
-                    if(tTarih.ozel1Ad) ozelGorevler.push({id: "og_1", ad: tTarih.ozel1Ad, tarih: tTarih.ozel1Tarih, vkn: tTarih.ozel1Vkn || "HEPSI"});
-                    if(tTarih.ozel2Ad) ozelGorevler.push({id: "og_2", ad: tTarih.ozel2Ad, tarih: tTarih.ozel2Tarih, vkn: tTarih.ozel2Vkn || "HEPSI"});
+                if((tTarih.ozel1Ad && tTarih.ozel1Tarih) && (!tTarih.ozel1Vkn || tTarih.ozel1Vkn === "HEPSI" || tTarih.ozel1Vkn === m.vkn)) {
+                    kontrolAlarm(tTarih.ozel1Ad, f.OZEL1, tTarih.ozel1Tarih, false);
                 }
-                ozelGorevler.forEach(og => {
-                    if(!og.vkn || og.vkn === "HEPSI" || og.vkn === m.vkn) {
-                        let isDone = (f.ozelGorevDurumlari && f.ozelGorevDurumlari[og.id]) ? true : false;
-                        if(og.id === "og_1" && f.OZEL1) isDone = true; 
-                        if(og.id === "og_2" && f.OZEL2) isDone = true;
-                        kontrolAlarm(og.ad, isDone, og.tarih, false);
-                    }
-                });
+                if((tTarih.ozel2Ad && tTarih.ozel2Tarih) && (!tTarih.ozel2Vkn || tTarih.ozel2Vkn === "HEPSI" || tTarih.ozel2Vkn === m.vkn)) {
+                    kontrolAlarm(tTarih.ozel2Ad, f.OZEL2, tTarih.ozel2Tarih, false);
+                }
 
                 if(m.muhurBitis) {
                     let mGun = gunFarkiHesapla(m.muhurBitis);
@@ -6084,6 +6094,7 @@
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
+
             // --- YENİ: E-DEFTER YÜKLEME MERKEZİ (PREMİUM DETAY) ---
             let dPca = donem.split("-");
             let dBaslik = dPca.length === 2 ? `${dPca[1]}/${dPca[0]} Dönemi E-Defter Yükleme Merkezi` : "E-Defter Yükleme Merkezi";
