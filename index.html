@@ -6068,7 +6068,7 @@
                         else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
                         else dAd = "4. Dönem E-Defter Beratı";
                     }
-                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false, true); // true = defter
+                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false, true); 
                 }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
@@ -6121,9 +6121,10 @@
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
 
-            // --- YENİ AI YÖNETİCİ ÖZETİ YAZISI ---
+            // YENİ AI YÖNETİCİ ÖZETİ YAZISI (İstediğiniz netliğe kavuştu)
             let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
             if(aiYoneticiKutu) {
+                let aiMesaj = "";
                 let dMetin = "";
                 let bMetin = "";
                 
@@ -6135,15 +6136,11 @@
                 else if (minGunBeyanname !== 999) bMetin = `Beyanname teslimlerine <b>${minGunBeyanname} gün</b> var.`;
                 else bMetin = "Tüm beyannameler tamamlandı.";
 
-                let aiMesaj = `${dMetin} ${bMetin} Finansal tablonuza göre hareket ederek önceliklerinizi belirleyebilirsiniz.`;
-                
-                if (totalAlacak > 50000) {
-                    aiMesaj += `<br><span style="color:#3498db; font-size:12px; margin-top:5px; display:inline-block;"><i class="fas fa-info-circle"></i> Finansal olarak piyasada tahsil edilmeyi bekleyen <b style="color:#e74c3c;">${formatMoney(totalAlacak)} TL</b> alacağınız birikmiş durumda. Ay sonu gelmeden vade takibi yaparak tahsilatlara hız vermelisiniz.</span>`;
-                }
+                aiMesaj = `${dMetin} ${bMetin} Finansal tablonuza göre hareket ederek önceliklerinizi belirleyebilirsiniz.`;
                 aiYoneticiKutu.innerHTML = aiMesaj;
             }
 
-            // --- E-DEFTER YÜKLEME MERKEZİ (PREMİUM DETAY) ---
+            // --- E-DEFTER YÜKLEME MERKEZİ (PREMIUM UI ROZETLER) ---
             let dPca = donem.split("-");
             let pYil = parseInt(dPca[0]);
             let pAy = parseInt(dPca[1]) - 3;
@@ -6155,9 +6152,26 @@
             let aylikYuzde = aylikDefterTop === 0 ? 100 : Math.round((aylikDefterTamam / aylikDefterTop) * 100);
             let ucAylikYuzde = ucAylikDefterTop === 0 ? 100 : Math.round((ucAylikDefterTamam / ucAylikDefterTop) * 100);
             
-            let aylikBekleyenHtml = bekleyenAylikDefterler.length > 0 ? `<div style="font-size:11px; color:#f87171; margin-top:8px; line-height:1.4; max-height:55px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenAylikDefterler.slice(0,3).join(', ')}${bekleyenAylikDefterler.length > 3 ? ` ve ${bekleyenAylikDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:11px; color:#38bdf8; margin-top:8px; font-weight:bold;">Tümü Yüklendi ✅</div>`;
-            
-            let ucAylikBekleyenHtml = bekleyenUcDefterler.length > 0 ? `<div style="font-size:11px; color:#f87171; margin-top:8px; line-height:1.4; max-height:55px; overflow-y:auto; padding-right:5px; text-align:left;"><b>Kalanlar:</b> ${bekleyenUcDefterler.slice(0,3).join(', ')}${bekleyenUcDefterler.length > 3 ? ` ve ${bekleyenUcDefterler.length - 3} firma daha...` : ''}</div>` : `<div style="font-size:11px; color:#a855f7; margin-top:8px; font-weight:bold;">Tümü Yüklendi ✅</div>`;
+            // Bekleyen firmaları şık rozetlere çeviren fonksiyon
+            function rozetOlustur(liste, isAylik) {
+                if(liste.length === 0) return `<div style="font-size:11px; color:${isAylik ? '#38bdf8' : '#c084fc'}; margin-top:8px; font-weight:bold;">Tümü Yüklendi ✅</div>`;
+                
+                let badgesHtml = liste.map(f => {
+                    let kelimeler = f.split(' ');
+                    let kisaAd = kelimeler.length > 1 ? kelimeler[0] + ' ' + kelimeler[1] : f;
+                    if(kisaAd.length > 18) kisaAd = kisaAd.substring(0, 16) + "..";
+                    
+                    let bg = isAylik ? "rgba(2, 132, 199, 0.2)" : "rgba(147, 51, 234, 0.2)";
+                    let color = isAylik ? "#bae6fd" : "#e9d5ff";
+                    let border = isAylik ? "1px solid rgba(2, 132, 199, 0.4)" : "1px solid rgba(147, 51, 234, 0.4)";
+                    return `<span style="background:${bg}; color:${color}; border:${border}; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:600; white-space:nowrap; display:inline-block;" title="${f}">${kisaAd}</span>`;
+                }).join('');
+                
+                return `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; max-height:65px; overflow-y:auto; padding-right:5px; align-content:flex-start;">${badgesHtml}</div>`;
+            }
+
+            let aylikBekleyenHtml = rozetOlustur(bekleyenAylikDefterler, true);
+            let ucAylikBekleyenHtml = rozetOlustur(bekleyenUcDefterler, false);
 
             let defterKutusu = document.getElementById("mdDefterBaslik").parentElement.parentElement;
             if(defterKutusu) {
@@ -6167,7 +6181,7 @@
                         <p style="font-size:13px; color:#94a3b8; margin:0; line-height:1.6;">GİB (Gelir İdaresi Başkanlığı) sistemlerine berat yükleme ve onay işlemlerinizin canlı ilerleme durumu.</p>
                     </div>
                     <div style="display:flex; flex:2; gap:20px; flex-wrap:wrap; align-items:stretch;">
-                        <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                 <span style="font-size:12px; color:#bae6fd; font-weight:700; text-transform:uppercase; letter-spacing:1px;"><i class="fas fa-book"></i> Aylık Yüklemeler</span>
                                 <span style="font-size:24px; font-weight:900; color:#38bdf8;">${aylikDefterTamam} <span style="font-size:14px; color:#7dd3fc;">/ ${aylikDefterTop}</span></span>
@@ -6178,7 +6192,7 @@
                             ${aylikDefterTop > 0 ? aylikBekleyenHtml : '<div style="font-size:11px; color:#64748b; margin-top:8px;">Bu aya ait kayıt yok.</div>'}
                         </div>
                         
-                        <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:10px; min-width:220px; display:flex; flex-direction:column; box-shadow:inset 0 2px 10px rgba(0,0,0,0.1);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                 <span style="font-size:12px; color:#e9d5ff; font-weight:700; text-transform:uppercase; letter-spacing:1px;"><i class="fas fa-book-open"></i> 3 Aylık Yüklemeler</span>
                                 <span style="font-size:24px; font-weight:900; color:#c084fc;">${ucAylikDefterTamam} <span style="font-size:14px; color:#d8b4fe;">/ ${ucAylikDefterTop}</span></span>
@@ -6216,15 +6230,6 @@
 
             document.getElementById("mdAktifProje").textContent = aktifPrjSay;
             document.getElementById("mdAktifProjelerListesi").innerHTML = prjListesiHtml || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Aktif yürütülen bir danışmanlık projesi bulunmuyor.</div>`;
-        }
-
-        function acDanismanlikEkleModal() {
-            let select = document.getElementById("danYeniFirmaSec");
-            select.innerHTML = '<option value="">-- Firma Seçiniz --</option>';
-            mukellefler.forEach(m => {
-                if(m.durum !== "Pasif") { select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; }
-            });
-            modalAc('danismanlikFirmaSecModal');
         }
 
         function danismanlikYeniFirmaBaslatBtn() {
