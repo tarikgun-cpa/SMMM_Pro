@@ -6062,8 +6062,15 @@
                 
                 let defterTarihiDash = null;
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
-                    if(isDefterUc) defterTarihiDash = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
-                    else defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+                    if(isDefterUc) {
+                        let donemAy = parseInt(donem.split("-")[1]);
+                        // 3 Aylık defterler sadece Şubat(2), Mayıs(5), Ağustos(8) ve Kasım(11) panosuna dahil edilir
+                        if ([2, 5, 8, 11].includes(donemAy)) {
+                            defterTarihiDash = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+                        }
+                    } else {
+                        defterTarihiDash = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+                    }
                     
                     if(defterTarihiDash) {
                         if(isDefterUc) { 
