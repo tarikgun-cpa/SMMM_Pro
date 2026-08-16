@@ -1658,7 +1658,16 @@
                     <button class="modal-close" onclick="modalKapat('kamuBorcDetayModal')">X</button>
                 </div>
                 <div class="modal-body" style="background:#f4f6f9; padding:20px;">
-                    <div class="cari-tabs" style="margin-bottom:15px; display:flex; gap:10px;">
+                    <!-- YAZDIRMA İÇİN ANTETLİ GİZLİ BAŞLIK -->
+                    <div class="print-header">
+                        <img src="SMMM Logo.png" alt="Logo">
+                        <div class="print-header-text">
+                            <h2>Tarık GÜN</h2>
+                            <p>Serbest Muhasebeci Mali Müşavir | Kamu Borç Dökümü</p>
+                        </div>
+                    </div>
+
+                    <div class="cari-tabs no-print" style="margin-bottom:15px; display:flex; gap:10px;">
                         <button class="cari-tab-btn active" id="btnKbVergiTab" onclick="kbSekmeDegistir('Vergi')" style="flex:1; background:#c0392b; color:white;"><i class="fas fa-file-invoice"></i> Vergi Dairesi Borçları</button>
                         <button class="cari-tab-btn" id="btnKbSgkTab" onclick="kbSekmeDegistir('SGK')" style="flex:1; background:#e1e8ed; color:#333;"><i class="fas fa-users"></i> SGK Prim Borçları</button>
                     </div>
@@ -1669,8 +1678,9 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="action-btn btn-primary" style="background:#2c3e50; width:100%;" onclick="modalKapat('kamuBorcDetayModal')">Kapat</button>
+                <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                    <button class="action-btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Listeyi Yazdır</button>
+                    <button class="action-btn btn-primary" style="background:#2c3e50;" onclick="modalKapat('kamuBorcDetayModal')">Kapat</button>
                 </div>
             </div>
         </div>
@@ -7201,7 +7211,7 @@
             return tarihStr;
         }
 
-        // A-B-C SÜTUN ADRESLEMELİ KESİN ÇÖZÜM GİB EXCEL OKUYUCU
+        // EN GÜÇLÜ VE HATASIZ GİB EXCEL OKUYUCU
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7214,94 +7224,126 @@
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // sheet_to_json'ı nesne formatında (object) okutuyoruz ki sütun harflerini (A,B,C..) kullanabilelim.
-                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: "A", defval: "" });
+                    // Saf dizi (array) formatında okuma - Sütun kaymalarını engeller
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
 
                     let baslikSatirIndeksi = -1;
+                    let headers = [];
 
-                    // Başlık satırını bul (A, B, C, D... objesi içinde ara)
+                    // 1. Başlık satırını bul
                     for (let i = 0; i < tumSatirlar.length; i++) {
-                        let row = tumSatirlar[i];
-                        let rowStr = Object.values(row).join(" ").toUpperCase();
+                        let rowStr = tumSatirlar[i].join(" ").toUpperCase();
                         if (rowStr.includes("ASIL") || rowStr.includes("TOPLAM") || rowStr.includes("TUTAR") || rowStr.includes("BORC")) {
                             baslikSatirIndeksi = i;
+                            headers = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
                             break;
                         }
                     }
 
+                    // Bulamazsa ilk satırı başlık say (GİB formatında bazen ilk satır başlıktır)
                     if (baslikSatirIndeksi === -1) {
-                        alert("Hata: GİB formatı algılanamadı. Excel dosyasında 'Vergi Türü' veya 'Tutar' başlıkları bulunamadı.");
-                        event.target.value = ""; return;
+                        baslikSatirIndeksi = 0;
+                        headers = tumSatirlar[0].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
                     }
 
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
+                    // 2. Parasal Değerleri Düzeltme Fonksiyonu
                     let parseTutar = (val) => {
-                        if (!val && val !== 0) return 0;
+                        if (val === undefined || val === null || val === "") return 0;
                         if (typeof val === 'number') return val;
-                        let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                        let str = String(val).trim();
+                        if (str === "-" || str === "") return 0;
+                        str = str.replace(/[A-Za-z₺ ]/g, ""); 
                         if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
                         else if (str.includes(',')) { str = str.replace(',', '.'); }
-                        return parseFloat(str) || 0;
+                        let num = parseFloat(str);
+                        return isNaN(num) ? 0 : num;
                     };
 
+                    // 3. Sütun İndekslerini Tespit Et (Bulamazsa GİB Standardı Ata)
+                    let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
+                    
+                    let idxVD = getColIdx(["VERGIDA", "DAIRE", "VD"]); if(idxVD === -1) idxVD = 0;
+                    let idxBelge = getColIdx(["BELGE"]); if(idxBelge === -1) idxBelge = 1;
+                    let idxTur = getColIdx(["VERGITUR", "TUR"]); if(idxTur === -1) idxTur = 2;
+                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM"]); if(idxDonem === -1) idxDonem = 3;
+                    let idxVade = getColIdx(["VADETARIH", "VADE"]); if(idxVade === -1) idxVade = 4;
+                    
+                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "TUTAR"]); if(idxAsil === -1) idxAsil = 5;
+                    let idxGecikme = getColIdx(["GECIKME", "ZAMMI"]); if(idxGecikme === -1) idxGecikme = 6;
+                    let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM"]); if(idxToplam === -1) idxToplam = 7;
+                    
+                    let idxPlaka = getColIdx(["PLAKA"]); if(idxPlaka === -1) idxPlaka = 8;
+
+                    // 4. Satırları Oku
                     for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
                         let row = tumSatirlar[i];
-                        let rowStr = Object.values(row).join(" ").toUpperCase();
+                        if (!row || row.length === 0 || row.join("").trim() === "") continue;
                         
-                        if (!rowStr || rowStr.trim() === "" || rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
+                        let rowStr = row.join(" ").toUpperCase();
+                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
 
                         try {
-                            // Excel Harf Sütunlarına Göre Sabit Adresleme (Böylece asla kaymaz)
-                            // A: VD, B: BelgeNo, C: Tür, D: Dönem, E: Vade, F: Asıl, G: Gecikme, H: Toplam, I: Plaka
-                            
-                            let asilDeger = row["F"] || row["G"] || 0; // F veya G'de olabilir diye ufak bir esneklik
-                            let gecikmeDeger = row["G"] || row["H"] || 0;
-                            let toplamDeger = row["H"] || row["I"] || 0;
+                            let anaPara = parseTutar(row[idxAsil]);
+                            let gecikme = parseTutar(row[idxGecikme]);
+                            let toplaTutar = parseTutar(row[idxToplam]);
 
-                            let anaPara = parseTutar(asilDeger);
-                            let gecikme = parseTutar(gecikmeDeger);
-                            let toplaTutar = parseTutar(toplamDeger);
+                            // Kontrol: Hepsi 0 ise boş satırdır
+                            if (anaPara === 0 && gecikme === 0 && toplaTutar === 0) continue;
 
-                            // Bazen Asıl Borç ile Gecikme Zammı yer değiştirebiliyor GİB tablolarında.
-                            // Eğer Asıl parayı bulamadıysak ama toplam varsa:
+                            // Bazen Asıl para ile Toplam yer değiştirebilir
                             if (anaPara === 0 && toplaTutar > 0) {
                                 anaPara = toplaTutar - gecikme;
                             }
 
-                            if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
-
-                            // Sütun D: Dönem, Sütun C: Tür (Excel'inizle birebir)
-                            let okunanDonem = row["D"] ? String(row["D"]).trim() : "-";
-                            let okunanTur = row["C"] ? String(row["C"]).trim() : "Vergi/Ceza Borcu";
+                            // Tür ve Dönem Okuma
+                            let okunanTur = row[idxTur] ? String(row[idxTur]).trim() : "Vergi/Ceza Borcu";
+                            let okunanDonem = row[idxDonem] ? String(row[idxDonem]).trim() : "-";
                             
-                            // Eğer bir şekilde C ve D sütunu boş geldiyse satırın içinden kelime arayıp kurtar
-                            if (okunanDonem === "-") {
-                                Object.values(row).forEach(cell => {
+                            // Akıllı Kurtarma (Eğer dönem veya tür boş kalmışsa satır içinden bul)
+                            if (okunanDonem === "-" || okunanDonem === "") {
+                                row.forEach(cell => {
                                     let c = String(cell).trim();
                                     if(c.match(/[0-9]{4}[\/\-][0-9]{2}/) || c.match(/[0-9]{2}[\/\-][0-9]{4}/)) okunanDonem = c;
                                 });
                             }
+                            if (okunanTur === "Vergi/Ceza Borcu" || okunanTur === "") {
+                                row.forEach(cell => {
+                                    let c = String(cell).trim();
+                                    if(isNaN(c) && c.length > 5 && /[a-zA-Z]/.test(c) && !c.match(/[0-9]{4}[\/\-][0-9]{2}/) && !c.match(/^[0-9]{2}[A-Z]{1,3}[0-9]{2,4}$/)) {
+                                        okunanTur = c;
+                                    }
+                                });
+                            }
+
+                            if(!okunanTur) okunanTur = "Vergi Borcu";
+                            if(!okunanDonem) okunanDonem = "-";
 
                             tVergiAna += anaPara;
                             tVergiGecikme += gecikme;
 
                             yeniBorclar.push({
                                 kurum: "Vergi", 
-                                vd: row["A"] ? String(row["A"]).trim() : "", 
-                                belgeNo: row["B"] ? String(row["B"]).trim() : "",
-                                tur: okunanTur.replace(/\n/g, " "), // Excel'de alt satıra geçme varsa düzelt
-                                donem: okunanDonem.replace(/\n/g, " "),
-                                vade: row["E"] ? parseTarih(row["E"]) : "-", 
+                                vd: row[idxVD] ? String(row[idxVD]).trim() : "", 
+                                belgeNo: row[idxBelge] ? String(row[idxBelge]).trim() : "",
+                                tur: okunanTur, 
+                                donem: okunanDonem,
+                                vade: row[idxVade] ? parseTarih(row[idxVade]) : "-", 
                                 asil: anaPara,
                                 gecikme: gecikme, 
                                 toplam: toplaTutar, 
-                                plaka: row["I"] ? String(row["I"]).trim() : ""
+                                plaka: row[idxPlaka] ? String(row[idxPlaka]).trim() : ""
                             });
                         } catch (e) {
-                            console.warn("Satır işlenemedi (Sessizce atlandı):", row);
+                            console.warn("Satır atlandı:", e);
                         }
+                    }
+
+                    if (yeniBorclar.length === 0) {
+                        alert("Hata: Excel dosyası okundu ancak borç satırı bulunamadı. Sütunların GİB formatında olduğundan emin olun.");
+                        event.target.value = ""; return;
                     }
 
                     let m = mukellefler.find(x => x.vkn === seciliVkn);
@@ -7332,7 +7374,7 @@
             };
             reader.readAsArrayBuffer(dosya);
         }
-        
+
         // YENİ: SGK SİSTEMİNDEN ALINAN EXCELİ OKUMA MOTORU
         function sgkExcelOku(event) {
             let dosya = event.target.files[0];
