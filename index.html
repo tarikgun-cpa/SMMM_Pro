@@ -812,6 +812,7 @@
             <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')"><i class="fas fa-building" style="width:20px; text-align:center;"></i> Şirket Kuruluşu</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')"><i class="fas fa-tasks" style="width:20px; text-align:center;"></i> Görev & Projeler</a></li>
             <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')"><i class="fas fa-file-invoice-dollar" style="width:20px; text-align:center;"></i> Vergi Ödemeleri</a></li>
+            <li id="menuKamuBorc"><a href="#" onclick="sayfaDegistir('kamuBorcPaneli')"><i class="fas fa-landmark" style="width:20px; text-align:center;"></i> Kamu Borç Takibi</a></li>
             
             <div class="menu-label">Finans & Gelir</div>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')"><i class="fas fa-calculator" style="width:20px; text-align:center;"></i> Ücret Sihirbazı</a></li>
@@ -1586,6 +1587,117 @@
                 <thead><tr><th>Teklif Adı (Yılı)</th><th>İlgili Müşteri</th><th>Genel Aylık Tutar</th><th>Durum</th><th>Onay Detayı</th><th>İşlemler</th></tr></thead>
                 <tbody id="teklifListeGövdesi"></tbody>
             </table>
+        </div>
+
+        <!-- YENİ: KAMU BORÇ TAKİBİ PANELİ -->
+        <div id="kamuBorcPaneli" class="view-section" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-landmark" style="color:#c0392b;"></i> Müşteri Kamu Borç Takibi</h1>
+                <div style="display:flex; gap:10px;">
+                    <button class="action-btn btn-secondary" style="margin:0; background:#7f8c8d; color:white;" onclick="kamuBorcSablonIndir()"><i class="fas fa-download"></i> Excel Şablonu İndir</button>
+                    <button class="action-btn" style="margin:0; background:#c0392b; color:white;" onclick="document.getElementById('kamuBorcExcelInput').click()"><i class="fas fa-file-excel"></i> Excel'den Borç Aktar</button>
+                    <input type="file" id="kamuBorcExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="kamuBorcExcelOku(event)">
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:20px;">
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #c0392b; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Toplam Vergi Borcu (GİB)</div>
+                    <div id="kbToplamVergi" style="font-size:20px; font-weight:900; color:#c0392b;">0.00 ₺</div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #f39c12; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Toplam SGK Borcu</div>
+                    <div id="kbToplamSgk" style="font-size:20px; font-weight:900; color:#f39c12;">0.00 ₺</div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #2c3e50; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Genel Toplam Kamu Borcu</div>
+                    <div id="kbGenelToplam" style="font-size:20px; font-weight:900; color:#2c3e50;">0.00 ₺</div>
+                </div>
+            </div>
+
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="kamuBorcArama" class="search-bar" placeholder="Firma unvanı veya VKN ara..." oninput="kamuBorclariListele()" style="width: 100%;">
+            </div>
+            
+            <div class="table-responsive">
+                <table class="mukellef-table">
+                    <thead>
+                        <tr>
+                            <th>Mükellef Unvanı (VKN)</th>
+                            <th style="text-align:right;">Vergi Ana Para</th>
+                            <th style="text-align:right;">Vergi Gecikme Z.</th>
+                            <th style="text-align:right; color:#c0392b;">Vergi Toplam</th>
+                            <th style="text-align:right;">SGK Ana Para</th>
+                            <th style="text-align:right;">SGK Gecikme Z.</th>
+                            <th style="text-align:right; color:#f39c12;">SGK Toplam</th>
+                            <th style="text-align:right; color:#2c3e50;">Genel Toplam</th>
+                            <th>Son Güncelleme</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kamuBorcListeGovdesi"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- YENİ: KAMU BORÇ TAKİBİ PANELİ -->
+        <div id="kamuBorcPaneli" class="view-section" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-landmark" style="color:#c0392b;"></i> Müşteri Kamu Borç Takibi</h1>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    
+                    <!-- GİB Excel Yükleme Alanı -->
+                    <select id="kamuBorcMusteriSecici" class="search-bar" style="max-width:250px; border:2px solid #c0392b; font-weight:bold; padding:8px;">
+                        <option value="">-- GİB Exceli İçin Firma Seç --</option>
+                    </select>
+                    <button class="action-btn" style="margin:0; background:#c0392b; color:white;" onclick="gibExcelTetikle()"><i class="fas fa-file-excel"></i> GİB Dökümü Yükle</button>
+                    <input type="file" id="gibExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="gibExcelOku(event)">
+                    
+                    <span style="color:#bdc3c7; font-size:20px; margin:0 5px;">|</span>
+                    
+                    <!-- Toplu Şablon Alanı -->
+                    <button class="action-btn btn-secondary" style="margin:0; background:#7f8c8d; color:white;" onclick="kamuBorcSablonIndir()"><i class="fas fa-download"></i> SGK/Toplu Şablon</button>
+                    <button class="action-btn" style="margin:0; background:#2c3e50; color:white;" onclick="document.getElementById('kamuBorcExcelInput').click()"><i class="fas fa-upload"></i> Toplu Yükle</button>
+                    <input type="file" id="kamuBorcExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="kamuBorcExcelOku(event)">
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:20px;">
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #c0392b; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Toplam Vergi Borcu (GİB)</div>
+                    <div id="kbToplamVergi" style="font-size:20px; font-weight:900; color:#c0392b;">0.00 ₺</div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #f39c12; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Toplam SGK Borcu</div>
+                    <div id="kbToplamSgk" style="font-size:20px; font-weight:900; color:#f39c12;">0.00 ₺</div>
+                </div>
+                <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #2c3e50; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Genel Toplam Kamu Borcu</div>
+                    <div id="kbGenelToplam" style="font-size:20px; font-weight:900; color:#2c3e50;">0.00 ₺</div>
+                </div>
+            </div>
+
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="kamuBorcArama" class="search-bar" placeholder="Firma unvanı veya VKN ara..." oninput="kamuBorclariListele()" style="width: 100%;">
+            </div>
+            
+            <div class="table-responsive">
+                <table class="mukellef-table">
+                    <thead>
+                        <tr>
+                            <th>Mükellef Unvanı (VKN)</th>
+                            <th style="text-align:right;">Vergi Ana Para</th>
+                            <th style="text-align:right;">Vergi Gecikme Z.</th>
+                            <th style="text-align:right; color:#c0392b;">Vergi Toplam</th>
+                            <th style="text-align:right;">SGK Ana Para</th>
+                            <th style="text-align:right;">SGK Gecikme Z.</th>
+                            <th style="text-align:right; color:#f39c12;">SGK Toplam</th>
+                            <th style="text-align:right; color:#2c3e50;">Genel Toplam</th>
+                            <th>Son Güncelleme</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kamuBorcListeGovdesi"></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="kurulusPaneli" class="view-section" style="display: none;">
@@ -3395,8 +3507,24 @@
             let takvimPaneli = document.getElementById('takvimPaneli');
             let odemelerPaneli = document.getElementById('odemelerPaneli');
             let kurulusPaneli = document.getElementById('kurulusPaneli');
+            let kamuBorcPaneli = document.getElementById('kamuBorcPaneli');
 
             if(masterDash) masterDash.style.display = 'none';
+            if(liste) liste.style.display = 'none'; 
+            if(form) form.style.display = 'none';
+            if(sihirbaz) sihirbaz.style.display = 'none'; 
+            if(tekliflerPaneli) tekliflerPaneli.style.display = 'none';
+            if(faturaPaneli) faturaPaneli.style.display = 'none';
+            if(ayarlarPaneli) ayarlarPaneli.style.display = 'none'; 
+            if(cariPaneli) cariPaneli.style.display = 'none';
+            if(takvimPaneli) takvimPaneli.style.display = 'none';
+            if(document.getElementById('menuMaster')) document.getElementById('menuMaster').classList.remove('active');
+            if(odemelerPaneli) odemelerPaneli.style.display = 'none';
+            if(document.getElementById('menuOdemeler')) document.getElementById('menuOdemeler').classList.remove('active');
+            if(kurulusPaneli) kurulusPaneli.style.display = 'none';
+            if(document.getElementById('menuKurulus')) document.getElementById('menuKurulus').classList.remove('active');
+            if(kamuBorcPaneli) kamuBorcPaneli.style.display = 'none';
+            if(document.getElementById('menuKamuBorc')) document.getElementById('menuKamuBorc').classList.remove('active');
             if(liste) liste.style.display = 'none'; 
             if(form) form.style.display = 'none';
             if(sihirbaz) sihirbaz.style.display = 'none'; 
@@ -3462,8 +3590,26 @@
                 
                 odemeleriListele(); 
             }
-            else if (hedefPaneli === 'kurulusPaneli') { 
+           else if (hedefPaneli === 'kurulusPaneli') { 
                 if(kurulusPaneli) kurulusPaneli.style.display = 'block'; document.getElementById('menuKurulus').classList.add('active'); kuruluslariListele(); 
+            }
+            else if (hedefPaneli === 'kamuBorcPaneli') { 
+                let kbPanel = document.getElementById('kamuBorcPaneli');
+                if(kbPanel) kbPanel.style.display = 'block'; 
+                let mKb = document.getElementById('menuKamuBorc');
+                if(mKb) mKb.classList.add('active');
+                
+                // Müşteri seçiciyi GİB aktarımı için doldur
+                let secici = document.getElementById('kamuBorcMusteriSecici');
+                if(secici) {
+                    secici.innerHTML = '<option value="">-- GİB Exceli İçin Firma Seç --</option>';
+                    mukellefler.forEach(m => {
+                        if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") {
+                            secici.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`;
+                        }
+                    });
+                }
+                kamuBorclariListele(); 
             }
         }
 
@@ -6143,8 +6289,7 @@
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
             document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
-
-            // YENİ AI YÖNETİCİ ÖZETİ YAZISI (İstediğiniz netliğe kavuştu)
+// YENİ AI YÖNETİCİ ÖZETİ YAZISI (Kamu Borçları ve Cari Dahil)
             let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
             if(aiYoneticiKutu) {
                 let aiMesaj = "";
@@ -6160,6 +6305,36 @@
                 else bMetin = "Tüm beyannameler tamamlandı.";
 
                 aiMesaj = `${dMetin} ${bMetin} Finansal tablonuza göre hareket ederek önceliklerinizi belirleyebilirsiniz.`;
+                
+                // Unutulan Tahsilat Uyarısı Geri Eklendi
+                if (totalAlacak > 50000) {
+                    aiMesaj += `<br><span style="color:#3498db; font-size:12px; margin-top:5px; display:inline-block;"><i class="fas fa-info-circle"></i> Finansal olarak piyasada tahsil edilmeyi bekleyen <b style="color:#e74c3c;">${formatMoney(totalAlacak)} TL</b> alacağınız birikmiş durumda. Ay sonu gelmeden vade takibi yaparak tahsilatlara hız vermelisiniz.</span>`;
+                }
+
+                // YENİ: Kamu Borcu ve SGK Teşvik İptal Riski Kontrolü
+                let riskliSgkFirmaSayisi = 0;
+                let toplamKamuBorcu = 0;
+                mukellefler.forEach(m => {
+                    if (m.kamuBorcu) {
+                        let sgkBorc = (m.kamuBorcu.sgkAna || 0) + (m.kamuBorcu.sgkGecikme || 0);
+                        let vergiBorc = (m.kamuBorcu.vergiAna || 0) + (m.kamuBorcu.vergiGecikme || 0);
+                        toplamKamuBorcu += (sgkBorc + vergiBorc);
+                        
+                        let calisanSayisi = parseInt(m.sgkCalisanSayisi) || 0;
+                        if (sgkBorc > 0 && calisanSayisi > 0 && m.durum !== "Pasif") {
+                            riskliSgkFirmaSayisi++;
+                        }
+                    }
+                });
+
+                if (toplamKamuBorcu > 0) {
+                    aiMesaj += `<br><span style="color:#c0392b; font-size:12px; margin-top:5px; display:inline-block;"><i class="fas fa-landmark"></i> Müşterilerinizin toplamda <b style="font-weight:900;">${formatMoney(toplamKamuBorcu)} TL</b> kamu borcu (Vergi+SGK) bulunmaktadır.</span>`;
+                }
+                
+                if (riskliSgkFirmaSayisi > 0) {
+                    aiMesaj += `<br><span style="background:#fef3c7; border:1px solid #f59e0b; padding:4px 6px; border-radius:4px; color:#d97706; font-size:12px; margin-top:5px; display:inline-block; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> DİKKAT: SGK borcu bulunan ve aktif çalışanı olan ${riskliSgkFirmaSayisi} firmanın SGK İSTİHDAM TEŞVİKLERİ YANABİLİR!</span>`;
+                }
+
                 aiYoneticiKutu.innerHTML = aiMesaj;
             }
 
@@ -7012,6 +7187,447 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // --- YENİ EKLENEN: KAMU BORÇ TAKİBİ MOTORU ---
+        function kamuBorcSablonIndir() {
+            let ws_data = [
+                ["VKN/TCKN", "Firma Unvanı", "Vergi Ana Para", "Vergi Gecikme Zammı", "SGK Ana Para", "SGK Gecikme Zammı", "Dönem/Notlar"],
+                ["11111111111", "Örnek Firma Ltd. Şti.", "15000.50", "2500.00", "8000.00", "1200.00", "2026/07 Dökümü"],
+                ["22222222222", "Test Şahıs Firması", "0", "0", "5000", "450", "Yapılandırma bozuldu"]
+            ];
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Kamu Borclari");
+            XLSX.writeFile(wb, "SMMM_Kamu_Borclari_Sablonu.xlsx");
+        }
+
+        function kamuBorcExcelOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+
+                    let baslikSatirIndeksi = -1;
+                    let headers = [];
+
+                    for (let i = 0; i < tumSatirlar.length; i++) {
+                        let satirMetni = tumSatirlar[i].join(" ").toUpperCase();
+                        if (satirMetni.includes("VKN") || satirMetni.includes("TCKN")) {
+                            baslikSatirIndeksi = i;
+                            headers = tumSatirlar[i];
+                            break;
+                        }
+                    }
+
+                    if (baslikSatirIndeksi === -1) {
+                        alert("Hata: Şablona uygun başlık satırı (VKN/TCKN vb.) bulunamadı.");
+                        event.target.value = "";
+                        return;
+                    }
+
+                    let islemSayisi = 0;
+                    let bugunStr = new Date().toLocaleDateString('tr-TR');
+
+                    for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
+                        let row = tumSatirlar[i];
+                        if (row.length === 0 || row.join("").trim() === "") continue;
+
+                        let getVal = (keywords) => {
+                            for (let j = 0; j < headers.length; j++) {
+                                if (!headers[j]) continue;
+                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
+                                for (let kw of keywords) {
+                                    let cleanKw = kw.toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, "");
+                                    if (b.includes(cleanKw)) {
+                                        return row[j];
+                                    }
+                                }
+                            }
+                            return null;
+                        };
+
+                        let vknRaw = getVal(["VKN", "TCKN"]) || row[0];
+                        if (!vknRaw) continue;
+                        let vkn = String(vknRaw).trim();
+
+                        let parseTutar = (val) => {
+                            if (!val && val !== 0) return 0;
+                            if (typeof val === 'number') return val;
+                            let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                            if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+                            else if (str.includes(',')) { str = str.replace(',', '.'); }
+                            let num = parseFloat(str);
+                            return isNaN(num) ? 0 : num;
+                        };
+
+                        let vAna = parseTutar(getVal(["VERGİANA"]) || row[2]);
+                        let vGecikme = parseTutar(getVal(["VERGİGECİKME", "VERGİZAM"]) || row[3]);
+                        let sAna = parseTutar(getVal(["SGKANA"]) || row[4]);
+                        let sGecikme = parseTutar(getVal(["SGKGECİKME", "SGKZAM"]) || row[5]);
+                        let notlar = getVal(["DÖNEM", "NOT", "AÇIKLAMA"]) || row[6] || "";
+
+                        let m = mukellefler.find(x => x.vkn === vkn);
+                        if (m) {
+                            m.kamuBorcu = {
+                                vergiAna: vAna,
+                                vergiGecikme: vGecikme,
+                                sgkAna: sAna,
+                                sgkGecikme: sGecikme,
+                                sonGuncelleme: bugunStr,
+                                notlar: notlar
+                            };
+                            islemSayisi++;
+                        }
+                    }
+
+                    if (islemSayisi > 0) {
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        kamuBorclariListele();
+                        masterDashboardCiz(); // Panodaki borç bilgisini de güncelletelim
+                        alert(`İşlem Tamamlandı!\n🎉 ${islemSayisi} firmanın kamu borç bilgileri güncellendi.`);
+                    } else {
+                        alert("Eşleşen VKN bulunamadı veya tutar girilmedi.");
+                    }
+                    event.target.value = ""; 
+                } catch (error) {
+                    console.error(error);
+                    alert("Excel okunurken hata oluştu.");
+                }
+            };
+            reader.readAsArrayBuffer(dosya);
+        }
+
+        function kamuBorclariListele() {
+            let tbody = document.getElementById('kamuBorcListeGovdesi');
+            if(!tbody) return;
+            let arama = document.getElementById('kamuBorcArama').value.toLowerCase().trim();
+            tbody.innerHTML = '';
+
+            let tVergi = 0; let tSgk = 0; let tGenel = 0;
+
+            let borcluFirmalar = mukellefler.filter(m => m.kamuBorcu && (m.kamuBorcu.vergiAna > 0 || m.kamuBorcu.vergiGecikme > 0 || m.kamuBorcu.sgkAna > 0 || m.kamuBorcu.sgkGecikme > 0));
+            
+            // Toplama göre azalan sıralama (En borçlu en üstte)
+            borcluFirmalar.sort((a,b) => {
+                let aTop = (a.kamuBorcu.vergiAna + a.kamuBorcu.vergiGecikme + a.kamuBorcu.sgkAna + a.kamuBorcu.sgkGecikme);
+                let bTop = (b.kamuBorcu.vergiAna + b.kamuBorcu.vergiGecikme + b.kamuBorcu.sgkAna + b.kamuBorcu.sgkGecikme);
+                return bTop - aTop;
+            });
+
+            borcluFirmalar.forEach(m => {
+                let b = m.kamuBorcu;
+                let vTop = b.vergiAna + b.vergiGecikme;
+                let sTop = b.sgkAna + b.sgkGecikme;
+                let gTop = vTop + sTop;
+
+                tVergi += vTop;
+                tSgk += sTop;
+                tGenel += gTop;
+
+                if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
+
+                let sgkUyari = (sTop > 0 && m.sgkCalisanSayisi > 0) ? `<br><span style="background:#fef3c7; color:#d97706; font-size:10px; padding:2px 4px; border-radius:4px;"><i class="fas fa-exclamation-triangle"></i> Teşvik İptal Riski</span>` : "";
+
+                tbody.innerHTML += `<tr>
+                    <td><b style="color:#2c3e50;">${m.unvan}</b><br><small style="color:#7f8c8d;">VKN: ${m.vkn}</small>${sgkUyari}</td>
+                    <td style="text-align:right;">${formatMoney(b.vergiAna)} ₺</td>
+                    <td style="text-align:right; color:#c0392b;">${formatMoney(b.vergiGecikme)} ₺</td>
+                    <td style="text-align:right; font-weight:bold; color:#c0392b; background:#fdf2f2;">${formatMoney(vTop)} ₺</td>
+                    <td style="text-align:right;">${formatMoney(b.sgkAna)} ₺</td>
+                    <td style="text-align:right; color:#d35400;">${formatMoney(b.sgkGecikme)} ₺</td>
+                    <td style="text-align:right; font-weight:bold; color:#d35400; background:#fef9e7;">${formatMoney(sTop)} ₺</td>
+                    <td style="text-align:right; font-weight:900; color:#2c3e50; font-size:15px; background:#f4f6f9;">${formatMoney(gTop)} ₺</td>
+                    <td><small style="color:#7f8c8d;">${b.sonGuncelleme}<br>${b.notlar}</small></td>
+                </tr>`;
+            });
+
+            if(borcluFirmalar.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#27ae60; font-weight:bold;"><i class="fas fa-check-circle" style="font-size:24px; display:block; margin-bottom:10px;"></i>Sistemde kamu borcu (Vergi/SGK) kayıtlı olan mükellef bulunmuyor.</td></tr>`;
+            }
+
+            document.getElementById("kbToplamVergi").textContent = formatMoney(tVergi) + " ₺";
+            document.getElementById("kbToplamSgk").textContent = formatMoney(tSgk) + " ₺";
+            document.getElementById("kbGenelToplam").textContent = formatMoney(tGenel) + " ₺";
+        }
+
+        // --- YENİ EKLENEN: GİB & KAMU BORÇ TAKİBİ MOTORU ---
+        function kamuBorcSablonIndir() {
+            let ws_data = [
+                ["VKN/TCKN", "Firma Unvanı", "Vergi Ana Para", "Vergi Gecikme Zammı", "SGK Ana Para", "SGK Gecikme Zammı", "Dönem/Notlar"],
+                ["11111111111", "Örnek Firma Ltd. Şti.", "15000.50", "2500.00", "8000.00", "1200.00", "2026/07 Dökümü"],
+                ["22222222222", "Test Şahıs Firması", "0", "0", "5000", "450", "Yapılandırma bozuldu"]
+            ];
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Kamu Borclari");
+            XLSX.writeFile(wb, "SMMM_Kamu_Borclari_Sablonu.xlsx");
+        }
+
+        // GİB Excel'ini Okuyan Özel Fonksiyon (Tutar bulucu)
+        function gibExcelTetikle() {
+            let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
+            if (!seciliVkn) {
+                alert("Lütfen önce vergi borcunun ekleneceği Mükellefi seçici kutudan seçin!");
+                return;
+            }
+            document.getElementById('gibExcelInput').click();
+        }
+
+        function gibExcelOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+
+            let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+
+                    let baslikSatirIndeksi = -1;
+                    let asilBorcIndex = -1;
+                    let gecikmeZammiIndex = -1;
+
+                    // GİB Excel'inde başlıkları bulur ("Asıl Borç" ve "Gecikme Zammı")
+                    for (let i = 0; i < tumSatirlar.length; i++) {
+                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().trim());
+                        let asilIdx = satirMetni.findIndex(v => v.includes("ASIL BOR"));
+                        let gecikmeIdx = satirMetni.findIndex(v => v.includes("GECİKME") || v.includes("GECIKME"));
+                        
+                        if (asilIdx !== -1 && gecikmeIdx !== -1) {
+                            baslikSatirIndeksi = i;
+                            asilBorcIndex = asilIdx;
+                            gecikmeZammiIndex = gecikmeIdx;
+                            break;
+                        }
+                    }
+
+                    if (baslikSatirIndeksi === -1) {
+                        alert("Hata: Yüklediğiniz Excel'de 'Asıl Borç' ve 'Gecikme Zammı' sütunları bulunamadı. Lütfen GİB İnternet Vergi Dairesinden indirdiğiniz dosyayı seçin.");
+                        event.target.value = "";
+                        return;
+                    }
+
+                    let tVergiAna = 0;
+                    let tVergiGecikme = 0;
+
+                    let parseTutar = (val) => {
+                        if (!val && val !== 0) return 0;
+                        if (typeof val === 'number') return val;
+                        let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                        if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+                        else if (str.includes(',')) { str = str.replace(',', '.'); }
+                        let num = parseFloat(str);
+                        return isNaN(num) ? 0 : num;
+                    };
+
+                    for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
+                        let row = tumSatirlar[i];
+                        if (!row || row.length === 0 || row.join("").trim() === "") continue;
+                        
+                        // Alt Toplam Satırlarını Ekleme Riskini Önler
+                        let rowStr = row.join(" ").toUpperCase();
+                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/) || (rowStr.includes("TOPLAM") && !rowStr.includes("VERGİ"))) continue;
+
+                        let anaPara = parseTutar(row[asilBorcIndex]);
+                        let gecikme = parseTutar(row[gecikmeZammiIndex]);
+                        
+                        tVergiAna += anaPara;
+                        tVergiGecikme += gecikme;
+                    }
+
+                    let m = mukellefler.find(x => x.vkn === seciliVkn);
+                    if (m) {
+                        let bugunStr = new Date().toLocaleDateString('tr-TR');
+                        if(!m.kamuBorcu) m.kamuBorcu = { vergiAna: 0, vergiGecikme: 0, sgkAna: 0, sgkGecikme: 0, sonGuncelleme: "", notlar: "" };
+                        
+                        m.kamuBorcu.vergiAna = tVergiAna;
+                        m.kamuBorcu.vergiGecikme = tVergiGecikme;
+                        m.kamuBorcu.sonGuncelleme = bugunStr;
+                        m.kamuBorcu.notlar = "GİB Orijinal Excel'den hesaplandı.";
+
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        kamuBorclariListele();
+                        if(typeof masterDashboardCiz === "function") masterDashboardCiz();
+                        
+                        alert(`İşlem Tamamlandı!\n🎉 ${m.unvan} firmasının vergi borcu başarıyla GİB'den güncellendi.\nAna Para: ${formatMoney(tVergiAna)} ₺\nGecikme: ${formatMoney(tVergiGecikme)} ₺`);
+                    }
+                    
+                    event.target.value = ""; 
+                } catch (error) {
+                    console.error(error);
+                    alert("GİB Excel'i okunurken bir hata oluştu.");
+                }
+            };
+            reader.readAsArrayBuffer(dosya);
+        }
+
+        // Toplu Şablonu Okuyan Fonksiyon
+        function kamuBorcExcelOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+
+                    let baslikSatirIndeksi = -1;
+                    let headers = [];
+
+                    for (let i = 0; i < tumSatirlar.length; i++) {
+                        let satirMetni = tumSatirlar[i].join(" ").toUpperCase();
+                        if (satirMetni.includes("VKN") || satirMetni.includes("TCKN")) {
+                            baslikSatirIndeksi = i;
+                            headers = tumSatirlar[i];
+                            break;
+                        }
+                    }
+
+                    if (baslikSatirIndeksi === -1) {
+                        alert("Hata: Şablona uygun başlık satırı (VKN/TCKN vb.) bulunamadı.");
+                        event.target.value = "";
+                        return;
+                    }
+
+                    let islemSayisi = 0;
+                    let bugunStr = new Date().toLocaleDateString('tr-TR');
+
+                    for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
+                        let row = tumSatirlar[i];
+                        if (row.length === 0 || row.join("").trim() === "") continue;
+
+                        let getVal = (keywords) => {
+                            for (let j = 0; j < headers.length; j++) {
+                                if (!headers[j]) continue;
+                                let b = String(headers[j]).toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, ""); 
+                                for (let kw of keywords) {
+                                    let cleanKw = kw.toLocaleUpperCase('tr-TR').replace(/[^A-ZÇĞİÖŞÜ0-9]/g, "");
+                                    if (b.includes(cleanKw)) {
+                                        return row[j];
+                                    }
+                                }
+                            }
+                            return null;
+                        };
+
+                        let vknRaw = getVal(["VKN", "TCKN"]) || row[0];
+                        if (!vknRaw) continue;
+                        let vkn = String(vknRaw).trim();
+
+                        let parseTutar = (val) => {
+                            if (!val && val !== 0) return 0;
+                            if (typeof val === 'number') return val;
+                            let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                            if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+                            else if (str.includes(',')) { str = str.replace(',', '.'); }
+                            let num = parseFloat(str);
+                            return isNaN(num) ? 0 : num;
+                        };
+
+                        let vAna = parseTutar(getVal(["VERGİANA"]) || row[2]);
+                        let vGecikme = parseTutar(getVal(["VERGİGECİKME", "VERGİZAM"]) || row[3]);
+                        let sAna = parseTutar(getVal(["SGKANA"]) || row[4]);
+                        let sGecikme = parseTutar(getVal(["SGKGECİKME", "SGKZAM"]) || row[5]);
+                        let notlar = getVal(["DÖNEM", "NOT", "AÇIKLAMA"]) || row[6] || "";
+
+                        let m = mukellefler.find(x => x.vkn === vkn);
+                        if (m) {
+                            if(!m.kamuBorcu) m.kamuBorcu = { vergiAna: 0, vergiGecikme: 0, sgkAna: 0, sgkGecikme: 0, sonGuncelleme: "", notlar: "" };
+                            
+                            // Üstüne yazar, eski veriyi temizler
+                            m.kamuBorcu.vergiAna = vAna;
+                            m.kamuBorcu.vergiGecikme = vGecikme;
+                            m.kamuBorcu.sgkAna = sAna;
+                            m.kamuBorcu.sgkGecikme = sGecikme;
+                            m.kamuBorcu.sonGuncelleme = bugunStr;
+                            m.kamuBorcu.notlar = notlar;
+                            
+                            islemSayisi++;
+                        }
+                    }
+
+                    if (islemSayisi > 0) {
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        kamuBorclariListele();
+                        if(typeof masterDashboardCiz === "function") masterDashboardCiz();
+                        alert(`İşlem Tamamlandı!\n🎉 ${islemSayisi} firmanın SGK ve Vergi borç bilgileri güncellendi.`);
+                    } else {
+                        alert("Eşleşen VKN bulunamadı.");
+                    }
+                    event.target.value = ""; 
+                } catch (error) {
+                    console.error(error);
+                    alert("Excel okunurken hata oluştu.");
+                }
+            };
+            reader.readAsArrayBuffer(dosya);
+        }
+
+        function kamuBorclariListele() {
+            let tbody = document.getElementById('kamuBorcListeGovdesi');
+            if(!tbody) return;
+            let arama = document.getElementById('kamuBorcArama').value.toLowerCase().trim();
+            tbody.innerHTML = '';
+
+            let tVergi = 0; let tSgk = 0; let tGenel = 0;
+
+            let borcluFirmalar = mukellefler.filter(m => m.kamuBorcu && (m.kamuBorcu.vergiAna > 0 || m.kamuBorcu.vergiGecikme > 0 || m.kamuBorcu.sgkAna > 0 || m.kamuBorcu.sgkGecikme > 0));
+            
+            // Toplama göre azalan sıralama (En borçlu en üstte)
+            borcluFirmalar.sort((a,b) => {
+                let aTop = (a.kamuBorcu.vergiAna + a.kamuBorcu.vergiGecikme + a.kamuBorcu.sgkAna + a.kamuBorcu.sgkGecikme);
+                let bTop = (b.kamuBorcu.vergiAna + b.kamuBorcu.vergiGecikme + b.kamuBorcu.sgkAna + b.kamuBorcu.sgkGecikme);
+                return bTop - aTop;
+            });
+
+            borcluFirmalar.forEach(m => {
+                let b = m.kamuBorcu;
+                let vTop = b.vergiAna + b.vergiGecikme;
+                let sTop = b.sgkAna + b.sgkGecikme;
+                let gTop = vTop + sTop;
+
+                tVergi += vTop;
+                tSgk += sTop;
+                tGenel += gTop;
+
+                if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
+
+                let sgkUyari = (sTop > 0 && m.sgkCalisanSayisi > 0 && m.durum !== "Pasif") ? `<br><span style="background:#fef3c7; border:1px solid #f59e0b; color:#d97706; font-size:10px; font-weight:bold; padding:2px 4px; border-radius:4px; display:inline-block; margin-top:4px;"><i class="fas fa-exclamation-triangle"></i> Teşvik İptal Riski!</span>` : "";
+
+                tbody.innerHTML += `<tr>
+                    <td><b style="color:#2c3e50;">${m.unvan}</b><br><small style="color:#7f8c8d;">VKN: ${m.vkn}</small>${sgkUyari}</td>
+                    <td style="text-align:right;">${formatMoney(b.vergiAna)} ₺</td>
+                    <td style="text-align:right; color:#c0392b;">${formatMoney(b.vergiGecikme)} ₺</td>
+                    <td style="text-align:right; font-weight:bold; color:#c0392b; background:#fdf2f2;">${formatMoney(vTop)} ₺</td>
+                    <td style="text-align:right;">${formatMoney(b.sgkAna)} ₺</td>
+                    <td style="text-align:right; color:#d35400;">${formatMoney(b.sgkGecikme)} ₺</td>
+                    <td style="text-align:right; font-weight:bold; color:#d35400; background:#fef9e7;">${formatMoney(sTop)} ₺</td>
+                    <td style="text-align:right; font-weight:900; color:#2c3e50; font-size:15px; background:#f4f6f9;">${formatMoney(gTop)} ₺</td>
+                    <td><small style="color:#7f8c8d;">${b.sonGuncelleme}<br>${b.notlar}</small></td>
+                </tr>`;
+            });
+
+            if(borcluFirmalar.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#27ae60; font-weight:bold;"><i class="fas fa-check-circle" style="font-size:24px; display:block; margin-bottom:10px;"></i>Sistemde kamu borcu (Vergi/SGK) kayıtlı olan mükellef bulunmuyor.</td></tr>`;
+            }
+
+            document.getElementById("kbToplamVergi").textContent = formatMoney(tVergi) + " ₺";
+            document.getElementById("kbToplamSgk").textContent = formatMoney(tSgk) + " ₺";
+            document.getElementById("kbGenelToplam").textContent = formatMoney(tGenel) + " ₺";
         }
 
     </script>
