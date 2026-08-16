@@ -7201,7 +7201,7 @@
             return tarihStr;
         }
 
-        // YAPAY ZEKA GİBİ ÇALIŞAN, SÜTUN İSİMLERİNE DAHA AZ BAĞIMLI GİB EXCEL OKUYUCU
+        // EKRAN GÖRÜNTÜSÜNE GÖRE TAM OPTİMİZE EDİLMİŞ GİB EXCEL OKUYUCU
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7220,6 +7220,7 @@
 
                     for (let i = 0; i < tumSatirlar.length; i++) {
                         let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
+                        // Başlık satırını bulma
                         if (satirMetni.some(v => v.includes("ASIL") || v.includes("TUTAR") || v.includes("BORC") || v.includes("TOPLAM"))) {
                             baslikSatirIndeksi = i;
                             headers = satirMetni;
@@ -7235,15 +7236,19 @@
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
+                    // Kolon adlarını Ekran Görüntünüzdeki kelimelere göre süzme
                     let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
                     let idxVD = getColIdx(["VERGIDA", "VD", "DAIRE", "SAYMANLIK"]);
                     let idxBelge = getColIdx(["BELGE", "TAKIP", "DOSYA", "TAHAKKUK"]);
-                    let idxTur = getColIdx(["VERGITUR", "TUR", "ACIKLAMA", "BORCUNNEVI"]);
-                    let idxDonem = getColIdx(["VERGILEN", "DONEM", "YIL", "AY"]); 
-                    let idxVade = getColIdx(["VADETARIH", "VADE", "SONODEME"]);
-                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "VERGI", "TUTAR", "ANA"]); 
-                    let idxGecikme = getColIdx(["GECIKME", "ZAMMI", "CEZA", "FAIZ"]);
-                    let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM", "YEKUN"]);
+                    
+                    // Sizin Excelinize göre nokta atışı:
+                    let idxTur = getColIdx(["VERGITUR", "TURU", "TUR"]); 
+                    let idxDonem = getColIdx(["VERGIDONEM", "DONEMI", "DONEM"]); 
+                    let idxVade = getColIdx(["VADETARIH", "VADE"]);
+                    
+                    let idxAsil = getColIdx(["ASILBOR", "ASIL"]); 
+                    let idxGecikme = getColIdx(["GECIKME", "ZAMMI"]);
+                    let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM"]);
                     let idxPlaka = getColIdx(["PLAKA", "ARAC"]);
 
                     let parseTutar = (val) => {
@@ -7272,47 +7277,24 @@
 
                         if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
 
-                        // Akıllı Tür (Açıklama) ve Dönem Bulucu
-                        let tahminEdilenTur = "";
-                        let tahminEdilenDonem = "";
-
-                        // Sütun indeksini bulduysak oradan alır, boşsa veya bulamadıysa diğer hücrelere bakar.
-                        if (idxTur !== -1 && String(row[idxTur]).trim() !== "") {
-                            tahminEdilenTur = String(row[idxTur]);
-                        } else {
-                            // "Vergi Türü" Sütunu yoksa: İçinde 6183, KDV, KGV, TECİLLİ, CEZA, MTV gibi kelimeler geçen (ve sayı olmayan) en uzun metni bul.
-                            let enUzunMetin = "";
-                            row.forEach(cell => {
-                                let c = String(cell).trim();
-                                if(isNaN(c) && c.length > enUzunMetin.length && !c.match(/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/)) { // Tarih değilse ve uzunsa
-                                    enUzunMetin = c;
-                                }
-                            });
-                            tahminEdilenTur = enUzunMetin || "GİB Vergi Borcu";
-                        }
-
-                        if (idxDonem !== -1 && String(row[idxDonem]).trim() !== "") {
-                            tahminEdilenDonem = String(row[idxDonem]);
-                        } else {
-                            // Dönem Sütunu yoksa: 2026/01, 2026-05, 01/2026 gibi patternleri o satırdaki hücrelerde ara
-                            row.forEach(cell => {
-                                let c = String(cell).trim();
-                                if(c.match(/20[0-9]{2}[\/\-][0-9]{2}/) || c.match(/[0-9]{2}[\/\-]20[0-9]{2}/) || c.match(/20[0-9]{2}[\/\-][A-Za-z]+/)) {
-                                    tahminEdilenDonem = c;
-                                }
-                            });
-                            if(!tahminEdilenDonem) tahminEdilenDonem = "-";
-                        }
-
+                        // Direk satır indexinden alma (Tahmin motoru yerine net index)
+                        let okunanTur = (idxTur !== -1 && row[idxTur]) ? String(row[idxTur]).trim() : "Vergi Borcu";
+                        let okunanDonem = (idxDonem !== -1 && row[idxDonem]) ? String(row[idxDonem]).trim() : "-";
 
                         tVergiAna += anaPara;
                         tVergiGecikme += gecikme;
 
                         yeniBorclar.push({
-                            kurum: "Vergi", vd: idxVD !== -1 ? row[idxVD] : "", belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
-                            tur: tahminEdilenTur, donem: tahminEdilenDonem,
-                            vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", asil: anaPara,
-                            gecikme: gecikme, toplam: toplaTutar, plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
+                            kurum: "Vergi", 
+                            vd: idxVD !== -1 ? row[idxVD] : "", 
+                            belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
+                            tur: okunanTur, 
+                            donem: okunanDonem,
+                            vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", 
+                            asil: anaPara,
+                            gecikme: gecikme, 
+                            toplam: toplaTutar, 
+                            plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
                         });
                     }
 
