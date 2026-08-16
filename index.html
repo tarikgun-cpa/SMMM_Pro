@@ -7237,14 +7237,15 @@
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
-                    // Kolonları çok geniş bir yelpazede arar
+                    // Kolonları çok geniş bir yelpazede arar (Dönem sorunu düzeltildi)
                     let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
                     let idxVD = getColIdx(["VERGIDA", "VD", "DAIRE"]);
                     let idxBelge = getColIdx(["BELGE", "TAKIP", "DOSYA"]);
                     let idxTur = getColIdx(["VERGITUR", "TUR", "ACIKLAMA"]);
-                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM", "YIL", "AY"]);
+                    // "VERGİLENDİRME DÖNEMİ" gibi uzun terimleri yakalamak için güçlendirildi
+                    let idxDonem = getColIdx(["VERGILEN", "DONEM", "YIL", "AY"]); 
                     let idxVade = getColIdx(["VADETARIH", "VADE", "SONODEME"]);
-                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "VERGI", "TUTAR", "ANA"]); // "TUTAR" veya "VERGİ" eklendi
+                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "VERGI", "TUTAR", "ANA"]); 
                     let idxGecikme = getColIdx(["GECIKME", "ZAMMI", "CEZA", "FAIZ"]);
                     let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM", "YEKUN"]);
                     let idxPlaka = getColIdx(["PLAKA", "ARAC"]);
