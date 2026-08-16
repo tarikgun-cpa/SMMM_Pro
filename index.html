@@ -1595,21 +1595,24 @@
                 <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-landmark" style="color:#c0392b;"></i> Müşteri Kamu Borç Takibi</h1>
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     
-                    <!-- GİB Excel Yükleme Alanı -->
-                    <select id="kamuBorcMusteriSecici" class="search-bar" style="max-width:250px; border:2px solid #c0392b; font-weight:bold; padding:8px;">
-                        <option value="">-- GİB Exceli İçin Firma Seç --</option>
+                    <!-- GİB ve SGK Excel Yükleme Alanı -->
+                    <select id="kamuBorcMusteriSecici" class="search-bar" style="max-width:230px; border:2px solid #2c3e50; font-weight:bold; padding:8px; color:#2c3e50;">
+                        <option value="">-- Mükellef Seçiniz --</option>
                     </select>
-                    <button class="action-btn" style="margin:0; background:#c0392b; color:white;" onclick="gibExcelTetikle()"><i class="fas fa-file-excel"></i> GİB Dökümü Yükle</button>
+                    
+                    <button class="action-btn" style="margin:0; background:#c0392b; color:white;" onclick="gibExcelTetikle()"><i class="fas fa-file-excel"></i> GİB Yükle</button>
                     <input type="file" id="gibExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="gibExcelOku(event)">
+                    
+                    <!-- YENİ: SGK YÜKLE BUTONU -->
+                    <button class="action-btn" style="margin:0; background:#d35400; color:white;" onclick="sgkExcelTetikle()"><i class="fas fa-users"></i> SGK Yükle</button>
+                    <input type="file" id="sgkExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="sgkExcelOku(event)">
                     
                     <span style="color:#bdc3c7; font-size:20px; margin:0 5px;">|</span>
                     
                     <!-- Toplu Şablon Alanı -->
                     <button class="action-btn btn-secondary" style="margin:0; background:#7f8c8d; color:white;" onclick="kamuBorcSablonIndir()"><i class="fas fa-download"></i> Detaylı Şablon İndir</button>
-                    <button class="action-btn" style="margin:0; background:#2c3e50; color:white;" onclick="document.getElementById('kamuBorcExcelInput').click()"><i class="fas fa-upload"></i> Listeyi Yükle</button>
+                    <button class="action-btn" style="margin:0; background:#2c3e50; color:white;" onclick="document.getElementById('kamuBorcExcelInput').click()"><i class="fas fa-upload"></i> Toplu Liste Yükle</button>
                     <input type="file" id="kamuBorcExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" onchange="kamuBorcExcelOku(event)">
-                </div>
-            </div>
             
             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:20px;">
                 <div style="background:white; padding:15px; border-radius:8px; border-left:4px solid #c0392b; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
@@ -7177,19 +7180,20 @@
 
         function gibExcelTetikle() {
             let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
-            if (!seciliVkn) {
-                alert("Lütfen önce vergi borcunun ekleneceği Mükellefi seçici kutudan seçin!");
-                return;
-            }
+            if (!seciliVkn) { alert("Lütfen önce vergi borcunun ekleneceği Müşteriyi açılır listeden seçin!"); return; }
             document.getElementById('gibExcelInput').click();
+        }
+
+        // YENİ: SGK TETİKLEYİCİ
+        function sgkExcelTetikle() {
+            let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
+            if (!seciliVkn) { alert("Lütfen önce SGK borcunun ekleneceği Müşteriyi açılır listeden seçin!"); return; }
+            document.getElementById('sgkExcelInput').click();
         }
 
         function parseTarih(tarihStr) {
             if (!tarihStr) return "";
-            if (typeof tarihStr === 'string' && tarihStr.includes(" ")) {
-                return tarihStr.split(" ")[0]; // "2026-01-31 00:00:00" -> "2026-01-31"
-            }
-            // Sayısal Excel tarihi ise
+            if (typeof tarihStr === 'string' && tarihStr.includes(" ")) return tarihStr.split(" ")[0]; 
             if (typeof tarihStr === 'number') {
                 let dateObj = new Date(Math.round((tarihStr - 25569) * 86400 * 1000));
                 return `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
@@ -7197,13 +7201,14 @@
             return tarihStr;
         }
 
+        // TÜRKÇE KARAKTER HATASINI ÖNLEYEN GÜÇLENDİRİLMİŞ GİB OKUYUCU
+        // ÇOK DAHA GÜÇLÜ VE ESNEK GİB EXCEL OKUYUCU (HATA DÜZELTİLDİ)
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
-
             let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
-
             let reader = new FileReader();
+            
             reader.onload = function(e) {
                 try {
                     let data = new Uint8Array(e.target.result);
@@ -7215,8 +7220,9 @@
                     let headers = [];
 
                     for (let i = 0; i < tumSatirlar.length; i++) {
-                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().trim());
-                        if (satirMetni.some(v => v.includes("ASIL BOR"))) {
+                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
+                        // Daha geniş bir arama havuzu (Herhangi bir tutar başlığı varsa başlık satırıdır)
+                        if (satirMetni.some(v => v.includes("ASIL") || v.includes("TUTAR") || v.includes("BORC") || v.includes("TOPLAM"))) {
                             baslikSatirIndeksi = i;
                             headers = satirMetni;
                             break;
@@ -7224,24 +7230,24 @@
                     }
 
                     if (baslikSatirIndeksi === -1) {
-                        alert("Hata: GİB formatı algılanamadı ('Asıl Borç' sütunu yok).");
-                        event.target.value = "";
-                        return;
+                        alert("Hata: GİB formatı algılanamadı (Tutar/Borç sütunu bulunamadı).");
+                        event.target.value = ""; return;
                     }
 
                     let tVergiAna = 0; let tVergiGecikme = 0;
-                    let yeniBorclar = []; // Detay listesi
+                    let yeniBorclar = []; 
 
+                    // Kolonları çok geniş bir yelpazede arar
                     let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
-                    let idxVD = getColIdx(["VERGİ DAİRESİ", "VD"]);
-                    let idxBelge = getColIdx(["BELGE NO"]);
-                    let idxTur = getColIdx(["VERGİ TÜRÜ"]);
-                    let idxDonem = getColIdx(["VERGİ DÖNEMİ", "DÖNEM"]);
-                    let idxVade = getColIdx(["VADE TARİHİ", "VADE"]);
-                    let idxAsil = getColIdx(["ASIL BOR"]);
-                    let idxGecikme = getColIdx(["GECİKME"]);
-                    let idxToplam = getColIdx(["TOPLAM BORÇ"]);
-                    let idxPlaka = getColIdx(["PLAKA"]);
+                    let idxVD = getColIdx(["VERGIDA", "VD", "DAIRE"]);
+                    let idxBelge = getColIdx(["BELGE", "TAKIP", "DOSYA"]);
+                    let idxTur = getColIdx(["VERGITUR", "TUR", "ACIKLAMA"]);
+                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM", "YIL", "AY"]);
+                    let idxVade = getColIdx(["VADETARIH", "VADE", "SONODEME"]);
+                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "VERGI", "TUTAR", "ANA"]); // "TUTAR" veya "VERGİ" eklendi
+                    let idxGecikme = getColIdx(["GECIKME", "ZAMMI", "CEZA", "FAIZ"]);
+                    let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM", "YEKUN"]);
+                    let idxPlaka = getColIdx(["PLAKA", "ARAC"]);
 
                     let parseTutar = (val) => {
                         if (!val && val !== 0) return 0;
@@ -7257,35 +7263,33 @@
                         if (!row || row.length === 0 || row.join("").trim() === "") continue;
                         
                         let rowStr = row.join(" ").toUpperCase();
-                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/) || (rowStr.includes("TOPLAM") && !rowStr.includes("VERGİ"))) continue;
+                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
 
-                        let anaPara = parseTutar(row[idxAsil]);
-                        let gecikme = parseTutar(row[idxGecikme]);
-                        let toplaTutar = parseTutar(row[idxToplam]);
+                        let anaPara = idxAsil !== -1 ? parseTutar(row[idxAsil]) : 0;
+                        let gecikme = idxGecikme !== -1 ? parseTutar(row[idxGecikme]) : 0;
+                        let toplaTutar = idxToplam !== -1 ? parseTutar(row[idxToplam]) : (anaPara + gecikme);
 
-                        if (anaPara === 0 && gecikme === 0 && toplaTutar === 0) continue;
+                        // Eğer asıl borç 0 ama toplam borç varsa, o zaman sadece toplamı baz alsın
+                        if (anaPara === 0 && toplaTutar > 0) {
+                            anaPara = toplaTutar - gecikme;
+                        }
+
+                        if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
 
                         tVergiAna += anaPara;
                         tVergiGecikme += gecikme;
 
                         yeniBorclar.push({
-                            kurum: "Vergi",
-                            vd: idxVD !== -1 ? row[idxVD] : "",
-                            belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
-                            tur: idxTur !== -1 ? row[idxTur] : "",
-                            donem: idxDonem !== -1 ? row[idxDonem] : "",
-                            vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "",
-                            asil: anaPara,
-                            gecikme: gecikme,
-                            toplam: toplaTutar,
-                            plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
+                            kurum: "Vergi", vd: idxVD !== -1 ? row[idxVD] : "", belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
+                            tur: idxTur !== -1 ? row[idxTur] : "Vergi/Ceza Borcu", donem: idxDonem !== -1 ? row[idxDonem] : "-",
+                            vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", asil: anaPara,
+                            gecikme: gecikme, toplam: toplaTutar, plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
                         });
                     }
 
                     let m = mukellefler.find(x => x.vkn === seciliVkn);
                     if (m) {
                         let bugunStr = new Date().toLocaleDateString('tr-TR');
-                        
                         if(!m.kamuBorcu) m.kamuBorcu = { vergiAna: 0, vergiGecikme: 0, sgkAna: 0, sgkGecikme: 0, sonGuncelleme: "", notlar: "", borcDetaylari: [] };
                         
                         m.kamuBorcu.vergiAna = tVergiAna;
@@ -7293,7 +7297,7 @@
                         m.kamuBorcu.sonGuncelleme = bugunStr;
                         m.kamuBorcu.notlar = "GİB'den güncellendi.";
                         
-                        // Önceki VERGİ borçlarını sil, SGK'ları tut, yenilerini ekle. (Eski listeyi silme isteğiniz)
+                        // Önceki VERGİ borçlarını siler, SGK'ları bırakır
                         m.kamuBorcu.borcDetaylari = (m.kamuBorcu.borcDetaylari || []).filter(d => d.kurum !== "Vergi");
                         m.kamuBorcu.borcDetaylari.push(...yeniBorclar);
 
@@ -7301,22 +7305,21 @@
                         kamuBorclariListele();
                         if(typeof masterDashboardCiz === "function") masterDashboardCiz();
                         
-                        alert(`🎉 GİB Aktarımı Tamamlandı!\nAna Para: ${formatMoney(tVergiAna)} ₺\nGecikme: ${formatMoney(tVergiGecikme)} ₺`);
+                        alert(`🎉 GİB Aktarımı Tamamlandı!\nAsıl Borç: ${formatMoney(tVergiAna)} ₺\nGecikme: ${formatMoney(tVergiGecikme)} ₺`);
                     }
                     event.target.value = ""; 
-                } catch (error) {
-                    console.error(error);
-                    alert("GİB Excel'i okunurken bir hata oluştu.");
-                }
+                } catch (error) { console.error(error); alert("GİB Excel'i okunurken bir hata oluştu."); }
             };
             reader.readAsArrayBuffer(dosya);
         }
 
-        function kamuBorcExcelOku(event) {
+        // YENİ: SGK SİSTEMİNDEN ALINAN EXCELİ OKUMA MOTORU
+        function sgkExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
-
+            let seciliVkn = document.getElementById("kamuBorcMusteriSecici").value;
             let reader = new FileReader();
+
             reader.onload = function(e) {
                 try {
                     let data = new Uint8Array(e.target.result);
@@ -7328,7 +7331,107 @@
                     let headers = [];
 
                     for (let i = 0; i < tumSatirlar.length; i++) {
-                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().trim());
+                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
+                        if ((satirMetni.some(v => v.includes("ASIL") || v.includes("PRIM") || v.includes("TUTAR"))) && satirMetni.some(v => v.includes("TOPLAM"))) {
+                            baslikSatirIndeksi = i;
+                            headers = satirMetni;
+                            break;
+                        }
+                    }
+
+                    if (baslikSatirIndeksi === -1) {
+                        alert("Hata: SGK Borç formatı algılanamadı. Lütfen SGK sisteminden indirdiğiniz Exceli yükleyin.");
+                        event.target.value = ""; return;
+                    }
+
+                    let tSgkAna = 0; let tSgkGecikme = 0;
+                    let yeniBorclar = []; 
+
+                    let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
+                    let idxDonem = getColIdx(["DONEM", "AY", "YIL"]);
+                    let idxAsil = getColIdx(["ASIL", "PRIM", "TUTAR", "ANA"]);
+                    let idxGecikme = getColIdx(["GECIKME", "CEZA", "ZAM"]);
+                    let idxToplam = getColIdx(["TOPLAM"]);
+                    let idxTur = getColIdx(["TURU", "ACIKLAMA"]); // Opsiyonel
+
+                    let parseTutar = (val) => {
+                        if (!val && val !== 0) return 0;
+                        if (typeof val === 'number') return val;
+                        let str = String(val).trim().replace(/[A-Za-z₺ ]/g, ""); 
+                        if (str.includes(',') && str.includes('.')) { str = str.replace(/\./g, '').replace(',', '.'); } 
+                        else if (str.includes(',')) { str = str.replace(',', '.'); }
+                        return parseFloat(str) || 0;
+                    };
+
+                    for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
+                        let row = tumSatirlar[i];
+                        if (!row || row.length === 0 || row.join("").trim() === "") continue;
+                        
+                        let rowStr = row.join(" ").toUpperCase();
+                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
+
+                        let anaPara = parseTutar(row[idxAsil]);
+                        let gecikme = idxGecikme !== -1 ? parseTutar(row[idxGecikme]) : 0;
+                        let toplaTutar = idxToplam !== -1 ? parseTutar(row[idxToplam]) : (anaPara + gecikme);
+
+                        if (anaPara === 0 && gecikme === 0 && toplaTutar === 0) continue;
+
+                        tSgkAna += anaPara;
+                        tSgkGecikme += gecikme;
+
+                        yeniBorclar.push({
+                            kurum: "SGK", vd: "SGK Kurumu", belgeNo: "-",
+                            tur: idxTur !== -1 ? row[idxTur] : "SGK Prim / İPC", 
+                            donem: idxDonem !== -1 ? row[idxDonem] : "-",
+                            vade: "-", asil: anaPara,
+                            gecikme: gecikme, toplam: toplaTutar, plaka: "-"
+                        });
+                    }
+
+                    let m = mukellefler.find(x => x.vkn === seciliVkn);
+                    if (m) {
+                        let bugunStr = new Date().toLocaleDateString('tr-TR');
+                        if(!m.kamuBorcu) m.kamuBorcu = { vergiAna: 0, vergiGecikme: 0, sgkAna: 0, sgkGecikme: 0, sonGuncelleme: "", notlar: "", borcDetaylari: [] };
+                        
+                        m.kamuBorcu.sgkAna = tSgkAna;
+                        m.kamuBorcu.sgkGecikme = tSgkGecikme;
+                        m.kamuBorcu.sonGuncelleme = bugunStr;
+                        m.kamuBorcu.notlar = "SGK'dan güncellendi.";
+                        
+                        // Önceki SGK borçlarını siler, Vergileri bırakır
+                        m.kamuBorcu.borcDetaylari = (m.kamuBorcu.borcDetaylari || []).filter(d => d.kurum !== "SGK");
+                        m.kamuBorcu.borcDetaylari.push(...yeniBorclar);
+
+                        localStorage.setItem('mukellefler', JSON.stringify(mukellefler));
+                        kamuBorclariListele();
+                        if(typeof masterDashboardCiz === "function") masterDashboardCiz();
+                        
+                        alert(`🎉 SGK Aktarımı Tamamlandı!\nSGK Ana Para: ${formatMoney(tSgkAna)} ₺\nGecikme: ${formatMoney(tSgkGecikme)} ₺`);
+                    }
+                    event.target.value = ""; 
+                } catch (error) { console.error(error); alert("SGK Excel'i okunurken bir hata oluştu."); }
+            };
+            reader.readAsArrayBuffer(dosya);
+        }
+
+        // TOPLU LİSTE YÜKLEYİCİSİ (Aynı mantıkla Türkçe karakter destekli)
+        function kamuBorcExcelOku(event) {
+            let dosya = event.target.files[0];
+            if (!dosya) return;
+            let reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+
+                    let baslikSatirIndeksi = -1;
+                    let headers = [];
+
+                    for (let i = 0; i < tumSatirlar.length; i++) {
+                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
                         if (satirMetni.some(v => v.includes("VKN") || v.includes("TCKN"))) {
                             baslikSatirIndeksi = i;
                             headers = satirMetni;
@@ -7338,24 +7441,23 @@
 
                     if (baslikSatirIndeksi === -1) {
                         alert("Hata: Şablona uygun başlık satırı (VKN/TCKN) bulunamadı.");
-                        event.target.value = "";
-                        return;
+                        event.target.value = ""; return;
                     }
 
                     let islemGorenVknler = new Set();
-                    let eklenecekBorclar = {}; // VKN -> Array
+                    let eklenecekBorclar = {}; 
                     let bugunStr = new Date().toLocaleDateString('tr-TR');
 
                     let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
                     let idxVKN = getColIdx(["VKN", "TCKN"]);
-                    let idxVD = getColIdx(["VERGİ DAİRESİ", "VD"]);
-                    let idxBelge = getColIdx(["BELGE NO"]);
-                    let idxTur = getColIdx(["VERGİ TÜRÜ"]);
-                    let idxDonem = getColIdx(["VERGİ DÖNEMİ", "DÖNEM", "NOTLAR"]);
-                    let idxVade = getColIdx(["VADE TARİHİ", "VADE"]);
-                    let idxAsil = getColIdx(["ASIL BOR", "VERGİ ANA", "SGK ANA"]); // Şablondaki adlar
-                    let idxGecikme = getColIdx(["GECİKME"]);
-                    let idxToplam = getColIdx(["TOPLAM BORÇ"]);
+                    let idxVD = getColIdx(["VERGIDA", "VD"]);
+                    let idxBelge = getColIdx(["BELGENO"]);
+                    let idxTur = getColIdx(["VERGITUR", "TUR"]);
+                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM", "NOTLAR"]);
+                    let idxVade = getColIdx(["VADETARIH", "VADE"]);
+                    let idxAsil = getColIdx(["ASILBOR", "VERGIANA", "SGKANA"]); 
+                    let idxGecikme = getColIdx(["GECIKME"]);
+                    let idxToplam = getColIdx(["TOPLAMBOR"]);
                     let idxPlaka = getColIdx(["PLAKA"]);
 
                     let parseTutar = (val) => {
@@ -7373,7 +7475,6 @@
 
                         let vkn = String(row[idxVKN] || "").trim();
                         if (!vkn) continue;
-
                         if(!eklenecekBorclar[vkn]) eklenecekBorclar[vkn] = [];
                         
                         let asil = parseTutar(idxAsil !== -1 ? row[idxAsil] : 0);
@@ -7381,23 +7482,17 @@
                         let toplam = parseTutar(idxToplam !== -1 ? row[idxToplam] : (asil + gecikme));
                         let turAd = (idxTur !== -1 ? row[idxTur] : "");
                         
-                        let kurum = "Vergi"; // Varsayılan
+                        let kurum = "Vergi"; 
                         if(String(turAd).toUpperCase().includes("SGK") || String(turAd).toUpperCase().includes("BAĞKUR") || String(turAd).toUpperCase().includes("PRIM")) {
                             kurum = "SGK";
                         }
 
                         if (asil > 0 || gecikme > 0 || toplam > 0) {
                             eklenecekBorclar[vkn].push({
-                                kurum: kurum,
-                                vd: idxVD !== -1 ? row[idxVD] : "",
-                                belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
-                                tur: turAd,
-                                donem: idxDonem !== -1 ? row[idxDonem] : "",
-                                vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "",
-                                asil: asil,
-                                gecikme: gecikme,
-                                toplam: toplam,
-                                plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
+                                kurum: kurum, vd: idxVD !== -1 ? row[idxVD] : "", belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
+                                tur: turAd, donem: idxDonem !== -1 ? row[idxDonem] : "",
+                                vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "", asil: asil,
+                                gecikme: gecikme, toplam: toplam, plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
                             });
                         }
                         islemGorenVknler.add(vkn);
@@ -7409,22 +7504,18 @@
                         if (m) {
                             if(!m.kamuBorcu) m.kamuBorcu = { vergiAna: 0, vergiGecikme: 0, sgkAna: 0, sgkGecikme: 0, sonGuncelleme: "", notlar: "", borcDetaylari: [] };
                             
-                            // Toplu aktarımda eski listeyi Tümüyle siliyoruz! (İsteğiniz)
+                            // Toplu aktarımda eski listeyi Tümüyle siliyoruz
                             m.kamuBorcu.borcDetaylari = eklenecekBorclar[vkn] || [];
                             
-                            // Yeni listeye göre ana dashboard sayılarını yeniden topla
                             let tvA = 0, tvG = 0, tsA = 0, tsG = 0;
                             m.kamuBorcu.borcDetaylari.forEach(d => {
                                 if(d.kurum === "Vergi") { tvA += d.asil; tvG += d.gecikme; }
                                 else { tsA += d.asil; tsG += d.gecikme; }
                             });
 
-                            m.kamuBorcu.vergiAna = tvA;
-                            m.kamuBorcu.vergiGecikme = tvG;
-                            m.kamuBorcu.sgkAna = tsA;
-                            m.kamuBorcu.sgkGecikme = tsG;
-                            m.kamuBorcu.sonGuncelleme = bugunStr;
-                            m.kamuBorcu.notlar = "Toplu Excel Aktarımı";
+                            m.kamuBorcu.vergiAna = tvA; m.kamuBorcu.vergiGecikme = tvG;
+                            m.kamuBorcu.sgkAna = tsA; m.kamuBorcu.sgkGecikme = tsG;
+                            m.kamuBorcu.sonGuncelleme = bugunStr; m.kamuBorcu.notlar = "Toplu Excel Aktarımı";
                             
                             islemSayisi++;
                         }
@@ -7435,14 +7526,9 @@
                         kamuBorclariListele();
                         if(typeof masterDashboardCiz === "function") masterDashboardCiz();
                         alert(`🎉 İşlem Tamamlandı!\n${islemSayisi} firmanın borç bilgileri güncellendi.`);
-                    } else {
-                        alert("Eşleşen VKN bulunamadı.");
-                    }
+                    } else { alert("Eşleşen VKN bulunamadı."); }
                     event.target.value = ""; 
-                } catch (error) {
-                    console.error(error);
-                    alert("Excel okunurken hata oluştu.");
-                }
+                } catch (error) { console.error(error); alert("Excel okunurken hata oluştu."); }
             };
             reader.readAsArrayBuffer(dosya);
         }
