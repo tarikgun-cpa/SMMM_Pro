@@ -7201,7 +7201,7 @@
             return tarihStr;
         }
 
-        // SON DERECE KARARLI VE SÜTUN KAYMASINI ÖNLEYEN GİB EXCEL OKUYUCU
+        // A-B-C SÜTUN ADRESLEMELİ KESİN ÇÖZÜM GİB EXCEL OKUYUCU
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7213,17 +7213,18 @@
                     let data = new Uint8Array(e.target.result);
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
-                    // Sütunların kaymasını kesin olarak engellemek için başlıkları diziden çıkar
-                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
+                    
+                    // sheet_to_json'ı nesne formatında (object) okutuyoruz ki sütun harflerini (A,B,C..) kullanabilelim.
+                    let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: "A", defval: "" });
 
                     let baslikSatirIndeksi = -1;
-                    let headers = [];
 
+                    // Başlık satırını bul (A, B, C, D... objesi içinde ara)
                     for (let i = 0; i < tumSatirlar.length; i++) {
-                        let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
-                        if (satirMetni.some(v => v.includes("ASIL") || v.includes("TOPLAM") || v.includes("TUTAR") || v.includes("BORC"))) {
+                        let row = tumSatirlar[i];
+                        let rowStr = Object.values(row).join(" ").toUpperCase();
+                        if (rowStr.includes("ASIL") || rowStr.includes("TOPLAM") || rowStr.includes("TUTAR") || rowStr.includes("BORC")) {
                             baslikSatirIndeksi = i;
-                            headers = satirMetni;
                             break;
                         }
                     }
@@ -7236,18 +7237,6 @@
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
-                    // Kolon adlarını Excelinize göre çok net belirliyoruz
-                    let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
-                    let idxVD = getColIdx(["VERGIDA", "DAIRE", "VD"]);
-                    let idxBelge = getColIdx(["BELGE"]);
-                    let idxTur = getColIdx(["VERGITUR", "TUR"]); 
-                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM"]); 
-                    let idxVade = getColIdx(["VADETARIH", "VADE"]);
-                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "TUTAR"]); 
-                    let idxGecikme = getColIdx(["GECIKME", "ZAMMI"]);
-                    let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM"]);
-                    let idxPlaka = getColIdx(["PLAKA"]);
-
                     let parseTutar = (val) => {
                         if (!val && val !== 0) return 0;
                         if (typeof val === 'number') return val;
@@ -7259,43 +7248,59 @@
 
                     for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
                         let row = tumSatirlar[i];
-                        if (!row || row.length === 0 || row.join("").trim() === "") continue;
+                        let rowStr = Object.values(row).join(" ").toUpperCase();
                         
-                        let rowStr = row.join(" ").toUpperCase();
-                        if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
+                        if (!rowStr || rowStr.trim() === "" || rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
 
                         try {
-                            let anaPara = idxAsil !== -1 ? parseTutar(row[idxAsil]) : 0;
-                            let gecikme = idxGecikme !== -1 ? parseTutar(row[idxGecikme]) : 0;
-                            let toplaTutar = idxToplam !== -1 ? parseTutar(row[idxToplam]) : (anaPara + gecikme);
+                            // Excel Harf Sütunlarına Göre Sabit Adresleme (Böylece asla kaymaz)
+                            // A: VD, B: BelgeNo, C: Tür, D: Dönem, E: Vade, F: Asıl, G: Gecikme, H: Toplam, I: Plaka
+                            
+                            let asilDeger = row["F"] || row["G"] || 0; // F veya G'de olabilir diye ufak bir esneklik
+                            let gecikmeDeger = row["G"] || row["H"] || 0;
+                            let toplamDeger = row["H"] || row["I"] || 0;
 
+                            let anaPara = parseTutar(asilDeger);
+                            let gecikme = parseTutar(gecikmeDeger);
+                            let toplaTutar = parseTutar(toplamDeger);
+
+                            // Bazen Asıl Borç ile Gecikme Zammı yer değiştirebiliyor GİB tablolarında.
+                            // Eğer Asıl parayı bulamadıysak ama toplam varsa:
                             if (anaPara === 0 && toplaTutar > 0) {
                                 anaPara = toplaTutar - gecikme;
                             }
 
                             if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
 
-                            // Sadece nokta atışı sütundan oku. Eğer bulamazsa "Vergi/Ceza Borcu" ve "-" de geç. 
-                            let okunanTur = (idxTur !== -1 && String(row[idxTur]).trim() !== "") ? String(row[idxTur]).trim() : "Vergi/Ceza Borcu";
-                            let okunanDonem = (idxDonem !== -1 && String(row[idxDonem]).trim() !== "") ? String(row[idxDonem]).trim() : "-";
+                            // Sütun D: Dönem, Sütun C: Tür (Excel'inizle birebir)
+                            let okunanDonem = row["D"] ? String(row["D"]).trim() : "-";
+                            let okunanTur = row["C"] ? String(row["C"]).trim() : "Vergi/Ceza Borcu";
+                            
+                            // Eğer bir şekilde C ve D sütunu boş geldiyse satırın içinden kelime arayıp kurtar
+                            if (okunanDonem === "-") {
+                                Object.values(row).forEach(cell => {
+                                    let c = String(cell).trim();
+                                    if(c.match(/[0-9]{4}[\/\-][0-9]{2}/) || c.match(/[0-9]{2}[\/\-][0-9]{4}/)) okunanDonem = c;
+                                });
+                            }
 
                             tVergiAna += anaPara;
                             tVergiGecikme += gecikme;
 
                             yeniBorclar.push({
                                 kurum: "Vergi", 
-                                vd: idxVD !== -1 ? String(row[idxVD]).trim() : "", 
-                                belgeNo: idxBelge !== -1 ? String(row[idxBelge]).trim() : "",
-                                tur: okunanTur, 
-                                donem: okunanDonem,
-                                vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", 
+                                vd: row["A"] ? String(row["A"]).trim() : "", 
+                                belgeNo: row["B"] ? String(row["B"]).trim() : "",
+                                tur: okunanTur.replace(/\n/g, " "), // Excel'de alt satıra geçme varsa düzelt
+                                donem: okunanDonem.replace(/\n/g, " "),
+                                vade: row["E"] ? parseTarih(row["E"]) : "-", 
                                 asil: anaPara,
                                 gecikme: gecikme, 
                                 toplam: toplaTutar, 
-                                plaka: idxPlaka !== -1 ? String(row[idxPlaka]).trim() : ""
+                                plaka: row["I"] ? String(row["I"]).trim() : ""
                             });
                         } catch (e) {
-                            console.warn("Bir satır atlandı (Veri bozuk):", row);
+                            console.warn("Satır işlenemedi (Sessizce atlandı):", row);
                         }
                     }
 
@@ -7327,6 +7332,7 @@
             };
             reader.readAsArrayBuffer(dosya);
         }
+        
         // YENİ: SGK SİSTEMİNDEN ALINAN EXCELİ OKUMA MOTORU
         function sgkExcelOku(event) {
             let dosya = event.target.files[0];
