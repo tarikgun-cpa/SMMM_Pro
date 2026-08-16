@@ -506,10 +506,13 @@
             }
             
             /* YAZDIRILIRKEN KAMU BORÇ TABLOSUNU GÖSTER */
-            #kamuBorcDetayModal { position: absolute !important; left: 0 !important; top: 0 !important; display: block !important; background: transparent !important; padding: 0 !important; width: 100% !important; }
-            #kamuBorcDetayModal .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            #kamuBorcDetayModal { display: block !important; position: absolute !important; left: 0 !important; top: 0 !important; background: transparent !important; padding: 0 !important; width: 100% !important; height: auto !important; }
+            #kamuBorcDetayModal .modal-box { display: block !important; position: static !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            #kamuBorcDetayModal .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
             #kamuBorcDetayModal .modal-header, #kamuBorcDetayModal .modal-footer, #kamuBorcDetayModal .cari-tabs { display: none !important; }
-            #printKamuBorcAlan { padding: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; }
+            
+            /* GİB Tablosuna Özel Ölçekleme */
+            #printKamuBorcAlan table { font-size: 8pt !important; width: 100% !important; }
         }
 
         /* --- LOGİN (GİRİŞ) EKRANI STİLLERİ --- */
@@ -7228,7 +7231,6 @@
             return tarihStr;
         }
 
-        // SÜTUN ADRESLERİ SABİTLENMİŞ VE GÜVENLİ GİB EXCEL OKUYUCU (A, B, C...)
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7241,12 +7243,12 @@
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // Sütunların kaymaması için A, B, C gibi nesne formatında okutuyoruz.
+                    // Sütunların sola kaymasını engellemek için A, B, C hücre referanslarına göre okuyoruz.
                     let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: "A", defval: "" });
 
                     let baslikSatirIndeksi = -1;
 
-                    // 1. Başlık satırını bul
+                    // Başlık satırını bul
                     for (let i = 0; i < tumSatirlar.length; i++) {
                         let row = tumSatirlar[i];
                         let rowStr = Object.values(row).join(" ").toUpperCase();
@@ -7264,7 +7266,7 @@
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
-                    // 2. Parasal Değerleri Düzeltme Fonksiyonu
+                    // Parasal Değerleri Düzeltme Fonksiyonu
                     let parseTutar = (val) => {
                         if (val === undefined || val === null || val === "" || String(val).trim() === "-") return 0;
                         if (typeof val === 'number') return val;
@@ -7275,7 +7277,7 @@
                         return isNaN(num) ? 0 : num;
                     };
 
-                    // 3. Satırları Oku ve İşle (Harflere Göre Kesin Okuma)
+                    // Satırları Oku
                     for (let i = baslikSatirIndeksi + 1; i < tumSatirlar.length; i++) {
                         let row = tumSatirlar[i]; 
                         
@@ -7283,21 +7285,21 @@
                         if (!rowStr || rowStr.trim() === "" || rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
 
                         try {
-                            // GİB EXCEL STANDARDINA GÖRE SABİT SÜTUNLAR:
+                            // Sabit Sütunlar:
                             // A: VD, B: Belge, C: Tür, D: Dönem, E: Vade, F: Asıl Borç, G: Gecikme, H: Toplam, I: Plaka
                             
                             let asilBorc = parseTutar(row["F"]);
                             let gecikme = parseTutar(row["G"]);
                             let toplaTutar = parseTutar(row["H"]);
 
-                            // Eğer G ve H sütunu boş ama asıl borç (E) veya (F)'deyse kayma vardır, onu test edelim.
+                            // Kayma Kontrolü (H sütunu boş ama F doluysa bir sütun sola kaymıştır)
                             if ((row["H"] === undefined || row["H"] === "") && row["F"] !== "") {
                                 asilBorc = parseTutar(row["E"]);
                                 gecikme = parseTutar(row["F"]);
                                 toplaTutar = parseTutar(row["G"]);
                             }
 
-                            // HATA DÜZELTME (Sıfır olan gecikmelerin Asıl Borç ile karışması)
+                            // Sıfır gecikme hatası kontrolü
                             if (toplaTutar > 0 && asilBorc > toplaTutar) {
                                 asilBorc = toplaTutar - gecikme; 
                             }
@@ -7314,7 +7316,6 @@
                             let okunanDonem = row["D"] ? String(row["D"]).trim() : "-";
                             let okunanBelge = row["B"] ? String(row["B"]).trim() : "";
 
-                            // TÜR VE DÖNEM KURTARMA
                             if (okunanDonem === "-" || okunanDonem === "") {
                                 Object.values(row).forEach(cell => {
                                     let c = String(cell).trim();
@@ -7331,7 +7332,6 @@
                                 });
                             }
 
-                            // Belge numarasını yanlışlıkla Tür olarak okumuşsa düzelt
                             if (okunanTur.length > 15 && okunanTur.match(/^[0-9]+[A-Z]+[0-9]+$/)) {
                                 okunanBelge = okunanTur;
                                 okunanTur = "Vergi/Ceza Borcu";
@@ -7340,10 +7340,15 @@
                             tVergiAna += asilBorc;
                             tVergiGecikme += gecikme;
 
-                            // Vade tarihi sütunu (E), önceki kodda "parseTarih" çağrısı hatalıydı. Burada düzeltildi.
+                            // Vade tarihi E sütunundan alınır. (Hatalı fonksiyon çağrısı kaldırıldı)
                             let vadeTarihi = "-";
                             if (row["E"] && String(row["E"]).trim() !== "") {
                                 vadeTarihi = String(row["E"]).trim();
+                                // Excel Sayı formatında tarih verdiyse (Örn: 46200) metne çevir:
+                                if (!isNaN(vadeTarihi) && Number(vadeTarihi) > 20000 && Number(vadeTarihi) < 60000) {
+                                    let dateObj = new Date(Math.round((Number(vadeTarihi) - 25569) * 86400 * 1000));
+                                    vadeTarihi = `${dateObj.getDate().toString().padStart(2,'0')}.${(dateObj.getMonth()+1).toString().padStart(2,'0')}.${dateObj.getFullYear()}`;
+                                }
                             }
 
                             yeniBorclar.push({
