@@ -7201,7 +7201,7 @@
             return tarihStr;
         }
 
-        // EN GÜÇLÜ VE HATASIZ GİB EXCEL OKUYUCU (VERİ FORMATI TANIMA SİSTEMLİ)
+        // SON DERECE KARARLI VE SÜTUN KAYMASINI ÖNLEYEN GİB EXCEL OKUYUCU
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7213,6 +7213,7 @@
                     let data = new Uint8Array(e.target.result);
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
+                    // Sütunların kaymasını kesin olarak engellemek için başlıkları diziden çıkar
                     let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: 1, defval: "" });
 
                     let baslikSatirIndeksi = -1;
@@ -7220,7 +7221,7 @@
 
                     for (let i = 0; i < tumSatirlar.length; i++) {
                         let satirMetni = tumSatirlar[i].map(v => String(v).toUpperCase().replace(/İ/g, 'I').replace(/[^A-Z0-9]/g, ""));
-                        if (satirMetni.some(v => v.includes("ASIL") || v.includes("TUTAR") || v.includes("BORC") || v.includes("TOPLAM"))) {
+                        if (satirMetni.some(v => v.includes("ASIL") || v.includes("TOPLAM") || v.includes("TUTAR") || v.includes("BORC"))) {
                             baslikSatirIndeksi = i;
                             headers = satirMetni;
                             break;
@@ -7228,23 +7229,24 @@
                     }
 
                     if (baslikSatirIndeksi === -1) {
-                        alert("Hata: GİB formatı algılanamadı (Tutar/Borç sütunu bulunamadı).");
+                        alert("Hata: GİB formatı algılanamadı. Excel dosyasında 'Vergi Türü' veya 'Tutar' başlıkları bulunamadı.");
                         event.target.value = ""; return;
                     }
 
                     let tVergiAna = 0; let tVergiGecikme = 0;
                     let yeniBorclar = []; 
 
+                    // Kolon adlarını Excelinize göre çok net belirliyoruz
                     let getColIdx = (kws) => headers.findIndex(h => kws.some(kw => h.includes(kw)));
-                    let idxVD = getColIdx(["VERGIDA", "VD", "DAIRE", "SAYMANLIK"]);
-                    let idxBelge = getColIdx(["BELGE", "TAKIP", "DOSYA", "TAHAKKUK"]);
-                    let idxTur = getColIdx(["VERGITUR", "TURU", "TUR", "ACIKLAMA"]); 
-                    let idxDonem = getColIdx(["VERGIDONEM", "DONEMI", "DONEM", "YIL"]); 
+                    let idxVD = getColIdx(["VERGIDA", "DAIRE", "VD"]);
+                    let idxBelge = getColIdx(["BELGE"]);
+                    let idxTur = getColIdx(["VERGITUR", "TUR"]); 
+                    let idxDonem = getColIdx(["VERGIDONEM", "DONEM"]); 
                     let idxVade = getColIdx(["VADETARIH", "VADE"]);
-                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "VERGI"]); 
+                    let idxAsil = getColIdx(["ASILBOR", "ASIL", "TUTAR"]); 
                     let idxGecikme = getColIdx(["GECIKME", "ZAMMI"]);
                     let idxToplam = getColIdx(["TOPLAMBOR", "TOPLAM"]);
-                    let idxPlaka = getColIdx(["PLAKA", "ARAC"]);
+                    let idxPlaka = getColIdx(["PLAKA"]);
 
                     let parseTutar = (val) => {
                         if (!val && val !== 0) return 0;
@@ -7262,66 +7264,39 @@
                         let rowStr = row.join(" ").toUpperCase();
                         if (rowStr.match(/GENEL TOPLAM|ARA TOPLAM/)) continue;
 
-                        let anaPara = idxAsil !== -1 ? parseTutar(row[idxAsil]) : 0;
-                        let gecikme = idxGecikme !== -1 ? parseTutar(row[idxGecikme]) : 0;
-                        let toplaTutar = idxToplam !== -1 ? parseTutar(row[idxToplam]) : (anaPara + gecikme);
+                        try {
+                            let anaPara = idxAsil !== -1 ? parseTutar(row[idxAsil]) : 0;
+                            let gecikme = idxGecikme !== -1 ? parseTutar(row[idxGecikme]) : 0;
+                            let toplaTutar = idxToplam !== -1 ? parseTutar(row[idxToplam]) : (anaPara + gecikme);
 
-                        if (anaPara === 0 && toplaTutar > 0) {
-                            anaPara = toplaTutar - gecikme;
-                        }
+                            if (anaPara === 0 && toplaTutar > 0) {
+                                anaPara = toplaTutar - gecikme;
+                            }
 
-                        if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
+                            if (anaPara <= 0 && gecikme <= 0 && toplaTutar <= 0) continue;
 
-                        let okunanTur = "";
-                        let okunanDonem = "";
+                            // Sadece nokta atışı sütundan oku. Eğer bulamazsa "Vergi/Ceza Borcu" ve "-" de geç. 
+                            let okunanTur = (idxTur !== -1 && String(row[idxTur]).trim() !== "") ? String(row[idxTur]).trim() : "Vergi/Ceza Borcu";
+                            let okunanDonem = (idxDonem !== -1 && String(row[idxDonem]).trim() !== "") ? String(row[idxDonem]).trim() : "-";
 
-                        // Sütun İndeksi Bulunamasa bile Hücre İçeriğinden DÖNEM Bulma Mantığı
-                        if (idxDonem !== -1 && row[idxDonem]) {
-                            okunanDonem = String(row[idxDonem]).trim();
-                        } else {
-                            // Dönem formatına uyan (Örn: 2026/01-2026/12 veya 01/2026) veriyi satırda ara
-                            row.forEach(cell => {
-                                let c = String(cell).trim();
-                                if(c.match(/[0-9]{4}[\/\-][0-9]{2}/) || c.match(/[0-9]{2}[\/\-][0-9]{4}/)) {
-                                    okunanDonem = c;
-                                }
+                            tVergiAna += anaPara;
+                            tVergiGecikme += gecikme;
+
+                            yeniBorclar.push({
+                                kurum: "Vergi", 
+                                vd: idxVD !== -1 ? String(row[idxVD]).trim() : "", 
+                                belgeNo: idxBelge !== -1 ? String(row[idxBelge]).trim() : "",
+                                tur: okunanTur, 
+                                donem: okunanDonem,
+                                vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", 
+                                asil: anaPara,
+                                gecikme: gecikme, 
+                                toplam: toplaTutar, 
+                                plaka: idxPlaka !== -1 ? String(row[idxPlaka]).trim() : ""
                             });
-                            if(!okunanDonem) okunanDonem = "-";
+                        } catch (e) {
+                            console.warn("Bir satır atlandı (Veri bozuk):", row);
                         }
-
-                        // Sütun İndeksi Bulunamasa bile Hücre İçeriğinden TÜR Bulma Mantığı
-                        if (idxTur !== -1 && row[idxTur]) {
-                            okunanTur = String(row[idxTur]).trim();
-                        } else {
-                            // İçinde harf barındıran, tarih/dönem/plaka olmayan, en uzun metni Vergi Türü kabul et
-                            let enUzunMetin = "";
-                            row.forEach(cell => {
-                                let c = String(cell).trim();
-                                if(isNaN(c) && /[a-zA-ZğüşıöçĞÜŞİÖÇ]/.test(c) && !c.match(/[0-9]{4}[\/\-][0-9]{2}/) && !c.match(/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/)) {
-                                    // Plaka kontrolü (Örn: 41ABC490) ve Vergi Dairesi adını (ACISU) atla
-                                    if(c.length > enUzunMetin.length && c.length > 5 && !c.match(/^[0-9]{2}[A-Z]{1,3}[0-9]{2,4}$/)) {
-                                        enUzunMetin = c;
-                                    }
-                                }
-                            });
-                            okunanTur = enUzunMetin || "Vergi/Ceza Borcu";
-                        }
-
-                        tVergiAna += anaPara;
-                        tVergiGecikme += gecikme;
-
-                        yeniBorclar.push({
-                            kurum: "Vergi", 
-                            vd: idxVD !== -1 ? row[idxVD] : "", 
-                            belgeNo: idxBelge !== -1 ? row[idxBelge] : "",
-                            tur: okunanTur, 
-                            donem: okunanDonem,
-                            vade: idxVade !== -1 ? parseTarih(row[idxVade]) : "-", 
-                            asil: anaPara,
-                            gecikme: gecikme, 
-                            toplam: toplaTutar, 
-                            plaka: idxPlaka !== -1 ? row[idxPlaka] : ""
-                        });
                     }
 
                     let m = mukellefler.find(x => x.vkn === seciliVkn);
@@ -7344,7 +7319,11 @@
                         alert(`🎉 GİB Aktarımı Tamamlandı!\nAsıl Borç: ${formatMoney(tVergiAna)} ₺\nGecikme: ${formatMoney(tVergiGecikme)} ₺`);
                     }
                     event.target.value = ""; 
-                } catch (error) { console.error(error); alert("GİB Excel'i okunurken bir hata oluştu."); }
+                } catch (error) { 
+                    console.error("Ana hata:", error); 
+                    alert("GİB Excel'i okunurken bir sorun oluştu. Lütfen dosyanın orijinal GİB çıktısı olduğundan emin olun."); 
+                    event.target.value = ""; 
+                }
             };
             reader.readAsArrayBuffer(dosya);
         }
