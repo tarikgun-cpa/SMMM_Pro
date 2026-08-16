@@ -504,11 +504,12 @@
                 flex-direction: row !important; 
                 justify-content: space-between !important; 
             }
-
-            /* YAZDIRILIRKEN KAMU BORÇ TABLOSUNU GÖSTER (CSS DÜZELTMESİ) */
-            #kamuBorcDetayModal { display: block !important; position: static !important; background: transparent !important; padding: 0 !important; }
-            #kamuBorcDetayModal .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; }
+            
+            /* YAZDIRILIRKEN KAMU BORÇ TABLOSUNU GÖSTER */
+            #kamuBorcDetayModal { position: absolute !important; left: 0 !important; top: 0 !important; display: block !important; background: transparent !important; padding: 0 !important; width: 100% !important; }
+            #kamuBorcDetayModal .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
             #kamuBorcDetayModal .modal-header, #kamuBorcDetayModal .modal-footer, #kamuBorcDetayModal .cari-tabs { display: none !important; }
+            #printKamuBorcAlan { padding: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; }
         }
 
         /* --- LOGİN (GİRİŞ) EKRANI STİLLERİ --- */
@@ -7227,7 +7228,7 @@
             return tarihStr;
         }
 
-        // EN GÜÇLÜ VE HATASIZ GİB EXCEL OKUYUCU
+        // SÜTUN ADRESLERİ SABİTLENMİŞ VE GÜVENLİ GİB EXCEL OKUYUCU (A, B, C...)
         function gibExcelOku(event) {
             let dosya = event.target.files[0];
             if (!dosya) return;
@@ -7240,14 +7241,15 @@
                     let workbook = XLSX.read(data, { type: 'array' });
                     let sayfa = workbook.Sheets[workbook.SheetNames[0]];
                     
-                    // sheet_to_json'ı A, B, C gibi nesne formatında okutuyoruz! Bu, boş sütunların kaymasını tamamen engeller.
+                    // Sütunların kaymaması için A, B, C gibi nesne formatında okutuyoruz.
                     let tumSatirlar = XLSX.utils.sheet_to_json(sayfa, { header: "A", defval: "" });
 
                     let baslikSatirIndeksi = -1;
 
-                    // 1. Başlık satırını bul (A, B, C... objesi içinde)
+                    // 1. Başlık satırını bul
                     for (let i = 0; i < tumSatirlar.length; i++) {
-                        let rowStr = Object.values(tumSatirlar[i]).join(" ").toUpperCase();
+                        let row = tumSatirlar[i];
+                        let rowStr = Object.values(row).join(" ").toUpperCase();
                         if (rowStr.includes("ASIL") || rowStr.includes("TOPLAM") || rowStr.includes("BORC")) {
                             baslikSatirIndeksi = i;
                             break;
@@ -7284,15 +7286,15 @@
                             // GİB EXCEL STANDARDINA GÖRE SABİT SÜTUNLAR:
                             // A: VD, B: Belge, C: Tür, D: Dönem, E: Vade, F: Asıl Borç, G: Gecikme, H: Toplam, I: Plaka
                             
-                            let asilBorc = parseTutar(row["F"] || 0);
-                            let gecikme = parseTutar(row["G"] || 0);
-                            let toplaTutar = parseTutar(row["H"] || 0);
+                            let asilBorc = parseTutar(row["F"]);
+                            let gecikme = parseTutar(row["G"]);
+                            let toplaTutar = parseTutar(row["H"]);
 
-                            // Bazen kayma nedeniyle H sütunu boş kalıp asıl/gecikme/toplam E, F, G'ye kayabilir. Onu test edelim.
-                            if (row["H"] === "" && row["F"] !== "") {
-                                asilBorc = parseTutar(row["E"] || 0);
-                                gecikme = parseTutar(row["F"] || 0);
-                                toplaTutar = parseTutar(row["G"] || 0);
+                            // Eğer G ve H sütunu boş ama asıl borç (E) veya (F)'deyse kayma vardır, onu test edelim.
+                            if ((row["H"] === undefined || row["H"] === "") && row["F"] !== "") {
+                                asilBorc = parseTutar(row["E"]);
+                                gecikme = parseTutar(row["F"]);
+                                toplaTutar = parseTutar(row["G"]);
                             }
 
                             // HATA DÜZELTME (Sıfır olan gecikmelerin Asıl Borç ile karışması)
@@ -7312,7 +7314,7 @@
                             let okunanDonem = row["D"] ? String(row["D"]).trim() : "-";
                             let okunanBelge = row["B"] ? String(row["B"]).trim() : "";
 
-                            // TÜR VE DÖNEM KURTARMA (Eğer hücre boşsa tüm satırda ara)
+                            // TÜR VE DÖNEM KURTARMA
                             if (okunanDonem === "-" || okunanDonem === "") {
                                 Object.values(row).forEach(cell => {
                                     let c = String(cell).trim();
@@ -7338,16 +7340,17 @@
                             tVergiAna += asilBorc;
                             tVergiGecikme += gecikme;
 
+                            // Vade tarihi sütunu (E), önceki kodda "parseTarih" çağrısı hatalıydı. Burada düzeltildi.
                             let vadeTarihi = "-";
                             if (row["E"] && String(row["E"]).trim() !== "") {
-                                vadeTarihi = typeof parseTarih === "function" ? parseTarih(row["E"]) : row["E"];
+                                vadeTarihi = String(row["E"]).trim();
                             }
 
                             yeniBorclar.push({
                                 kurum: "Vergi", 
                                 vd: row["A"] ? String(row["A"]).trim() : "", 
                                 belgeNo: okunanBelge,
-                                tur: okunanTur.replace(/\n/g, " "), // Excel'de alt satıra geçme varsa düzelt
+                                tur: okunanTur.replace(/\n/g, " "), 
                                 donem: okunanDonem.replace(/\n/g, " "),
                                 vade: vadeTarihi, 
                                 asil: asilBorc,
@@ -7356,7 +7359,7 @@
                                 plaka: row["I"] ? String(row["I"]).trim() : ""
                             });
                         } catch (e) {
-                            console.warn("Satır işlenemedi (Sessizce atlandı):", row);
+                            console.warn("Satır işlenemedi:", row);
                         }
                     }
 
@@ -7387,7 +7390,7 @@
                     event.target.value = ""; 
                 } catch (error) { 
                     console.error("Ana hata:", error); 
-                    alert("GİB Excel'i okunurken bir sorun oluştu. Lütfen dosyanın orijinal GİB çıktısı olduğundan emin olun."); 
+                    alert("GİB Excel'i okunurken bir sorun oluştu."); 
                     event.target.value = ""; 
                 }
             };
