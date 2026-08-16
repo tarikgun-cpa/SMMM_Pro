@@ -4836,8 +4836,15 @@
                 
                 let defterTarihi = null;
                 if(m.eDefterDurum && m.eDefterDurum.includes("Evet")) {
-                    if(isDefterUc) defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
-                    else defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+                    if(isDefterUc) {
+                        let donemAy = parseInt(donem.split("-")[1]);
+                        // 3 Aylık defterler sadece 2, 5, 8 ve 11. ayların görev matrisinde listelenir
+                        if ([2, 5, 8, 11].includes(donemAy)) {
+                            defterTarihi = isKurum ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+                        }
+                    } else {
+                        defterTarihi = isKurum ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+                    }
                 }
                 if(defterTarihi) { 
                     fToplam++; if(f.DEFTER) fTamam++; 
@@ -4945,7 +4952,10 @@
             document.getElementById("chk_Gorev_MUHSGK").checked = f.MUHSGK || false;
             document.getElementById("chk_MUHSGK_Yok").checked = f.MUHSGK_Yok || false;
             document.getElementById("chk_Gorev_GECICI").checked = f.GECICI || false;
-            // ... (diğerleri devam ediyor) ...
+            document.getElementById("chk_Gorev_BABS").checked = f.BABS || false;
+            document.getElementById("chk_Gorev_DEFTER").checked = f.DEFTER || false;
+            document.getElementById("chk_Gorev_SGK").checked = f.SGK || false;
+            document.getElementById("chk_Gorev_TUIK").checked = f.TUIK || false;
             document.getElementById("chk_Gorev_ISKUR").checked = f.ISKUR || false;
 
             // Kilit Mekanizması
@@ -4964,8 +4974,14 @@
             let isDefterUcModal = (eDefterDurum === "Evet - Üç Aylık");
             
             let defterTarihVarmı = false;
-            if(isDefterUcModal) defterTarihVarmı = isKurumModal ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
-            else defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+            if(isDefterUcModal) {
+                let donemAy = parseInt(donem.split("-")[1]);
+                if ([2, 5, 8, 11].includes(donemAy)) {
+                    defterTarihVarmı = isKurumModal ? (tTarih.defterUcKurum || tTarih.defterUc) : (tTarih.defterUcSahis || tTarih.defterUc);
+                }
+            } else {
+                defterTarihVarmı = isKurumModal ? (tTarih.defterAylikKurum || tTarih.defterAylik) : (tTarih.defterAylikSahis || tTarih.defterAylik);
+            }
             
             document.getElementById("lbl_Gorev_DEFTER").style.display = (eDefterDurum && eDefterDurum.includes("Evet") && defterTarihVarmı) ? "flex" : "none";
             
