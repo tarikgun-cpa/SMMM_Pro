@@ -5990,10 +5990,14 @@
 
             let tTarih = hedefAyaAitTarihleriGetir(donem);
             let fGorevTop = 0; let fGorevTamam = 0;
-            let alarmListesiHTML = "";
+            
+            // YENİ: Alarmları gününe göre sıralamak için html metni yerine dizi kullanıyoruz.
+            let alarmDizisi = []; 
             
             let aylikDefterTop = 0, aylikDefterTamam = 0;
             let ucAylikDefterTop = 0, ucAylikDefterTamam = 0;
+            
+            // E-DEFTER ROZETLERİ İÇİN GEREKLİ DİZİLER (EKSİKSİZ)
             let bekleyenAylikDefterler = [];
             let bekleyenUcDefterler = [];
             let aktifProjelerGruplu = {}; 
@@ -6041,15 +6045,22 @@
                                     if(gun >= 0 && gun < minGunBeyanname) minGunBeyanname = gun;
                                     if(gun < 0) gecikmisBeyannameVar = true;
                                 }
-                            }
 
-                            if(gun !== null && gun <= 7) {
-                                let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
-                                alarmListesiHTML += `
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:#fdf2f2; border-left:3px solid #e74c3c; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #f9d5d5; margin-bottom: 5px;">
-                                    <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(${isim})</span></div>
-                                    <div>${text}</div>
-                                </div>`;
+                                if(gun <= 7) {
+                                    let text = gun < 0 ? `<span style="color:#e74c3c; font-weight:bold;"><i class="fas fa-history"></i> Gecikti!</span>` : (gun === 0 ? `<span style="color:#e67e22; font-weight:bold;"><i class="fas fa-hourglass-half"></i> Bugün Son!</span>` : `<span style="color:#d35400; font-weight:500;">${gun} gün kaldı</span>`);
+                                    
+                                    // YENİ: Objeyi diziye atıyoruz (Sıralama için). OSGB tamamen çıkarıldı.
+                                    let gorselGun = gun < 0 ? -999 : gun; // Gecikenleri listeye en üste zorla atmak için
+                                    alarmDizisi.push({
+                                        sira: gorselGun,
+                                        html: `<div style="display:flex; justify-content:space-between; align-items:center; background:#fffcfc; border-left:3px solid #e74c3c; padding:8px 12px; border-radius:6px; font-size:12px; border:1px solid #fadbd8; transition:0.3s;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='#fffcfc'">
+                                            <span style="font-weight:600; color:#2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:75%;" title="${m.unvan}">
+                                                ${m.unvan} <span style="color:#7f8c8d; font-weight:normal; font-size:10.5px; margin-left:4px;">(${isim})</span>
+                                            </span>
+                                            ${text}
+                                        </div>`
+                                    });
+                                }
                             }
                         }
                     }
@@ -6075,23 +6086,21 @@
                     if(defterTarihiDash) {
                         if(isDefterUc) { 
                             ucAylikDefterTop++; 
-                            if(f.DEFTER) ucAylikDefterTamam++; else bekleyenUcDefterler.push(m.unvan);
+                            if(f.DEFTER) { ucAylikDefterTamam++; } else { bekleyenUcDefterler.push(m.unvan); }
                         } else { 
                             aylikDefterTop++; 
-                            if(f.DEFTER) aylikDefterTamam++; else bekleyenAylikDefterler.push(m.unvan);
+                            if(f.DEFTER) { aylikDefterTamam++; } else { bekleyenAylikDefterler.push(m.unvan); }
                         }
+                        
+                        let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
+                        if(isDefterUc) {
+                            if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
+                            else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
+                            else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
+                            else dAd = "4. Dönem E-Defter Beratı";
+                        }
+                        kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false, true); 
                     }
-                }
-                
-                if(defterTarihiDash) {
-                    let dAd = tTarih._defterAyAdi + " E-Defter Beratı";
-                    if(isDefterUc) {
-                        if(tTarih._defterAyNum >= 1 && tTarih._defterAyNum <= 3) dAd = "1. Dönem E-Defter Beratı"; 
-                        else if(tTarih._defterAyNum >= 4 && tTarih._defterAyNum <= 6) dAd = "2. Dönem E-Defter Beratı"; 
-                        else if(tTarih._defterAyNum >= 7 && tTarih._defterAyNum <= 9) dAd = "3. Dönem E-Defter Beratı"; 
-                        else dAd = "4. Dönem E-Defter Beratı";
-                    }
-                    kontrolAlarm(dAd, f.DEFTER, defterTarihiDash, false, true); 
                 }
                 
                 if(isKurum ? tTarih.geciciKurum : (tTarih.yillik || tTarih.geciciSahis)) {
@@ -6119,48 +6128,92 @@
                     let mGun = gunFarkiHesapla(m.muhurBitis);
                     if(mGun !== null && mGun <= 30) {
                         let mText = mGun < 0 ? `<span style="color:#c0392b; font-weight:bold;">SÜRESİ BİTTİ!</span>` : `<span style="color:#d35400; font-weight:bold;">${mGun} gün kaldı</span>`;
-                        alarmListesiHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#fdf2f2; border-left:3px solid #c0392b; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #fadbd8; margin-bottom: 5px;">
-                            <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(Mali Mühür / E-İmza)</span></div>
-                            <div>${mText}</div>
-                        </div>`;
+                        let gorselGun = mGun < 0 ? -999 : mGun;
+                        alarmDizisi.push({
+                            sira: gorselGun,
+                            html: `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fcfcfc; border-left:3px solid #c0392b; padding:8px 12px; border-radius:6px; font-size:12px; border:1px solid #fadbd8; margin-bottom: 5px;">
+                                <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(Mali Mühür / E-İmza)</span></div>
+                                <div>${mText}</div>
+                            </div>`
+                        });
                     }
                 }
-
-                let perSayisi = parseInt(m.sgkCalisanSayisi) || 0;
-                if(perSayisi >= 48) {
-                    let sText = perSayisi >= 50 ? `<span style="color:#c0392b; font-weight:bold;">OSGB ZORUNLU!</span>` : `<span style="color:#e67e22; font-weight:bold;">Sınıra Yaklaştı</span>`;
-                    let sColor = perSayisi >= 50 ? "#c0392b" : "#e67e22";
-                    let sBg = perSayisi >= 50 ? "#fdf2f2" : "#fef9e7";
-                    alarmListesiHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:${sBg}; border-left:3px solid ${sColor}; padding:6px 10px; border-radius:4px; font-size:12px; border:1px solid #eee; margin-bottom: 5px;">
-                            <div><strong style="color:#2c3e50;">${m.unvan}</strong> <span style="color:#7f8c8d; font-size:11px;">(SGK: ${perSayisi} Personel)</span></div>
-                            <div>${sText}</div>
-                        </div>`;
-                }
+                
+                // OSGB ZORUNLU KISMI ARTIK BURADA YOK
             });
 
             document.getElementById("mdBekleyenGorev").textContent = (fGorevTop - fGorevTamam);
             document.getElementById("mdGorevOran").textContent = "%" + (fGorevTop === 0 ? 100 : Math.round((fGorevTamam / fGorevTop) * 100));
-            document.getElementById("mdKritikGorevlerListesi").innerHTML = alarmListesiHTML || `<div style="text-align:center; color:#27ae60; padding:15px; font-size:12px; font-weight:600;"><i class="fas fa-check-circle"></i> Yakın zamanda kritik (son 7 gün) bir görev veya alarm bulunmuyor.</div>`;
+            document.getElementById("mdGorevOran").style.color = (fGorevTop>0 && fGorevTamam/fGorevTop === 1) ? "#27ae60" : "#f39c12";
 
-            // YENİ AI YÖNETİCİ ÖZETİ YAZISI (İstediğiniz netliğe kavuştu)
+            // Alarmları Gün Sayısına Göre Sırala (Günü En Az Olanlar En Üstte Çıkar)
+            alarmDizisi.sort((a, b) => a.sira - b.sira);
+            let alarmListesiHTML = alarmDizisi.map(a => a.html).join("");
+            
+            let alarmKutu = document.getElementById("mdKritikGorevlerListesi");
+            if(alarmKutu) {
+                if(alarmListesiHTML === "") {
+                    alarmKutu.innerHTML = `<div style="text-align:center; padding:20px; color:#27ae60; background:#f0fdf4; border-radius:6px; border:1px dashed #bbf7d0;"><i class="fas fa-check-double" style="font-size:24px; display:block; margin-bottom:8px;"></i> Önümüzdeki 7 gün içinde bitecek kritik bir görev bulunmuyor. Harika ilerliyorsunuz!</div>`;
+                } else {
+                    alarmKutu.innerHTML = alarmListesiHTML;
+                }
+            }
+
+            // YENİ AI YÖNETİCİ ÖZETİ YAZISI VE GÖRSELİ
             let aiYoneticiKutu = document.getElementById("aiYoneticiMetin");
-            if(aiYoneticiKutu) {
-                let aiMesaj = "";
-                let dMetin = "";
-                let bMetin = "";
+            let aiBox = document.getElementById("aiYoneticiOzeti");
+            
+            if(aiYoneticiKutu && aiBox) {
+                let aiMesaj = "Ofisinizin operasyonel süreçleri analiz edilmiştir. ";
+                let aiType = "success"; 
                 
-                if (gecikmisDefterVar) dMetin = "<b style='color:#e74c3c;'>E-Defter yükleme süresi dolmuş firmalar var!</b>";
-                else if (minGunDefter !== 999) dMetin = `E-Defter teslimine <b>${minGunDefter} gün</b>.`;
-                else dMetin = "Bekleyen E-Defter işlemi görünmüyor.";
+                // Beyanname Analizi
+                let bekleyenByn = fGorevTop - fGorevTamam;
+                if(gecikmisBeyannameVar) {
+                    aiType = "danger";
+                    aiMesaj += `<br><strong style="color:#c0392b;">⚠️ DİKKAT: Yasal süresi geçmiş beyanname bildirimleriniz bulunmaktadır!</strong> Cezai müeyyidelere maruz kalmamak için derhal kontrolleri sağlayınız. `;
+                } else if(minGunBeyanname <= 3 && bekleyenByn > 0) {
+                    aiType = "warning";
+                    aiMesaj += `<br>Yaklaşan beyanname yasal sürelerine <b>${minGunBeyanname} gün</b> kalmış olup, tamamlanmayı bekleyen <b style="color:#d35400;">${bekleyenByn} adet</b> işleminiz bulunmaktadır. Öncelikli firmalara odaklanmanız önemle tavsiye edilir. `;
+                } else if(minGunBeyanname <= 7 && bekleyenByn > 0) {
+                    aiType = "success";
+                    aiMesaj += `Beyanname takviminde olağan bir periyottasınız. Kalan süre <b>${minGunBeyanname} gün</b>, bekleyen işlem sayısı <b>${bekleyenByn}</b>. Planlamanıza uygun ilerleyebilirsiniz. `;
+                } else if(bekleyenByn === 0 && fGorevTop > 0) {
+                    aiType = "success";
+                    aiMesaj += `<span style="color:#27ae60; font-weight:600;">Tebrikler! Bu döneme ait tüm vergi ve SGK bildirimleri eksiksiz olarak tamamlanmıştır.</span> `;
+                } else if (fGorevTop === 0) {
+                    aiMesaj += "Seçili takvim dönemi için tanımlanmış bir beyanname görevi bulunmuyor. ";
+                }
 
-                if (gecikmisBeyannameVar) bMetin = "<b style='color:#e74c3c;'>Gecikmiş beyannameler mevcut, lütfen kontrol edin!</b>";
-                else if (minGunBeyanname !== 999) bMetin = `Beyanname teslimlerine <b>${minGunBeyanname} gün</b> var.`;
-                else bMetin = "Tüm beyannameler tamamlandı.";
+                // Defter Analizi
+                let bekleyenDefter = (aylikDefterTop - aylikDefterTamam) + (ucAylikDefterTop - ucAylikDefterTamam);
+                if(gecikmisDefterVar) {
+                    aiType = "danger";
+                    aiMesaj += `<br><strong style="color:#c0392b;">⚠️ Berat yükleme süresi dolmuş E-Defter mükellefleriniz var!</strong> Lütfen GİB onay durumlarını acilen teyit ediniz. `;
+                } else if (minGunDefter <= 5 && bekleyenDefter > 0) {
+                    if(aiType === "success") aiType = "warning";
+                    aiMesaj += `<br>Ayrıca E-Defter berat gönderimlerinin son gününe <b>${minGunDefter} gün</b> kalmıştır. <b>${bekleyenDefter} firmanın</b> defter onayı beklemektedir.`;
+                }
 
-                aiMesaj = `${dMetin} ${bMetin} Finansal tablonuza göre hareket ederek önceliklerinizi belirleyebilirsiniz.`;
+                // Finansal Eklenti
+                if (totalAlacak > 50000) {
+                    aiMesaj += `<br><br><span style="background:#f8fafc; padding:6px 10px; border-radius:6px; font-size:12px; color:#475569; border:1px solid #e2e8f0; display:inline-block;"><i class="fas fa-lightbulb" style="color:#f59e0b;"></i> <b>Finansal Not:</b> Piyasada yüksek tahsilat bakiyeniz (${formatMoney(totalAlacak)} ₺) bulunmaktadır. Tahsilat modülünden ekstre paylaşımı yapabilirsiniz.</span>`;
+                }
+
                 aiYoneticiKutu.innerHTML = aiMesaj;
+                
+                // AI Kutu Görsel Tasarımının Dinamik Değişimi
+                let bgGradient = aiType === "danger" ? "linear-gradient(to right, #fdf2f2, #ffffff)" : (aiType === "warning" ? "linear-gradient(to right, #fffcf0, #ffffff)" : "linear-gradient(to right, #f0fdf4, #ffffff)");
+                let borderColor = aiType === "danger" ? "#e74c3c" : (aiType === "warning" ? "#f59e0b" : "#10b981");
+                let iconColor = aiType === "danger" ? "#e74c3c" : (aiType === "warning" ? "#f59e0b" : "#10b981");
+                
+                aiBox.style.background = bgGradient;
+                aiBox.style.borderLeft = `4px solid ${borderColor}`;
+                aiBox.querySelector("i").style.color = iconColor;
+                aiBox.querySelector("i").className = "fas fa-brain"; 
+                aiBox.querySelector("h4").textContent = "AI Operasyon Analizi";
+                aiBox.querySelector("h4").style.color = "#1e293b";
             }
 
             // --- E-DEFTER YÜKLEME MERKEZİ (PREMIUM UI ROZETLER) ---
@@ -6232,6 +6285,8 @@
             // Danışmanlık Projeleri Listesini Güncelle
             let prjListesiHtml = "";
             let aktifPrjSay = 0;
+            let bitenToplam = 0;
+            
             Object.keys(aktifProjelerGruplu).forEach(fUnvan => {
                 let pList = aktifProjelerGruplu[fUnvan];
                 pList.forEach(p => {
@@ -6250,9 +6305,18 @@
                     </div>`;
                 });
             });
+            
+            Object.values(danismanlikVeritabani).forEach(plist => {
+                bitenToplam += plist.filter(x => x.tamamlandi).length;
+            });
 
             document.getElementById("mdAktifProje").textContent = aktifPrjSay;
-            document.getElementById("mdAktifProjelerListesi").innerHTML = prjListesiHtml || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px;">Aktif yürütülen bir danışmanlık projesi bulunmuyor.</div>`;
+            document.getElementById("mdBitenProje").textContent = bitenToplam;
+            
+            let mdPList = document.getElementById("mdAktifProjelerListesi");
+            if(mdPList) {
+                mdPList.innerHTML = prjListesiHtml || `<div style="text-align:center; color:#7f8c8d; padding:15px; font-size:12px; background:#f8fafc; border-radius:6px; border:1px dashed #e2e8f0;"><i class="fas fa-folder-open" style="font-size:24px; display:block; margin-bottom:8px; color:#cbd5e1;"></i> Aktif yürütülen bir danışmanlık projesi bulunmuyor.</div>`;
+            }
         }
 
         function danismanlikYeniFirmaBaslatBtn() {
