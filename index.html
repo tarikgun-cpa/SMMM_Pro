@@ -443,8 +443,12 @@
             .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
             .modal-header, .modal-footer, .no-print, button, #tahsilatKutu, #mutabakatKutu, #giderOdemeKutu { display: none !important; }
             
-            /* (SORUN 1'İN ÇÖZÜMÜ) Yazdırmada tablo kaydırma çubuğu ve kesilme sorununu çözer */
-            .table-responsive { overflow: visible !important; height: auto !important; }
+            /* (SORUN 1'İN ÇÖZÜMÜ) Yazdırmada tablo kaydırma çubuğu ve kesilme sorununu tamamen çözer */
+            .table-responsive { overflow: visible !important; height: auto !important; display: block !important; width: 100% !important; }
+            .mukellef-table { page-break-inside: auto !important; }
+            .mukellef-table tr { page-break-inside: avoid !important; page-break-after: auto !important; }
+            .mukellef-table thead { display: table-header-group !important; }
+            .mukellef-table tfoot { display: table-footer-group !important; }
             
             /* EKLENEN YENİ SATIR: İstihbarat raporunun yazdırılırken yarıda kesilmesini engeller */
             #istihbaratRaporAlani { max-height: none !important; overflow: visible !important; }
