@@ -5545,6 +5545,29 @@
             danismanlikCiz();
         }
 
+        // Manuel Proje Ekle Butonunu ve Modalını Çalıştıran Fonksiyon
+        function acDanismanlikEkleModal() {
+            let select = document.getElementById("danYeniFirmaSec");
+            select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
+            mukellefler.forEach(m => { 
+                if(m.durum !== "Pasif") select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; 
+            });
+            modalAc('danismanlikFirmaSecModal');
+        }
+
+        // Modal İçindeki "Firmaya Proje Alanı Aç" Butonunu Çalıştıran Fonksiyon
+        function danismanlikYeniFirmaBaslatBtn() {
+            let select = document.getElementById("danYeniFirmaSec");
+            let vkn = select.value;
+            if(!vkn) { alert("Lütfen proje başlatmak için bir firma seçin."); return; }
+            
+            let unvan = select.options[select.selectedIndex].text;
+            modalKapat('danismanlikFirmaSecModal');
+            
+            // Firmayı seçtikten sonra detay ekranını (Yeni Proje Ekle menüsünü) otomatik aç
+            danismanlikGorevPaneliAc(vkn, unvan);
+        }
+
         function danismanlikCiz() {
             let kartlarAlani = document.getElementById("danismanlikKartlariAlani");
             let arama = document.getElementById("danismanlikArama").value.toLowerCase().trim();
