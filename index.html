@@ -819,7 +819,7 @@
             <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')"><i class="fas fa-building" style="width:20px; text-align:center;"></i> Şirket Kuruluşu</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')"><i class="fas fa-tasks" style="width:20px; text-align:center;"></i> Görev & Projeler</a></li>
             <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')"><i class="fas fa-file-invoice-dollar" style="width:20px; text-align:center;"></i> Vergi Ödemeleri</a></li>
-            
+            <li id="menuYapilandirma"><a href="#" onclick="sayfaDegistir('yapilandirmaPaneli')"><i class="fas fa-landmark" style="width:20px; text-align:center;"></i> Kamu & Yapılandırma</a></li>
             <div class="menu-label">Finans & Gelir</div>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')"><i class="fas fa-calculator" style="width:20px; text-align:center;"></i> Ücret Sihirbazı</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')"><i class="fas fa-file-signature" style="width:20px; text-align:center;"></i> Sözleşmeler</a></li>
@@ -861,9 +861,13 @@
                         <span style="color:#555; font-size:12px;">Net Ofis Kârlılığı:</span>
                         <strong id="mdNetKar" style="font-size:14px; color:#2ecc71;">0,00 ₺</strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                         <span style="color:#555; font-size:12px;">Toplam Piyasa Alacağı:</span>
                         <strong id="mdPiyasaAlacak" style="font-size:14px; color:#e74c3c;">0,00 ₺</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #eef2f5; padding-top:5px;">
+                        <span style="color:#555; font-size:12px;">Mükellef Kamu Borçları:</span>
+                        <strong id="mdKamuBorcu" style="font-size:14px; color:#c0392b;">0,00 ₺</strong>
                     </div>
                 </div>
 
@@ -1697,6 +1701,76 @@
         </div>
 
         <!-- ========================================== -->
+        <!-- KAMU BORÇ VE YAPILANDIRMA MERKEZİ -->
+        <!-- ========================================== -->
+        <div id="yapilandirmaPaneli" class="view-section" style="display: none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h1 style="margin:0; font-size:22px; color:#2c3e50;"><i class="fas fa-landmark" style="color:#c0392b;"></i> Kamu Borç & Yapılandırma Takibi</h1>
+                <div style="display:flex; gap:10px;">
+                    <input type="month" id="yapilandirmaDonem" class="search-bar" style="border:2px solid #c0392b; background:#fdf2f2;" onchange="yapilandirmaListele()">
+                    <button class="action-btn btn-primary" style="background:#c0392b; margin:0;" onclick="yeniYapilandirmaEkleAc()"><i class="fas fa-plus"></i> Yeni Yapılandırma/Borç</button>
+                </div>
+            </div>
+            
+            <div class="list-header-actions mb-3" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #c0392b; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <input type="text" id="yapilandirmaArama" class="search-bar" placeholder="Mükellef Ara..." oninput="yapilandirmaListele()" style="width: 100%;">
+            </div>
+            
+            <div id="yapilandirmaKartlariAlani" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;"></div>
+        </div>
+
+        <div id="yapilandirmaEkleModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#c0392b;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-file-contract"></i> Yeni Kamu Borcu / Yapılandırma Ekle</h3>
+                    <button class="modal-close" onclick="modalKapat('yapilandirmaEkleModal')">X</button>
+                </div>
+                <div class="modal-body" style="padding:20px; background:#fcfcfc;">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Mükellef Seçin:</label>
+                            <select id="yapMusteri" class="search-bar" style="width:100%;"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Borç Türü:</label>
+                            <select id="yapTur" class="search-bar" style="width:100%;">
+                                <option value="SGK Prim Borcu">SGK Prim Borcu</option>
+                                <option value="Vergi Borcu">Vergi Borcu</option>
+                                <option value="Bağ-Kur Borcu">Bağ-Kur Borcu</option>
+                                <option value="7440 Yapılandırma">7440 Yapılandırma</option>
+                                <option value="Diğer Kamu Borcu">Diğer Kamu Borcu</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Açıklama/Dosya No:</label>
+                            <input type="text" id="yapAciklama" class="search-bar" placeholder="Örn: 2023 SGK Yapılandırma">
+                        </div>
+                        <div class="form-group">
+                            <label>Toplam Tutar (TL):</label>
+                            <input type="number" id="yapToplamTutar" class="search-bar" placeholder="0.00" oninput="yapTaksitHesapla()" style="font-weight:bold; color:#c0392b;">
+                        </div>
+                        <div class="form-group">
+                            <label>Taksit Sayısı (Ay):</label>
+                            <input type="number" id="yapTaksitSayisi" class="search-bar" value="1" min="1" max="72" oninput="yapTaksitHesapla()">
+                        </div>
+                        <div class="form-group">
+                            <label>Aylık Taksit Tutarı:</label>
+                            <input type="number" id="yapAylikTutar" class="search-bar" readonly style="background:#eee; font-weight:bold;">
+                        </div>
+                        <div class="form-group">
+                            <label>İlk Taksit Vadesi (Ay/Yıl):</label>
+                            <input type="month" id="yapIlkBaslangic" class="search-bar">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn" onclick="modalKapat('yapilandirmaEkleModal')">İptal</button>
+                    <button class="action-btn btn-primary" style="background:#c0392b;" onclick="yapilandirmaKaydet()">Sisteme İşle</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
         <!-- MALİ TAKVİM VE BEYANNAME MATRIX DASHBOARD -->
         <!-- ========================================== -->
         <div id="takvimPaneli" class="view-section" style="display: none;">
@@ -2424,7 +2498,7 @@
                                 giderKategorileri: JSON.parse(localStorage.getItem('giderKategorileri') || '["Aylık Ofis Kira", "Personel Maaş/SGK", "SMMM Dışarıdan Hizmet (Makbuzlu)", "KDV / Vergi", "Kırtasiye / Ofis İhtiyaçları", "Diğer Giderler"]'),
                                 sistemAyarlari: JSON.parse(localStorage.getItem('sistemAyarlari') || "{}"),
                                 takvimVeritabanı: JSON.parse(localStorage.getItem('takvimVeritabanı') || "{}"),
-                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),kurulusVeritabani: JSON.parse(localStorage.getItem('kurulusVeritabani') || "{}"),
+                                danismanlikVeritabani: JSON.parse(localStorage.getItem('danismanlikVeritabani') || "{}"),odemeVeritabani: JSON.parse(localStorage.getItem('odemeVeritabani') || "{}"),kurulusVeritabani: JSON.parse(localStorage.getItem('kurulusVeritabani') || "{}"),yapilandirmaVeritabani: JSON.parse(localStorage.getItem('yapilandirmaVeritabani') || "{}"),
                                 teklifler: JSON.parse(localStorage.getItem('teklifler') || "[]"),
                                 sonMakbuzTarih: localStorage.getItem('sonMakbuzTarih') || "-",
                                 sonTahsilatTarih: localStorage.getItem('sonTahsilatTarih') || "-"
@@ -2458,6 +2532,7 @@
                         if(data.danismanlikVeritabani) { localStorage.setItem('danismanlikVeritabani', JSON.stringify(data.danismanlikVeritabani)); danismanlikVeritabani = data.danismanlikVeritabani; }
                         if(data.odemeVeritabani) { localStorage.setItem('odemeVeritabani', JSON.stringify(data.odemeVeritabani)); odemeVeritabani = data.odemeVeritabani; }
                         if(data.kurulusVeritabani) { localStorage.setItem('kurulusVeritabani', JSON.stringify(data.kurulusVeritabani)); kurulusVeritabani = data.kurulusVeritabani; }
+                        if(data.yapilandirmaVeritabani) { localStorage.setItem('yapilandirmaVeritabani', JSON.stringify(data.yapilandirmaVeritabani)); yapilandirmaVeritabani = data.yapilandirmaVeritabani; }
                         if(data.teklifler) { localStorage.setItem('teklifler', JSON.stringify(data.teklifler)); kayitliTeklifler = data.teklifler; }
                         if(data.sonMakbuzTarih) localStorage.setItem('sonMakbuzTarih', data.sonMakbuzTarih);
                         if(data.sonTahsilatTarih) localStorage.setItem('sonTahsilatTarih', data.sonTahsilatTarih);
@@ -3402,6 +3477,7 @@
             let takvimPaneli = document.getElementById('takvimPaneli');
             let odemelerPaneli = document.getElementById('odemelerPaneli');
             let kurulusPaneli = document.getElementById('kurulusPaneli');
+            let yapilandirmaPaneli = document.getElementById('yapilandirmaPaneli');
 
             if(masterDash) masterDash.style.display = 'none';
             if(liste) liste.style.display = 'none'; 
@@ -3417,6 +3493,8 @@
             if(document.getElementById('menuOdemeler')) document.getElementById('menuOdemeler').classList.remove('active');
             if(kurulusPaneli) kurulusPaneli.style.display = 'none';
             if(document.getElementById('menuKurulus')) document.getElementById('menuKurulus').classList.remove('active');
+            if(yapilandirmaPaneli) yapilandirmaPaneli.style.display = 'none';
+            if(document.getElementById('menuYapilandirma')) document.getElementById('menuYapilandirma').classList.remove('active');
             document.getElementById('menuMukellef').classList.remove('active');
             document.getElementById('menuSihirbaz').classList.remove('active');
             document.getElementById('menuTeklifler').classList.remove('active');
@@ -3471,6 +3549,13 @@
             }
             else if (hedefPaneli === 'kurulusPaneli') { 
                 if(kurulusPaneli) kurulusPaneli.style.display = 'block'; document.getElementById('menuKurulus').classList.add('active'); kuruluslariListele(); 
+            }
+            else if (hedefPaneli === 'yapilandirmaPaneli') { 
+                if(yapilandirmaPaneli) yapilandirmaPaneli.style.display = 'block'; document.getElementById('menuYapilandirma').classList.add('active'); 
+                let d = new Date(); 
+                let dStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+                if(!document.getElementById("yapilandirmaDonem").value) document.getElementById("yapilandirmaDonem").value = dStr;
+                yapilandirmaListele(); 
             }
         }
 
@@ -5992,6 +6077,15 @@
             document.getElementById("mdNetKar").style.color = netKar >= 0 ? "#2ecc71" : "#e74c3c";
             document.getElementById("mdPiyasaAlacak").textContent = formatMoney(totalAlacak) + " ₺";
 
+            let yapDB = JSON.parse(localStorage.getItem('yapilandirmaVeritabani')) || {};
+            let tKamuBorcu = 0;
+            Object.values(yapDB).forEach(firmaBorclar => {
+                firmaBorclar.forEach(b => {
+                    b.taksitler.forEach(t => { if(!t.odendi) tKamuBorcu += t.tutar; });
+                });
+            });
+            if(document.getElementById("mdKamuBorcu")) document.getElementById("mdKamuBorcu").textContent = formatMoney(tKamuBorcu) + " ₺";
+
             // 2. Operasyonel Beyanname / Görev Takibi
             let takvimInput = document.getElementById("takvimDonem");
             let donem = takvimInput && takvimInput.value ? takvimInput.value : "";
@@ -7088,6 +7182,172 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // --- YAPILANDIRMA VE KAMU BORÇ TAKİBİ MOTORU ---
+        let yapilandirmaVeritabani = JSON.parse(localStorage.getItem('yapilandirmaVeritabani')) || {};
+
+        function yeniYapilandirmaEkleAc() {
+            let select = document.getElementById("yapMusteri");
+            select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
+            mukellefler.forEach(m => { if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; });
+            
+            document.getElementById("yapAciklama").value = "";
+            document.getElementById("yapToplamTutar").value = "";
+            document.getElementById("yapTaksitSayisi").value = "1";
+            document.getElementById("yapAylikTutar").value = "";
+            let d = new Date();
+            document.getElementById("yapIlkBaslangic").value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            
+            modalAc('yapilandirmaEkleModal');
+        }
+
+        function yapTaksitHesapla() {
+            let top = parseFloat(document.getElementById("yapToplamTutar").value) || 0;
+            let tak = parseInt(document.getElementById("yapTaksitSayisi").value) || 1;
+            document.getElementById("yapAylikTutar").value = (top / tak).toFixed(2);
+        }
+
+        function yapilandirmaKaydet() {
+            let vkn = document.getElementById("yapMusteri").value;
+            let tur = document.getElementById("yapTur").value;
+            let aciklama = document.getElementById("yapAciklama").value || tur;
+            let toplam = parseFloat(document.getElementById("yapToplamTutar").value);
+            let taksitSayisi = parseInt(document.getElementById("yapTaksitSayisi").value);
+            let ilkVade = document.getElementById("yapIlkBaslangic").value;
+
+            if(!vkn || isNaN(toplam) || toplam <= 0 || !ilkVade) { alert("Lütfen tüm alanları eksiksiz doldurun."); return; }
+
+            let taksitTutari = parseFloat((toplam / taksitSayisi).toFixed(2));
+            let taksitler = [];
+            let [yil, ay] = ilkVade.split("-").map(Number);
+            
+            for(let i=0; i<taksitSayisi; i++) {
+                let vadeYil = yil + Math.floor((ay - 1 + i) / 12);
+                let vadeAy = ((ay - 1 + i) % 12) + 1;
+                let vadeStr = `${vadeYil}-${vadeAy.toString().padStart(2, '0')}`;
+                
+                let buTutar = taksitTutari;
+                if (i === taksitSayisi - 1) buTutar = toplam - (taksitTutari * (taksitSayisi - 1)); // Kuruş düzeltmesi
+                
+                taksitler.push({ no: i + 1, vade: vadeStr, tutar: parseFloat(buTutar.toFixed(2)), odendi: false });
+            }
+
+            let yeniBorc = {
+                id: "YAP_" + Date.now(), tur: tur, aciklama: aciklama, toplamBorc: toplam,
+                taksitSayisi: taksitSayisi, taksitler: taksitler, eklenmeTarihi: new Date().toLocaleDateString('tr-TR')
+            };
+
+            if(!yapilandirmaVeritabani[vkn]) yapilandirmaVeritabani[vkn] = [];
+            yapilandirmaVeritabani[vkn].push(yeniBorc);
+            
+            localStorage.setItem('yapilandirmaVeritabani', JSON.stringify(yapilandirmaVeritabani));
+            modalKapat('yapilandirmaEkleModal');
+            yapilandirmaListele();
+            masterDashboardCiz(); 
+            
+            let toast = document.getElementById("toast-mesaj");
+            if(!toast) { toast = document.createElement("div"); toast.id = "toast-mesaj"; document.body.appendChild(toast); }
+            toast.innerHTML = `<i class="fas fa-check-circle" style="color:#c0392b;"></i> Borç/Yapılandırma sisteme işlendi.`;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 2500);
+        }
+
+        function yapilandirmaListele() {
+            let donem = document.getElementById("yapilandirmaDonem").value;
+            let arama = document.getElementById("yapilandirmaArama").value.toLowerCase().trim();
+            let alan = document.getElementById("yapilandirmaKartlariAlani");
+            if(!alan) return;
+            alan.innerHTML = "";
+            let kayitBulundu = false;
+
+            Object.keys(yapilandirmaVeritabani).forEach(vkn => {
+                let m = mukellefler.find(x => x.vkn === vkn);
+                if(!m) return;
+                if(arama && m.unvan.toLowerCase().indexOf(arama) === -1 && m.vkn.indexOf(arama) === -1) return;
+
+                let firmaBorclari = yapilandirmaVeritabani[vkn];
+                let oAykiTaksitler = [];
+                let totalKalanBorc = 0;
+
+                firmaBorclari.forEach((borc, bIndex) => {
+                    let kalan = 0;
+                    borc.taksitler.forEach((t, tIndex) => {
+                        if(!t.odendi) kalan += t.tutar;
+                        if(t.vade === donem) {
+                            oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id });
+                        }
+                    });
+                    totalKalanBorc += kalan;
+                });
+
+                if(oAykiTaksitler.length > 0 || totalKalanBorc > 0) {
+                    kayitBulundu = true;
+                    let taksitHtml = "";
+                    let wpTaksitMetin = `*Sayın ${m.unvan} Yetkilisi,*\n\nKamu yapılandırma ve borçlarınıza ait *${donem}* dönemi ödeme dökümünüz aşağıdadır:\n\n`;
+
+                    if(oAykiTaksitler.length === 0) {
+                        taksitHtml = `<div style="text-align:center; padding:10px; color:#7f8c8d; font-size:12px; background:#f4f6f9; border-radius:6px;">Bu ay vadesi gelen taksit/ödeme bulunmuyor.</div>`;
+                    } else {
+                        oAykiTaksitler.forEach(t => {
+                            let btnRenk = t.odendi ? "#27ae60" : "#e74c3c";
+                            let btnIkon = t.odendi ? "fa-check-circle" : "fa-circle";
+                            let btnText = t.odendi ? "Ödendi" : "Ödenmedi";
+                            
+                            wpTaksitMetin += `🔸 *${t.tur}* (${t.aciklama})\n👉 ${t.no}. Taksit: *${formatMoney(t.tutar)} TL*\nDurum: ${t.odendi ? '✅ Ödendi' : '❌ Ödenmedi'}\n\n`;
+
+                            taksitHtml += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fffcfc; border:1px solid #fadbd8; padding:8px 10px; border-radius:6px; margin-bottom:8px; border-left:3px solid ${btnRenk};">
+                                <div>
+                                    <div style="font-size:11px; font-weight:bold; color:#2c3e50;">${t.tur} <span style="color:#7f8c8d; font-weight:normal;">(${t.no}. Taksit)</span></div>
+                                    <div style="font-size:10px; color:#95a5a6;">${t.aciklama}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:14px; font-weight:bold; color:#c0392b; margin-bottom:4px;">${formatMoney(t.tutar)} ₺</div>
+                                    <button onclick="yapTaksitDurumDegistir('${vkn}', '${t.borcId}', ${t.tIndex})" style="background:${btnRenk}; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;"><i class="fas ${btnIkon}"></i> ${btnText}</button>
+                                </div>
+                            </div>`;
+                        });
+                    }
+                    
+                    wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n📌 *Toplam Kalan Kamu Borcunuz:* ${formatMoney(totalKalanBorc)} TL\n\n_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
+                    let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Hatırlat</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+
+                    alan.innerHTML += `
+                    <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;">
+                            <div style="width:70%;">
+                                <h4 style="margin:0; font-size:14px; color:#2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</h4>
+                                <div style="font-size:11px; color:#7f8c8d; margin-top:3px;"><i class="fas fa-landmark"></i> Toplam Kalan: <b style="color:#c0392b;">${formatMoney(totalKalanBorc)} ₺</b></div>
+                            </div>
+                            <div>${wpBtnHtml}</div>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:12px; font-weight:bold; color:#34495e; margin-bottom:8px;">Bu Ayki Yükümlülükler (${donem})</div>
+                            ${taksitHtml}
+                        </div>
+                        <div style="text-align:right; margin-top:10px;">
+                            <button onclick="alert('Geçmiş silme ve detay fonksiyonu bir sonraki versiyonda açılacaktır.')" style="background:none; border:none; color:#c0392b; font-size:11px; cursor:pointer;"><i class="fas fa-trash"></i> Yapılandırmayı Sil</button>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            if(!kayitBulundu) {
+                alan.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:30px; background:#fdf2f2; color:#c0392b; border-radius:8px; border:1px dashed #e74c3c;">Bu döneme ait yapılandırma taksiti veya kamu borcu bulunmuyor.</div>`;
+            }
+        }
+
+        function yapTaksitDurumDegistir(vkn, borcId, tIndex) {
+            let firmaBorclari = yapilandirmaVeritabani[vkn];
+            let borc = firmaBorclari.find(b => b.id === borcId);
+            if(borc) {
+                borc.taksitler[tIndex].odendi = !borc.taksitler[tIndex].odendi;
+                localStorage.setItem('yapilandirmaVeritabani', JSON.stringify(yapilandirmaVeritabani));
+                yapilandirmaListele();
+                masterDashboardCiz(); 
+            }
         }
 
     </script>
