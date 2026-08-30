@@ -439,9 +439,12 @@
 
             .modal-overlay { display: none !important; }
             .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] { position: static !important; display: block !important; background: transparent !important; padding: 0 !important; }
-            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+            .modal-box { position: static !important; display: block !important; box-shadow: none !important; border: none !important; background: white !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; overflow: visible !important; height: auto !important; }
             .modal-body { overflow: visible !important; padding: 0 !important; height: auto !important; }
             .modal-header, .modal-footer, .no-print, button, #tahsilatKutu, #mutabakatKutu, #giderOdemeKutu { display: none !important; }
+            
+            /* (SORUN 1'İN ÇÖZÜMÜ) Yazdırmada tablo kaydırma çubuğu ve kesilme sorununu çözer */
+            .table-responsive { overflow: visible !important; height: auto !important; }
             
             /* EKLENEN YENİ SATIR: İstihbarat raporunun yazdırılırken yarıda kesilmesini engeller */
             #istihbaratRaporAlani { max-height: none !important; overflow: visible !important; }
@@ -4590,20 +4593,25 @@
                 
                 // Tablo düzeninin cep telefonunda kaymaması için Monospace (```) bloğu kullanıyoruz.
                 wpMetin += "```\n"; 
-                wpMetin += "TARİH | İŞLEM  |  TUTAR | BAKİYE\n";
-                wpMetin += "--------------------------------\n";
+                wpMetin += "TARİH |TÜR| AÇIKLAMA     | TUTAR|BAKİYE\n";
+                wpMetin += "---------------------------------------\n";
 
                 let cBakiye = devreden;
                 if (devreden !== 0) {
                     let bStr = devreden.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                    wpMetin += `${baslikTarih.substring(0,5)} | DEVİR  |        | ${bStr.padStart(6)}\n`;
+                    wpMetin += `${baslikTarih.substring(0,5)} |DEV| Devreden     |      |${bStr.padStart(6)}\n`;
                 }
 
                 siraliHrk.forEach(h => {
                     if (h._renderThis) {
                         let isFatura = h.tur === "Makbuz";
                         let kisaTarih = h.tarih.substring(0, 5); // 07.02 gibi
-                        let islemTur = isFatura ? "FATURA" : "ÖDEME ";
+                        let islemTur = isFatura ? "FAT" : "ÖDM";
+                        
+                        let temizAciklama = h.aciklama ? h.aciklama.replace(/ \[KDV:.*?\]/g, '').replace(/ \[Stp:.*?\]/g, '') : "";
+                        // 12 karaktere sabitliyoruz (telefon ekranına sığması için)
+                        let kisaAciklama = temizAciklama.length > 12 ? temizAciklama.substring(0, 10) + ".." : temizAciklama.padEnd(12, ' ');
+
                         let t = h.netTutar || h.tutar;
                         cBakiye += (isFatura ? t : -t);
 
@@ -4611,7 +4619,7 @@
                         let bStr = cBakiye.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
 
                         // Boşluklarla (pad) tablo hizalaması yapıyoruz
-                        wpMetin += `${kisaTarih} | ${islemTur} | ${tStr.padStart(6)} | ${bStr.padStart(6)}\n`;
+                        wpMetin += `${kisaTarih} |${islemTur}| ${kisaAciklama} |${tStr.padStart(6)}|${bStr.padStart(6)}\n`;
                     }
                 });
                 wpMetin += "```\n\n";
