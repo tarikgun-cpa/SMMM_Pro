@@ -819,7 +819,7 @@
             <li id="menuKurulus"><a href="#" onclick="sayfaDegistir('kurulusPaneli')"><i class="fas fa-building" style="width:20px; text-align:center;"></i> Şirket Kuruluşu</a></li>
             <li id="menuTakvim"><a href="#" onclick="sayfaDegistir('takvimPaneli')"><i class="fas fa-tasks" style="width:20px; text-align:center;"></i> Görev & Projeler</a></li>
             <li id="menuOdemeler"><a href="#" onclick="sayfaDegistir('odemelerPaneli')"><i class="fas fa-file-invoice-dollar" style="width:20px; text-align:center;"></i> Vergi Ödemeleri</a></li>
-            <li id="menuYapilandirma"><a href="#" onclick="sayfaDegistir('yapilandirmaPaneli')"><i class="fas fa-landmark" style="width:20px; text-align:center;"></i> Kamu & Yapılandırma</a></li>
+            <li id="menuYapilandirma"><a href="#" onclick="sayfaDegistir('yapilandirmaPaneli')"><i class="fas fa-landmark" style="width:20px; text-align:center;"></i> Yapılandırma</a></li>
             <div class="menu-label">Finans & Gelir</div>
             <li id="menuSihirbaz"><a href="#" onclick="sayfaDegistir('sihirbazPaneli')"><i class="fas fa-calculator" style="width:20px; text-align:center;"></i> Ücret Sihirbazı</a></li>
             <li id="menuTeklifler"><a href="#" onclick="sayfaDegistir('teklifPaneli')"><i class="fas fa-file-signature" style="width:20px; text-align:center;"></i> Sözleşmeler</a></li>
@@ -7440,19 +7440,21 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:6px; margin-bottom:8px; border-left:3px solid ${btnRenk}; border-width: 1px 1px 1px 3px; border-style: solid; transition: all 0.3s; ${opacityStyle}">
                                 <div>
                                     <div style="font-size:11px; font-weight:bold; color:#2c3e50; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${t.tur} <span style="color:#7f8c8d; font-weight:normal; text-decoration: none;">(${t.no}. Taksit)</span>${gecikmeUyari}</div>
-                                    <div style="font-size:10px; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; font-weight:bold; margin-top:2px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-calendar-day"></i> Son Ödeme: ${tamTarih}</div>
+                                    <div style="font-size:10px; color:#555; margin-top:2px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-info-circle"></i> ${t.aciklama}</div>
+                                    <div style="font-size:10px; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; font-weight:bold; margin-top:3px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-calendar-day"></i> Son Ödeme: ${tamTarih}</div>
                                 </div>
                                 <div style="text-align:right;">
                                     <div style="font-size:14px; font-weight:bold; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; margin-bottom:4px; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${formatMoney(t.tutar)} ₺</div>
                                     <button onclick="yapTaksitDurumDegistir('${vkn}', '${t.borcId}', ${t.tIndex})" style="background:${btnRenk}; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;"><i class="fas ${btnIkon}"></i> ${btnText}</button>
                                 </div>
                             </div>`;
+
                         });
                     }
                     
                     wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n📌 *Toplam Kalan Kamu Borcunuz:* ${formatMoney(totalKalanBorc)} TL\n\n_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
                     let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
-                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i>Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
 
                     alan.innerHTML += `
                     <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
