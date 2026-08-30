@@ -7373,6 +7373,9 @@
             alan.innerHTML = "";
             let kayitBulundu = false;
 
+            // BUGÜNÜN TARİHİ (Gecikme kontrolü için)
+            let bugunStr = new Date().toISOString().split('T')[0];
+
             Object.keys(yapilandirmaVeritabani).forEach(vkn => {
                 let m = mukellefler.find(x => x.vkn === vkn);
                 if(!m) return;
@@ -7381,16 +7384,22 @@
                 let firmaBorclari = yapilandirmaVeritabani[vkn];
                 let oAykiTaksitler = [];
                 let totalKalanBorc = 0;
+                let totalVadesiGecmis = 0;
+                let totalVadesiGelecek = 0;
                 let adminIslemMenusu = "";
 
                 firmaBorclari.forEach((borc, bIndex) => {
                     let kalan = 0;
                     borc.taksitler.forEach((t, tIndex) => {
-                        if(!t.odendi) kalan += t.tutar;
+                        if(!t.odendi) {
+                            kalan += t.tutar;
+                            if(t.vade < bugunStr) totalVadesiGecmis += t.tutar;
+                            else totalVadesiGelecek += t.tutar;
+                        }
                         
                         // Bu aya ait olanlar VEYA geçmişte kalıp hala ödenmemiş olanlar (Gecikmeli Devir)
                         let isBuAy = t.vade && t.vade.startsWith(donem);
-                        let isGecikmis = !t.odendi && t.vade && (t.vade < donem + "-01");
+                        let isGecikmis = !t.odendi && t.vade && (t.vade < bugunStr);
                         
                         if(isBuAy || isGecikmis) {
                             oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id, isGecikmis: isGecikmis });
@@ -7448,20 +7457,29 @@
                                     <button onclick="yapTaksitDurumDegistir('${vkn}', '${t.borcId}', ${t.tIndex})" style="background:${btnRenk}; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;"><i class="fas ${btnIkon}"></i> ${btnText}</button>
                                 </div>
                             </div>`;
-
                         });
                     }
                     
-                    wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n📌 *Toplam Kalan Kamu Borcunuz:* ${formatMoney(totalKalanBorc)} TL\n\n_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
+                    wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n`;
+                    wpTaksitMetin += `📌 *Genel Borç Durumunuz:*\n`;
+                    wpTaksitMetin += `▪️ Vadesi Geçmiş (Ödenmemiş): ${formatMoney(totalVadesiGecmis)} TL\n`;
+                    wpTaksitMetin += `▪️ Vadesi Gelmemiş (Gelecek): ${formatMoney(totalVadesiGelecek)} TL\n`;
+                    wpTaksitMetin += `▪️ *TOPLAM KALAN BORÇ: ${formatMoney(totalKalanBorc)} TL*\n\n`;
+                    wpTaksitMetin += `_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
+                    
                     let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
-                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bekleyenleri Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
 
                     alan.innerHTML += `
                     <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;">
                             <div style="width:65%;">
                                 <h4 style="margin:0; font-size:14px; color:#2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</h4>
-                                <div style="font-size:11px; color:#7f8c8d; margin-top:3px;"><i class="fas fa-landmark"></i> Toplam Kalan: <b style="color:#c0392b;">${formatMoney(totalKalanBorc)} ₺</b></div>
+                                <div style="font-size:11px; color:#7f8c8d; margin-top:5px;"><i class="fas fa-landmark"></i> Toplam Kalan: <b style="color:#2c3e50;">${formatMoney(totalKalanBorc)} ₺</b></div>
+                                <div style="font-size:10px; margin-top:3px; background:#f9fbfc; padding:4px; border-radius:4px; border:1px solid #eee;">
+                                    <span style="color:#e74c3c; font-weight:bold;">Gecikmiş: ${formatMoney(totalVadesiGecmis)} ₺</span> <span style="color:#ccc;">|</span> 
+                                    <span style="color:#27ae60; font-weight:bold;">Gelecek: ${formatMoney(totalVadesiGelecek)} ₺</span>
+                                </div>
                             </div>
                             <div>${wpBtnHtml}</div>
                         </div>
@@ -7475,7 +7493,6 @@
                         </div>
                     </div>`;
                 }
-                
             });
 
             if(!kayitBulundu) {
