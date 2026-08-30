@@ -865,8 +865,8 @@
                         <span style="color:#555; font-size:12px;">Toplam Piyasa Alacağı:</span>
                         <strong id="mdPiyasaAlacak" style="font-size:14px; color:#e74c3c;">0,00 ₺</strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #eef2f5; padding-top:5px;">
-                        <span style="color:#555; font-size:12px;">Mükellef Kamu Borçları:</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #eef2f5; padding-top:5px;" title="Sisteme girilen yapılandırma ve vergi borçlarının henüz ödenmemiş toplam bakiyesi">
+                        <span style="color:#555; font-size:12px;">Mükellef Kamu Borçları <i class="fas fa-info-circle" style="color:#95a5a6; font-size:11px;"></i>:</span>
                         <strong id="mdKamuBorcu" style="font-size:14px; color:#c0392b;">0,00 ₺</strong>
                     </div>
                 </div>
@@ -1753,6 +1753,7 @@
                             <label style="color:#c0392b; font-weight:bold; margin:0;">Ödeme Planı (Taksitler):</label>
                             <button class="action-btn" style="background:#fdf2f2; color:#c0392b; border:1px solid #fadbd8; padding:4px 8px; margin:0; font-size:11px;" onclick="yapTaksitSatiriEkle()"><i class="fas fa-plus"></i> Manuel Satır Ekle</button>
                         </div>
+                        <p style="font-size:11px; color:#7f8c8d; margin-bottom:10px; margin-top:-5px;"><i class="fas fa-info-circle"></i> Otomatik oluşturduktan sonra vade tarihlerini ve tutarları satır üzerinden tek tek değiştirebilirsiniz.</p>
                         
                         <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-end; background:#f9fbfc; padding:10px; border-radius:4px; border:1px dashed #ccc;">
                             <div style="flex:1;"><label style="font-size:11px;">Taksit Sayısı:</label><input type="number" id="yapOtoTaksitSayisi" class="search-bar" value="1" min="1" max="72" style="padding:6px; font-size:12px;"></div>
@@ -7386,19 +7387,23 @@
                     let kalan = 0;
                     borc.taksitler.forEach((t, tIndex) => {
                         if(!t.odendi) kalan += t.tutar;
-                        // Tam gün girildiği için YYYY-MM ile eşleşip eşleşmediğine bakıyoruz
-                        if(t.vade && t.vade.startsWith(donem)) {
-                            oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id });
+                        
+                        // Bu aya ait olanlar VEYA geçmişte kalıp hala ödenmemiş olanlar (Gecikmeli Devir)
+                        let isBuAy = t.vade && t.vade.startsWith(donem);
+                        let isGecikmis = !t.odendi && t.vade && (t.vade < donem + "-01");
+                        
+                        if(isBuAy || isGecikmis) {
+                            oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id, isGecikmis: isGecikmis });
                         }
                     });
                     totalKalanBorc += kalan;
 
                     adminIslemMenusu += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f6f9; padding:4px 8px; margin-bottom:4px; border-radius:4px;">
-                            <span style="font-size:10px; color:#555;"><b>${borc.tur}</b> (${borc.aciklama})</span>
-                            <div>
-                                <button onclick="yapilandirmaDuzenle('${vkn}', '${borc.id}')" style="background:none; border:none; color:#3498db; cursor:pointer; font-size:11px; margin-right:8px;" title="Düzenle"><i class="fas fa-edit"></i></button>
-                                <button onclick="yapilandirmaSil('${vkn}', '${borc.id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:11px;" title="Sil"><i class="fas fa-trash"></i></button>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f6f9; padding:6px 10px; margin-bottom:6px; border-radius:4px; border:1px solid #e1e8ed;">
+                            <span style="font-size:11px; color:#2c3e50; font-weight:bold;">${borc.tur} <span style="font-weight:normal; color:#7f8c8d;">(${borc.aciklama})</span></span>
+                            <div style="display:flex; gap:5px;">
+                                <button onclick="yapilandirmaDuzenle('${vkn}', '${borc.id}')" style="background:#3498db; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;" title="Tarih, tutar ve detayları düzelt"><i class="fas fa-edit"></i> Düzelt</button>
+                                <button onclick="yapilandirmaSil('${vkn}', '${borc.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;" title="Komple Sil"><i class="fas fa-trash"></i> Sil</button>
                             </div>
                         </div>
                     `;
@@ -7410,7 +7415,7 @@
                     let wpTaksitMetin = `*Sayın ${m.unvan} Yetkilisi,*\n\nKamu yapılandırma ve borçlarınıza ait *${donem}* dönemi ödeme dökümünüz aşağıdadır:\n\n`;
 
                     if(oAykiTaksitler.length === 0) {
-                        taksitHtml = `<div style="text-align:center; padding:10px; color:#7f8c8d; font-size:12px; background:#f4f6f9; border-radius:6px;">Bu ay vadesi gelen taksit/ödeme bulunmuyor.</div>`;
+                        taksitHtml = `<div style="text-align:center; padding:10px; color:#7f8c8d; font-size:12px; background:#f4f6f9; border-radius:6px;">Bu ay vadesi gelen veya geçmişten devreden taksit bulunmuyor.</div>`;
                     } else {
                         // Taksitleri ay içindeki günlerine göre sıralayalım
                         oAykiTaksitler.sort((a,b) => new Date(a.vade) - new Date(b.vade));
@@ -7420,47 +7425,55 @@
                             let btnIkon = t.odendi ? "fa-check-circle" : "fa-circle";
                             let btnText = t.odendi ? "Ödendi" : "Ödenmedi";
                             
-                            let tamTarih = parseTR(t.vade); // 2026-08-31 -> 31.08.2026 çevrimi
+                            let tamTarih = parseTR(t.vade);
+                            
+                            // Ödenmişse Soluk, Ödenmemiş ve Gecikmişse Kırmızı Uyarı
+                            let opacityStyle = t.odendi ? "opacity: 0.5; background: #f0fdf4; border-color: #bbf7d0;" : (t.isGecikmis ? "background: #fdf2f2; border-color: #f5b7b1;" : "background: #fffcfc; border-color: #fadbd8;");
+                            let gecikmeUyari = t.isGecikmis && !t.odendi ? `<span style="color:#e74c3c; font-size:9px; font-weight:bold; margin-left:5px;"><i class="fas fa-exclamation-triangle"></i> GECİKMİŞ</span>` : "";
 
-                            wpTaksitMetin += `🔸 *${t.tur}* (${t.aciklama})\n👉 ${t.no}. Taksit: *${formatMoney(t.tutar)} TL*\n📅 Son Ödeme: *${tamTarih}*\nDurum: ${t.odendi ? '✅ Ödendi' : '❌ Ödenmedi'}\n\n`;
+                            // Wp Mesajına sadece ödenmemiş olanları ekle ki kafa karışmasın
+                            if (!t.odendi) {
+                                wpTaksitMetin += `🔸 *${t.tur}* (${t.aciklama})\n👉 ${t.no}. Taksit: *${formatMoney(t.tutar)} TL*\n📅 Son Ödeme: *${tamTarih}*\nDurum: ❌ Ödenmedi ${t.isGecikmis ? '(GECİKMİŞ)' : ''}\n\n`;
+                            }
 
                             taksitHtml += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fffcfc; border:1px solid #fadbd8; padding:8px 10px; border-radius:6px; margin-bottom:8px; border-left:3px solid ${btnRenk};">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:6px; margin-bottom:8px; border-left:3px solid ${btnRenk}; border-width: 1px 1px 1px 3px; border-style: solid; transition: all 0.3s; ${opacityStyle}">
                                 <div>
-                                    <div style="font-size:11px; font-weight:bold; color:#2c3e50;">${t.tur} <span style="color:#7f8c8d; font-weight:normal;">(${t.no}. Taksit)</span></div>
-                                    <div style="font-size:10px; color:#c0392b; font-weight:bold; margin-top:2px;"><i class="fas fa-calendar-day"></i> Son Ödeme: ${tamTarih}</div>
+                                    <div style="font-size:11px; font-weight:bold; color:#2c3e50; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${t.tur} <span style="color:#7f8c8d; font-weight:normal; text-decoration: none;">(${t.no}. Taksit)</span>${gecikmeUyari}</div>
+                                    <div style="font-size:10px; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; font-weight:bold; margin-top:2px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-calendar-day"></i> Son Ödeme: ${tamTarih}</div>
                                 </div>
                                 <div style="text-align:right;">
-                                    <div style="font-size:14px; font-weight:bold; color:#c0392b; margin-bottom:4px;">${formatMoney(t.tutar)} ₺</div>
+                                    <div style="font-size:14px; font-weight:bold; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; margin-bottom:4px; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${formatMoney(t.tutar)} ₺</div>
                                     <button onclick="yapTaksitDurumDegistir('${vkn}', '${t.borcId}', ${t.tIndex})" style="background:${btnRenk}; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;"><i class="fas ${btnIkon}"></i> ${btnText}</button>
                                 </div>
                             </div>`;
                         });
                     }
                     
-                    wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n📌 *Toplam Kalan Kamu Borcunuz:* ${formatMoney(totalKalanBorc)} TL\n\n_Taksitlerinizi son ödeme gününden önce ödemeyi unutmayınız. Yapılandırma iptal riski bulunmaktadır._\n\n- SMMM Tarık GÜN`;
+                    wpTaksitMetin += `━━━━━━━━━━━━━━━━━━━━\n📌 *Toplam Kalan Kamu Borcunuz:* ${formatMoney(totalKalanBorc)} TL\n\n_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
                     let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
-                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Hatırlat</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bekleyenleri Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
 
                     alan.innerHTML += `
                     <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:10px;">
-                            <div style="width:70%;">
+                            <div style="width:65%;">
                                 <h4 style="margin:0; font-size:14px; color:#2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${m.unvan}">${m.unvan}</h4>
                                 <div style="font-size:11px; color:#7f8c8d; margin-top:3px;"><i class="fas fa-landmark"></i> Toplam Kalan: <b style="color:#c0392b;">${formatMoney(totalKalanBorc)} ₺</b></div>
                             </div>
                             <div>${wpBtnHtml}</div>
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:12px; font-weight:bold; color:#34495e; margin-bottom:8px;">Bu Ayki Yükümlülükler (${donem})</div>
+                            <div style="font-size:12px; font-weight:bold; color:#34495e; margin-bottom:8px;">Bu Ayki Ödemeler ve Devredenler</div>
                             ${taksitHtml}
                         </div>
                         <div style="margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
-                            <div style="font-size:11px; font-weight:bold; color:#8e44ad; margin-bottom:5px;"><i class="fas fa-tools"></i> Tanımlı Paketleri Yönet</div>
+                            <div style="font-size:11px; font-weight:bold; color:#8e44ad; margin-bottom:8px;"><i class="fas fa-tools"></i> Tanımlı Paketleri Yönet</div>
                             ${adminIslemMenusu}
                         </div>
                     </div>`;
                 }
+                
             });
 
             if(!kayitBulundu) {
