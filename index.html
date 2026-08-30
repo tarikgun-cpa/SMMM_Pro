@@ -1745,25 +1745,32 @@
                             <label>Açıklama/Dosya No:</label>
                             <input type="text" id="yapAciklama" class="search-bar" placeholder="Örn: 2023 SGK Yapılandırma">
                         </div>
-                        <div class="form-group">
-                            <label>Toplam Tutar (TL):</label>
-                            <input type="number" id="yapToplamTutar" class="search-bar" placeholder="0.00" oninput="yapTaksitHesapla()" style="font-weight:bold; color:#c0392b;">
+                    </div>
+                    
+                    <div style="margin-top:15px; background:white; border:1px solid #fadbd8; border-radius:6px; padding:15px; border-left:4px solid #c0392b;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <label style="color:#c0392b; font-weight:bold; margin:0;">Ödeme Planı (Taksitler):</label>
+                            <button class="action-btn" style="background:#fdf2f2; color:#c0392b; border:1px solid #fadbd8; padding:4px 8px; margin:0; font-size:11px;" onclick="yapTaksitSatiriEkle()"><i class="fas fa-plus"></i> Manuel Satır Ekle</button>
                         </div>
-                        <div class="form-group">
-                            <label>Taksit Sayısı (Ay):</label>
-                            <input type="number" id="yapTaksitSayisi" class="search-bar" value="1" min="1" max="72" oninput="yapTaksitHesapla()">
+                        
+                        <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-end; background:#f9fbfc; padding:10px; border-radius:4px; border:1px dashed #ccc;">
+                            <div style="flex:1;"><label style="font-size:11px;">Otomatik Böl (Taksit Sayısı):</label><input type="number" id="yapOtoTaksitSayisi" class="search-bar" value="1" min="1" max="72" style="padding:6px; font-size:12px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">Toplam Tutar:</label><input type="number" id="yapOtoToplamTutar" class="search-bar" placeholder="0.00" style="padding:6px; font-size:12px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px;">İlk Vade:</label><input type="month" id="yapOtoIlkVade" class="search-bar" style="padding:6px; font-size:12px;"></div>
+                            <button class="action-btn" style="background:#2c3e50; color:white; padding:6px 10px; margin:0; font-size:12px;" onclick="yapOtoTaksitOlustur()">Oluştur</button>
                         </div>
-                        <div class="form-group">
-                            <label>Aylık Taksit Tutarı:</label>
-                            <input type="number" id="yapAylikTutar" class="search-bar" readonly style="background:#eee; font-weight:bold;">
+
+                        <div id="yapTaksitListesiContainer" style="max-height: 250px; overflow-y: auto; padding-right: 5px; display:flex; flex-direction:column; gap:8px;">
+                            <!-- Taksit Satırları Buraya Gelecek -->
                         </div>
-                        <div class="form-group">
-                            <label>İlk Taksit Vadesi (Ay/Yıl):</label>
-                            <input type="month" id="yapIlkBaslangic" class="search-bar">
+                        
+                        <div style="margin-top:15px; text-align:right; font-size:14px; font-weight:bold; color:#2c3e50;">
+                            Genel Toplam: <span id="yapGenelToplamYazi" style="color:#c0392b; font-size:18px;">0.00 ₺</span>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+
                     <button class="action-btn" onclick="modalKapat('yapilandirmaEkleModal')">İptal</button>
                     <button class="action-btn btn-primary" style="background:#c0392b;" onclick="yapilandirmaKaydet()">Sisteme İşle</button>
                 </div>
@@ -7193,33 +7200,29 @@
             mukellefler.forEach(m => { if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; });
             
             document.getElementById("yapAciklama").value = "";
-            document.getElementById("yapToplamTutar").value = "";
-            document.getElementById("yapTaksitSayisi").value = "1";
-            document.getElementById("yapAylikTutar").value = "";
-            let d = new Date();
-            document.getElementById("yapIlkBaslangic").value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            document.getElementById("yapOtoTaksitSayisi").value = "1";
+            document.getElementById("yapOtoToplamTutar").value = "";
             
+            let d = new Date();
+            document.getElementById("yapOtoIlkVade").value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+            
+            document.getElementById("yapTaksitListesiContainer").innerHTML = "";
+            yapGenelToplamiGuncelle();
             modalAc('yapilandirmaEkleModal');
         }
 
-        function yapTaksitHesapla() {
-            let top = parseFloat(document.getElementById("yapToplamTutar").value) || 0;
-            let tak = parseInt(document.getElementById("yapTaksitSayisi").value) || 1;
-            document.getElementById("yapAylikTutar").value = (top / tak).toFixed(2);
-        }
-
-        function yapilandirmaKaydet() {
-            let vkn = document.getElementById("yapMusteri").value;
-            let tur = document.getElementById("yapTur").value;
-            let aciklama = document.getElementById("yapAciklama").value || tur;
-            let toplam = parseFloat(document.getElementById("yapToplamTutar").value);
-            let taksitSayisi = parseInt(document.getElementById("yapTaksitSayisi").value);
-            let ilkVade = document.getElementById("yapIlkBaslangic").value;
-
-            if(!vkn || isNaN(toplam) || toplam <= 0 || !ilkVade) { alert("Lütfen tüm alanları eksiksiz doldurun."); return; }
-
+        // Taksitleri Otomatik Oluşturup Listeye Basma
+        function yapOtoTaksitOlustur() {
+            let container = document.getElementById("yapTaksitListesiContainer");
+            container.innerHTML = ""; // Temizle
+            
+            let toplam = parseFloat(document.getElementById("yapOtoToplamTutar").value) || 0;
+            let taksitSayisi = parseInt(document.getElementById("yapOtoTaksitSayisi").value) || 1;
+            let ilkVade = document.getElementById("yapOtoIlkVade").value;
+            
+            if(toplam <= 0 || !ilkVade) { alert("Lütfen toplam tutarı ve ilk vadeyi girin."); return; }
+            
             let taksitTutari = parseFloat((toplam / taksitSayisi).toFixed(2));
-            let taksitler = [];
             let [yil, ay] = ilkVade.split("-").map(Number);
             
             for(let i=0; i<taksitSayisi; i++) {
@@ -7228,14 +7231,66 @@
                 let vadeStr = `${vadeYil}-${vadeAy.toString().padStart(2, '0')}`;
                 
                 let buTutar = taksitTutari;
-                if (i === taksitSayisi - 1) buTutar = toplam - (taksitTutari * (taksitSayisi - 1)); // Kuruş düzeltmesi
+                // Son taksitte kuruş düzeltmesi yap
+                if (i === taksitSayisi - 1) buTutar = toplam - (taksitTutari * (taksitSayisi - 1));
                 
-                taksitler.push({ no: i + 1, vade: vadeStr, tutar: parseFloat(buTutar.toFixed(2)), odendi: false });
+                yapTaksitSatiriEkle(i + 1, vadeStr, buTutar.toFixed(2));
             }
+            yapGenelToplamiGuncelle();
+        }
+
+        // Manuel Satır Ekleme Butonu İçin
+        function yapTaksitSatiriEkle(no = "", vade = "", tutar = "") {
+            let container = document.getElementById("yapTaksitListesiContainer");
+            let mevcutSayi = container.querySelectorAll('.yap-taksit-satiri').length;
+            let tsNo = no || (mevcutSayi + 1);
+            
+            let html = `
+            <div class="yap-taksit-satiri" style="display:flex; gap:10px; align-items:center; background:#fff; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <input type="text" class="yap-ts-no search-bar" value="${tsNo}" style="width:50px; text-align:center; padding:6px; font-size:12px;" title="Taksit No (Örn: 1)">
+                <input type="month" class="yap-ts-vade search-bar" value="${vade}" style="flex:2; padding:6px; font-size:12px;" title="Vade Dönemi">
+                <input type="number" class="yap-ts-tutar search-bar" value="${tutar}" placeholder="0.00" oninput="yapGenelToplamiGuncelle()" style="flex:2; padding:6px; font-weight:bold; color:#c0392b; font-size:12px;" title="Taksit Tutarı (TL)">
+                <button onclick="this.parentElement.remove(); yapGenelToplamiGuncelle();" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding:6px 10px; cursor:pointer;" title="Sil"><i class="fas fa-trash"></i></button>
+            </div>`;
+            
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function yapGenelToplamiGuncelle() {
+            let toplam = 0;
+            document.querySelectorAll('.yap-ts-tutar').forEach(input => {
+                let t = parseFloat(input.value) || 0;
+                toplam += t;
+            });
+            document.getElementById("yapGenelToplamYazi").textContent = formatMoney(toplam) + " ₺";
+        }
+
+        function yapilandirmaKaydet() {
+            let vkn = document.getElementById("yapMusteri").value;
+            let tur = document.getElementById("yapTur").value;
+            let aciklama = document.getElementById("yapAciklama").value || tur;
+            
+            if(!vkn) { alert("Lütfen mükellef seçin."); return; }
+
+            let taksitler = [];
+            let genelToplam = 0;
+            
+            document.querySelectorAll('.yap-taksit-satiri').forEach(satir => {
+                let no = satir.querySelector('.yap-ts-no').value;
+                let vade = satir.querySelector('.yap-ts-vade').value;
+                let tutar = parseFloat(satir.querySelector('.yap-ts-tutar').value) || 0;
+                
+                if(vade && tutar > 0) {
+                    genelToplam += tutar;
+                    taksitler.push({ no: no, vade: vade, tutar: tutar, odendi: false });
+                }
+            });
+
+            if(taksitler.length === 0) { alert("Lütfen en az 1 geçerli taksit (vade ve tutar) ekleyin."); return; }
 
             let yeniBorc = {
-                id: "YAP_" + Date.now(), tur: tur, aciklama: aciklama, toplamBorc: toplam,
-                taksitSayisi: taksitSayisi, taksitler: taksitler, eklenmeTarihi: new Date().toLocaleDateString('tr-TR')
+                id: "YAP_" + Date.now(), tur: tur, aciklama: aciklama, toplamBorc: genelToplam,
+                taksitSayisi: taksitler.length, taksitler: taksitler, eklenmeTarihi: new Date().toLocaleDateString('tr-TR')
             };
 
             if(!yapilandirmaVeritabani[vkn]) yapilandirmaVeritabani[vkn] = [];
