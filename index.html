@@ -7223,7 +7223,12 @@
             document.getElementById("yapDuzenlenenId").value = ""; // Düzenleme modunu sıfırla
             let select = document.getElementById("yapMusteri");
             select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
-            mukellefler.forEach(m => { if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; });
+            mukellefler.forEach(m => { 
+                if(m.mukellefTuru !== "SMMM") {
+                    let pasifEki = m.durum === "Pasif" ? " (PASİF)" : "";
+                    select.innerHTML += `<option value="${m.vkn}">${m.unvan}${pasifEki}</option>`; 
+                }
+            });
             
             document.getElementById("yapMusteri").disabled = false;
             document.getElementById("yapAciklama").value = "";
@@ -7365,7 +7370,12 @@
             
             let select = document.getElementById("yapMusteri");
             select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
-            mukellefler.forEach(m => { if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.vkn}">${m.unvan}</option>`; });
+            mukellefler.forEach(m => { 
+                if(m.mukellefTuru !== "SMMM") {
+                    let pasifEki = m.durum === "Pasif" ? " (PASİF)" : "";
+                    select.innerHTML += `<option value="${m.vkn}">${m.unvan}${pasifEki}</option>`; 
+                }
+            });
             
             select.value = vkn;
             select.disabled = true; // Firmayı değiştirmeyi kapat
