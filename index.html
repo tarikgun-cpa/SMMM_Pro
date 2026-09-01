@@ -3610,7 +3610,8 @@
             let select = document.getElementById("karsitMusteri");
             select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
             mukellefler.forEach(m => { 
-                if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.unvan}">${m.unvan}</option>`; 
+                // DÜZELTME: SMMM kısıtlaması kaldırıldı, artık kendi ofisinizi de listeden seçebilirsiniz.
+                if(m.durum !== "Pasif") select.innerHTML += `<option value="${m.unvan}">${m.unvan}</option>`; 
             });
 
             document.getElementById("karsitGelisTarihi").valueAsDate = new Date();
