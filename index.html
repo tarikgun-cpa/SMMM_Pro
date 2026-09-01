@@ -2102,9 +2102,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Tutanak Hangi Mükellefinize Geldi?</label>
+                            <select id="karsitMusteri" class="search-bar" style="width:100%; border:2px solid #e67e22;"></select>
+                        </div>
                         <div class="form-group"><label>Geliş Tarihi (Tebliğ):</label><input type="date" id="karsitGelisTarihi" class="search-bar"></div>
                         <div class="form-group"><label>İncelenen Dönem:</label><input type="text" id="karsitDonem" class="search-bar" placeholder="Örn: 2026/Ocak - Mart"></div>
-                        <div class="form-group full-width"><label>Gönderen Firma (Unvan):</label><input type="text" id="karsitFirma" class="search-bar" placeholder="Karşıt incelemeyi isteyen firma..."></div>
+                        <div class="form-group full-width"><label>Karşıt İncelemeyi İsteyen Firma:</label><input type="text" id="karsitFirma" class="search-bar" placeholder="Karşıt incelemeyi isteyen firma unvanı..."></div>
                         <div class="form-group full-width"><label>YMM Bilgisi:</label><input type="text" id="karsitYmm" class="search-bar" placeholder="YMM Adı Soyadı / Rapor No..."></div>
                     </div>
                     <p style="font-size:11px; color:#e74c3c; margin-top:10px;"><i class="fas fa-info-circle"></i> Yasal cevaplama süresi (15 Gün), Geliş Tarihine göre sistem tarafından otomatik hesaplanacaktır.</p>
@@ -3530,13 +3534,11 @@
             
             let karsitListe = sistemAyarlari.karsitIncelemeler || [];
             
-            // Eski kayıtları onarma (ID'si olmayanlara otomatik kimlik ata)
+            // ESKİ KAYITLARI ONARMA MOTORU (Butonların basmama sorununu çözer)
             let onarildi = false;
             karsitListe.forEach(k => {
-                if(!k.id) { 
-                    k.id = "KRS_" + Date.now() + Math.floor(Math.random() * 1000); 
-                    onarildi = true; 
-                }
+                if(!k.id) { k.id = "KRS_" + Date.now() + Math.floor(Math.random() * 1000); onarildi = true; }
+                if(!k.kendiFirma) { k.kendiFirma = "Bilinmeyen Mükellef"; onarildi = true; } // Önceden girilenler için
             });
             if(onarildi) localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
 
@@ -3553,7 +3555,7 @@
             let bugun = new Date();
             bugun.setHours(0,0,0,0);
 
-            // Sıralama: Bekleyenler süresi yaklaşana göre, Gönderilenler yeni gönderilenden eskiye göre
+            // Bekleyenler yaklaşan süreye göre, gönderilenler tarihe göre (en yeni en üstte) sıralanır
             filtrelenmis.sort((a,b) => {
                 if(karsitGosterimModu === "Bekleyen") return new Date(a.sonGunRaw) - new Date(b.sonGunRaw);
                 return new Date(b.gonderimTarihiRaw) - new Date(a.gonderimTarihiRaw);
@@ -3572,7 +3574,8 @@
 
                     icerikHtml = `
                         <div style="flex:1;">
-                            <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${k.gonderenFirma} <span style="font-size:10px; color:#8e44ad; font-weight:normal; background:#f4ecf7; padding:2px 6px; border-radius:4px; margin-left:5px;">Dönem: ${k.donem}</span></div>
+                            <div style="font-size:13px; font-weight:bold; color:#2c3e50;"><i class="fas fa-building" style="color:#8e44ad;"></i> İlgili Müşteri: ${k.kendiFirma}</div>
+                            <div style="font-size:12px; color:#d35400; margin-top:4px;"><i class="fas fa-file-invoice"></i> Karşıt Firma: ${k.gonderenFirma} <span style="font-size:10px; color:#8e44ad; font-weight:normal; background:#f4ecf7; padding:2px 6px; border-radius:4px; margin-left:5px;">Dönem: ${k.donem}</span></div>
                             <div style="font-size:11px; color:#7f8c8d; margin-top:4px;"><i class="fas fa-user-tie"></i> YMM: ${k.ymmBilgisi || '-'}</div>
                             <div style="font-size:11px; color:#7f8c8d; margin-top:4px;">Geliş: ${k.gelisTarihi} <span style="margin:0 5px;">|</span> Son Cevap: <b style="color:${renk};">${k.sonGun}</b></div>
                         </div>
@@ -3589,8 +3592,9 @@
                     // Gönderilenler (Arşiv) Görünümü
                     icerikHtml = `
                         <div style="flex:1;">
-                            <div style="font-size:13px; font-weight:bold; color:#7f8c8d; text-decoration:line-through;">${k.gonderenFirma}</div>
-                            <div style="font-size:11px; color:#95a5a6; margin-top:4px;">YMM: ${k.ymmBilgisi || '-'} | Dönem: ${k.donem}</div>
+                            <div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-decoration:line-through;"><i class="fas fa-building"></i> İlgili Müşteri: ${k.kendiFirma}</div>
+                            <div style="font-size:11.5px; color:#95a5a6; margin-top:4px;">İsteyen: ${k.gonderenFirma}</div>
+                            <div style="font-size:11px; color:#95a5a6; margin-top:2px;">YMM: ${k.ymmBilgisi || '-'} | Dönem: ${k.donem}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:15px; margin-left:10px;">
                             <div style="font-size:11px; font-weight:bold; color:#27ae60; text-align:right;"><i class="fas fa-check-double"></i> Gönderildi<br><span style="color:#555;">${k.gonderimTarihi}</span></div>
@@ -3603,6 +3607,12 @@
         }
 
         function karsitModalAc() {
+            let select = document.getElementById("karsitMusteri");
+            select.innerHTML = '<option value="">-- Mükellef Seç --</option>';
+            mukellefler.forEach(m => { 
+                if(m.durum !== "Pasif" && m.mukellefTuru !== "SMMM") select.innerHTML += `<option value="${m.unvan}">${m.unvan}</option>`; 
+            });
+
             document.getElementById("karsitGelisTarihi").valueAsDate = new Date();
             document.getElementById("karsitDonem").value = "";
             document.getElementById("karsitFirma").value = "";
@@ -3611,12 +3621,13 @@
         }
 
         function karsitKaydetBtn() {
+            let kendiFirma = document.getElementById("karsitMusteri").value;
             let gelisRaw = document.getElementById("karsitGelisTarihi").value;
             let donem = document.getElementById("karsitDonem").value;
             let firma = document.getElementById("karsitFirma").value;
             let ymm = document.getElementById("karsitYmm").value;
 
-            if(!gelisRaw || !firma || !donem) { alert("Lütfen Geliş Tarihi, Dönem ve Firma Unvanını eksiksiz doldurun!"); return; }
+            if(!kendiFirma || !gelisRaw || !firma || !donem) { alert("Lütfen Mükellef, Geliş Tarihi, Dönem ve İsteyen Firma Unvanını eksiksiz doldurun!"); return; }
 
             let gelisTarihObj = new Date(gelisRaw);
             let sonGunObj = new Date(gelisTarihObj);
@@ -3628,6 +3639,7 @@
             
             sistemAyarlari.karsitIncelemeler.push({
                 id: "KRS_" + Date.now(),
+                kendiFirma: kendiFirma,
                 gonderenFirma: firma.trim(),
                 ymmBilgisi: ymm.trim(),
                 donem: donem.trim(),
@@ -3643,7 +3655,6 @@
             localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
             modalKapat('karsitModal');
             
-            // Eğer gönderilenler sekmesindeysek bekleyenlere geri at
             if(karsitGosterimModu === "Gönderilen") karsitGosterimToggle(); 
             else karsitIncelemeCiz();
         }
@@ -3675,7 +3686,6 @@
             }
         }
 
-        // Sayfa yüklendiğinde ve panolar arası geçiş yapıldığında listeyi tetikleyelim
         document.addEventListener("DOMContentLoaded", karsitIncelemeCiz);
         document.getElementById("menuMaster").addEventListener("click", karsitIncelemeCiz);
 
