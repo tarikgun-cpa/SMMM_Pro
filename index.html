@@ -3529,6 +3529,17 @@
             if(!listeAlan) return;
             
             let karsitListe = sistemAyarlari.karsitIncelemeler || [];
+            
+            // Eski kayıtları onarma (ID'si olmayanlara otomatik kimlik ata)
+            let onarildi = false;
+            karsitListe.forEach(k => {
+                if(!k.id) { 
+                    k.id = "KRS_" + Date.now() + Math.floor(Math.random() * 1000); 
+                    onarildi = true; 
+                }
+            });
+            if(onarildi) localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
+
             listeAlan.innerHTML = "";
 
             let filtrelenmis = karsitListe.filter(k => karsitGosterimModu === "Bekleyen" ? !k.gonderildi : k.gonderildi);
