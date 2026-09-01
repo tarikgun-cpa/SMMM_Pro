@@ -898,6 +898,15 @@
                 </div>
             </div>
 
+            <!-- GİB KARŞIT İNCELEME TAKİBİ -->
+            <div style="background:white; border:1px solid #eef2f5; border-radius:8px; padding:15px; margin-bottom:12px; box-shadow:0 4px 15px rgba(0,0,0,0.01); border-left:4px solid #e67e22;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
+                    <h3 style="font-size:14px; color:#d35400; margin:0;"><i class="fas fa-envelope-open-text"></i> GİB Karşıt İnceleme & Tebligat Takibi (15 Gün Sınırı)</h3>
+                    <button class="action-btn" style="background:#e67e22; color:white; padding:4px 10px; font-size:11px; margin:0;" onclick="yeniKarsitInceleme()">+ Yeni Tutanak İşle</button>
+                </div>
+                <div id="karsitIncelemeListesi" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
             <div style="background:linear-gradient(to right, #2c3e50, #34495e); border-radius:8px; padding:15px; margin-bottom:12px; color:white; box-shadow:0 4px 15px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px;">
                 <div style="flex:1; min-width:200px;">
                     <h3 style="font-size:14px; margin-bottom:5px; color:#f1c40f;"><i class="fas fa-book"></i> E-Defter Yükleme Merkezi</h3>
@@ -3474,6 +3483,89 @@
             localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
             alert("Yıllık zam oranları kaydedildi!");
         }
+
+        // --- GİB KARŞIT İNCELEME MOTORU ---
+        function karsitIncelemeCiz() {
+            let listeAlan = document.getElementById("karsitIncelemeListesi");
+            if(!listeAlan) return;
+            
+            let karsitListe = sistemAyarlari.karsitIncelemeler || [];
+            listeAlan.innerHTML = "";
+
+            if(karsitListe.length === 0) {
+                listeAlan.innerHTML = `<div style="font-size:12px; color:#7f8c8d; text-align:center; padding:10px;">Şu an bekleyen bir karşıt inceleme tutanağı bulunmuyor. 🎉</div>`;
+                return;
+            }
+
+            let bugun = new Date();
+            bugun.setHours(0,0,0,0);
+
+            // Yaklaşan güne göre sırala
+            karsitListe.sort((a,b) => new Date(a.sonGunRaw) - new Date(b.sonGunRaw)).forEach((k, index) => {
+                let sonGunTarih = new Date(k.sonGunRaw);
+                let kalanGun = Math.ceil((sonGunTarih - bugun) / (1000 * 60 * 60 * 24));
+                
+                let renk = "#27ae60"; let ikon = "fa-check-circle"; let bg = "#eafaf1";
+                if(kalanGun <= 3) { renk = "#c0392b"; ikon = "fa-exclamation-triangle"; bg = "#fdf2f2"; } // 3 gün ve altı Kırmızı
+                else if(kalanGun <= 7) { renk = "#e67e22"; ikon = "fa-hourglass-half"; bg = "#fef9e7"; } // 7 gün ve altı Turuncu
+                
+                let gunMetin = kalanGun < 0 ? `SÜRE GEÇTİ (${Math.abs(kalanGun)} Gün)` : (kalanGun === 0 ? "BUGÜN SON!" : `${kalanGun} Gün Kaldı`);
+
+                listeAlan.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:${bg}; border:1px solid ${renk}; padding:8px 12px; border-radius:6px;">
+                    <div>
+                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${k.firmaAd}</div>
+                        <div style="font-size:11px; color:#7f8c8d; margin-top:2px;">Tebliğ Tarihi: ${k.tebligTarih} <span style="margin:0 5px;">|</span> Son Cevap: <b style="color:${renk};">${k.sonGun}</b></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="font-size:12px; font-weight:bold; color:${renk};"><i class="fas ${ikon}"></i> ${gunMetin}</div>
+                        <button onclick="karsitIncelemeTamamla(${index})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; box-shadow:0 2px 4px rgba(46,204,113,0.2);" title="Cevaplandı olarak işaretle"><i class="fas fa-check"></i> Tamamlandı</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function yeniKarsitInceleme() {
+            let firmaAd = prompt("Tutanağın geldiği Firma Unvanını veya Kısa Adını girin:");
+            if(!firmaAd) return;
+            
+            let tebligRaw = prompt("GİB Sistemine Düşme (Tebliğ) Tarihini girin (YYYY-AA-GG formatında):", new Date().toISOString().split('T')[0]);
+            if(!tebligRaw) return;
+
+            let tebligTarihObj = new Date(tebligRaw);
+            if(isNaN(tebligTarihObj)) { alert("HATA: Geçersiz tarih formatı girdiniz!"); return; }
+
+            // Tebliğ tarihine otomatik 15 gün yasal süre ekle
+            let sonGunObj = new Date(tebligTarihObj);
+            sonGunObj.setDate(sonGunObj.getDate() + 15);
+
+            let formatla = (d) => `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+
+            if(!sistemAyarlari.karsitIncelemeler) sistemAyarlari.karsitIncelemeler = [];
+            
+            sistemAyarlari.karsitIncelemeler.push({
+                firmaAd: firmaAd.trim(),
+                tebligRaw: tebligRaw,
+                tebligTarih: formatla(tebligTarihObj),
+                sonGunRaw: sonGunObj.toISOString().split('T')[0],
+                sonGun: formatla(sonGunObj)
+            });
+
+            localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
+            karsitIncelemeCiz();
+        }
+
+        function karsitIncelemeTamamla(index) {
+            if(confirm("Bu karşıt incelemeye cevap verildiğini onaylıyor musunuz? (Listeden kaldırılacak)")) {
+                sistemAyarlari.karsitIncelemeler.splice(index, 1);
+                localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
+                karsitIncelemeCiz();
+            }
+        }
+
+        // Sayfa yüklendiğinde ve panolar arası geçiş yapıldığında listeyi tetikleyelim
+        document.addEventListener("DOMContentLoaded", karsitIncelemeCiz);
+        document.getElementById("menuMaster").addEventListener("click", karsitIncelemeCiz);
 
         // --- MENÜ (SAYFA) DEĞİŞTİRME YÖNETİMİ ---
         function sayfaDegistir(hedefPaneli) {
