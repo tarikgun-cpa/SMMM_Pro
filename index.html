@@ -7437,15 +7437,19 @@
                         let isGecikmis = !t.odendi && t.vade && (t.vade < bugunStr);
                         
                         if(isBuAy || isGecikmis) {
-                            oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id, isGecikmis: isGecikmis });
+                            oAykiTaksitler.push({ ...t, bIndex: bIndex, tIndex: tIndex, tur: borc.tur, aciklama: borc.aciklama, borcId: borc.id, isGecikmis: isGecikmis, isOnemli: borc.onemli });
                         }
                     });
                     totalKalanBorc += kalan;
+
+                    let onemliBtnRenk = borc.onemli ? "#f39c12" : "#bdc3c7";
+                    let onemliBtnText = borc.onemli ? "Kritik" : "Normal";
 
                     adminIslemMenusu += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f6f9; padding:6px 10px; margin-bottom:6px; border-radius:4px; border:1px solid #e1e8ed;">
                             <span style="font-size:11px; color:#2c3e50; font-weight:bold;">${borc.tur} <span style="font-weight:normal; color:#7f8c8d;">(${borc.aciklama})</span></span>
                             <div style="display:flex; gap:5px;">
+                                <button onclick="yapilandirmaOnemliToggle('${vkn}', '${borc.id}')" style="background:${onemliBtnRenk}; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;" title="Bu borcu kritik olarak işaretle"><i class="fas fa-star"></i> ${onemliBtnText}</button>
                                 <button onclick="yapilandirmaDuzenle('${vkn}', '${borc.id}')" style="background:#3498db; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;" title="Tarih, tutar ve detayları düzelt"><i class="fas fa-edit"></i> Düzelt</button>
                                 <button onclick="yapilandirmaSil('${vkn}', '${borc.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold;" title="Komple Sil"><i class="fas fa-trash"></i> Sil</button>
                             </div>
@@ -7474,16 +7478,17 @@
                             // Ödenmişse Soluk, Ödenmemiş ve Gecikmişse Kırmızı Uyarı
                             let opacityStyle = t.odendi ? "opacity: 0.5; background: #f0fdf4; border-color: #bbf7d0;" : (t.isGecikmis ? "background: #fdf2f2; border-color: #f5b7b1;" : "background: #fffcfc; border-color: #fadbd8;");
                             let gecikmeUyari = t.isGecikmis && !t.odendi ? `<span style="color:#e74c3c; font-size:9px; font-weight:bold; margin-left:5px;"><i class="fas fa-exclamation-triangle"></i> GECİKMİŞ</span>` : "";
+                            let onemliUyari = t.isOnemli && !t.odendi ? `<span style="background:#f39c12; color:white; padding:2px 4px; border-radius:4px; font-size:9px; font-weight:bold; margin-left:5px;"><i class="fas fa-star"></i> KRİTİK</span>` : "";
 
                             // Wp Mesajına sadece ödenmemiş olanları ekle ki kafa karışmasın
                             if (!t.odendi) {
-                                wpTaksitMetin += `🔸 *${t.tur}* (${t.aciklama})\n👉 ${t.no}. Taksit: *${formatMoney(t.tutar)} TL*\n📅 Son Ödeme: *${tamTarih}*\nDurum: ❌ Ödenmedi ${t.isGecikmis ? '(GECİKMİŞ)' : ''}\n\n`;
+                                wpTaksitMetin += `🔸 *${t.tur}* (${t.aciklama}) ${t.isOnemli ? '⚠️ KRİTİK' : ''}\n👉 ${t.no}. Taksit: *${formatMoney(t.tutar)} TL*\n📅 Son Ödeme: *${tamTarih}*\nDurum: ❌ Ödenmedi ${t.isGecikmis ? '(GECİKMİŞ)' : ''}\n\n`;
                             }
 
                             taksitHtml += `
                             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:6px; margin-bottom:8px; border-left:3px solid ${btnRenk}; border-width: 1px 1px 1px 3px; border-style: solid; transition: all 0.3s; ${opacityStyle}">
                                 <div>
-                                    <div style="font-size:11px; font-weight:bold; color:#2c3e50; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${t.tur} <span style="color:#7f8c8d; font-weight:normal; text-decoration: none;">(${t.no}. Taksit)</span>${gecikmeUyari}</div>
+                                    <div style="font-size:11px; font-weight:bold; color:#2c3e50; text-decoration: ${t.odendi ? 'line-through' : 'none'};">${t.tur} <span style="color:#7f8c8d; font-weight:normal; text-decoration: none;">(${t.no}. Taksit)</span>${gecikmeUyari}${onemliUyari}</div>
                                     <div style="font-size:10px; color:#555; margin-top:2px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-info-circle"></i> ${t.aciklama}</div>
                                     <div style="font-size:10px; color:${t.odendi ? '#7f8c8d' : '#c0392b'}; font-weight:bold; margin-top:3px; text-decoration: ${t.odendi ? 'line-through' : 'none'};"><i class="fas fa-calendar-day"></i> Son Ödeme: ${tamTarih}</div>
                                 </div>
@@ -7503,7 +7508,7 @@
                     wpTaksitMetin += `_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
                     
                     let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
-                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bekleyenleri Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
 
                     alan.innerHTML += `
                     <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
@@ -7532,6 +7537,15 @@
 
             if(!kayitBulundu) {
                 alan.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:30px; background:#fdf2f2; color:#c0392b; border-radius:8px; border:1px dashed #e74c3c;">Bu döneme ait yapılandırma taksiti veya kamu borcu bulunmuyor.</div>`;
+            }
+        }
+
+        function yapilandirmaOnemliToggle(vkn, borcId) {
+            let borc = yapilandirmaVeritabani[vkn].find(b => b.id === borcId);
+            if(borc) {
+                borc.onemli = !borc.onemli;
+                localStorage.setItem('yapilandirmaVeritabani', JSON.stringify(yapilandirmaVeritabani));
+                yapilandirmaListele();
             }
         }
 
