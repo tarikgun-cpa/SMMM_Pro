@@ -901,8 +901,11 @@
             <!-- GİB KARŞIT İNCELEME TAKİBİ -->
             <div style="background:white; border:1px solid #eef2f5; border-radius:8px; padding:15px; margin-bottom:12px; box-shadow:0 4px 15px rgba(0,0,0,0.01); border-left:4px solid #e67e22;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #eee; padding-bottom:10px; margin-bottom:10px;">
-                    <h3 style="font-size:14px; color:#d35400; margin:0;"><i class="fas fa-envelope-open-text"></i> GİB Karşıt İnceleme & Tebligat Takibi (15 Gün Sınırı)</h3>
-                    <button class="action-btn" style="background:#e67e22; color:white; padding:4px 10px; font-size:11px; margin:0;" onclick="yeniKarsitInceleme()">+ Yeni Tutanak İşle</button>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h3 style="font-size:14px; color:#d35400; margin:0;"><i class="fas fa-search"></i> Karşıt İnceleme Tutanakları</h3>
+                        <button onclick="karsitGosterimToggle()" id="btnKarsitGosterim" style="background:#f4f6f9; border:1px solid #ddd; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; color:#555; transition:0.2s;">Gönderilenleri Göster</button>
+                    </div>
+                    <button class="action-btn" style="background:#e67e22; color:white; padding:4px 10px; font-size:11px; margin:0;" onclick="karsitModalAc()">+ Yeni Tutanak İşle</button>
                 </div>
                 <div id="karsitIncelemeListesi" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
@@ -2087,6 +2090,28 @@
                 </div>
                 <div class="modal-footer">
                     <button class="action-btn btn-primary" onclick="modalKapat('istihbaratModal')" style="background:#2c3e50; width:100%;">Anlaşıldı, Kapat</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="karsitModal" class="modal-overlay">
+            <div class="modal-box modal-box-sm">
+                <div class="modal-header" style="background:#e67e22;">
+                    <h3 style="font-size:16px; margin:0;"><i class="fas fa-envelope-open-text"></i> Yeni Karşıt İnceleme Tutanağı</h3>
+                    <button class="modal-close" onclick="modalKapat('karsitModal')">X</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Geliş Tarihi (Tebliğ):</label><input type="date" id="karsitGelisTarihi" class="search-bar"></div>
+                        <div class="form-group"><label>İncelenen Dönem:</label><input type="text" id="karsitDonem" class="search-bar" placeholder="Örn: 2026/Ocak - Mart"></div>
+                        <div class="form-group full-width"><label>Gönderen Firma (Unvan):</label><input type="text" id="karsitFirma" class="search-bar" placeholder="Karşıt incelemeyi isteyen firma..."></div>
+                        <div class="form-group full-width"><label>YMM Bilgisi:</label><input type="text" id="karsitYmm" class="search-bar" placeholder="YMM Adı Soyadı / Rapor No..."></div>
+                    </div>
+                    <p style="font-size:11px; color:#e74c3c; margin-top:10px;"><i class="fas fa-info-circle"></i> Yasal cevaplama süresi (15 Gün), Geliş Tarihine göre sistem tarafından otomatik hesaplanacaktır.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="action-btn" onclick="modalKapat('karsitModal')">İptal</button>
+                    <button class="action-btn btn-primary" style="background:#e67e22;" onclick="karsitKaydetBtn()">Sisteme Ekle</button>
                 </div>
             </div>
         </div>
@@ -3485,6 +3510,20 @@
         }
 
         // --- GİB KARŞIT İNCELEME MOTORU ---
+        let karsitGosterimModu = "Bekleyen"; // "Bekleyen" veya "Gönderilen"
+
+        function karsitGosterimToggle() {
+            karsitGosterimModu = karsitGosterimModu === "Bekleyen" ? "Gönderilen" : "Bekleyen";
+            let btn = document.getElementById("btnKarsitGosterim");
+            if(btn) {
+                btn.textContent = karsitGosterimModu === "Bekleyen" ? "Gönderilenleri Göster" : "Bekleyenlere Dön";
+                btn.style.background = karsitGosterimModu === "Bekleyen" ? "#f4f6f9" : "#27ae60";
+                btn.style.color = karsitGosterimModu === "Bekleyen" ? "#555" : "white";
+                btn.style.border = karsitGosterimModu === "Bekleyen" ? "1px solid #ddd" : "none";
+            }
+            karsitIncelemeCiz();
+        }
+
         function karsitIncelemeCiz() {
             let listeAlan = document.getElementById("karsitIncelemeListesi");
             if(!listeAlan) return;
@@ -3492,51 +3531,84 @@
             let karsitListe = sistemAyarlari.karsitIncelemeler || [];
             listeAlan.innerHTML = "";
 
-            if(karsitListe.length === 0) {
-                listeAlan.innerHTML = `<div style="font-size:12px; color:#7f8c8d; text-align:center; padding:10px;">Şu an bekleyen bir karşıt inceleme tutanağı bulunmuyor. 🎉</div>`;
+            let filtrelenmis = karsitListe.filter(k => karsitGosterimModu === "Bekleyen" ? !k.gonderildi : k.gonderildi);
+
+            if(filtrelenmis.length === 0) {
+                let bosMesaj = karsitGosterimModu === "Bekleyen" ? "Şu an bekleyen bir karşıt inceleme tutanağı bulunmuyor. 🎉" : "Henüz gönderilmiş / arşivlenmiş bir tutanak yok.";
+                listeAlan.innerHTML = `<div style="font-size:12px; color:#7f8c8d; text-align:center; padding:10px;">${bosMesaj}</div>`;
                 return;
             }
 
             let bugun = new Date();
             bugun.setHours(0,0,0,0);
 
-            // Yaklaşan güne göre sırala
-            karsitListe.sort((a,b) => new Date(a.sonGunRaw) - new Date(b.sonGunRaw)).forEach((k, index) => {
-                let sonGunTarih = new Date(k.sonGunRaw);
-                let kalanGun = Math.ceil((sonGunTarih - bugun) / (1000 * 60 * 60 * 24));
-                
-                let renk = "#27ae60"; let ikon = "fa-check-circle"; let bg = "#eafaf1";
-                if(kalanGun <= 3) { renk = "#c0392b"; ikon = "fa-exclamation-triangle"; bg = "#fdf2f2"; } // 3 gün ve altı Kırmızı
-                else if(kalanGun <= 7) { renk = "#e67e22"; ikon = "fa-hourglass-half"; bg = "#fef9e7"; } // 7 gün ve altı Turuncu
-                
-                let gunMetin = kalanGun < 0 ? `SÜRE GEÇTİ (${Math.abs(kalanGun)} Gün)` : (kalanGun === 0 ? "BUGÜN SON!" : `${kalanGun} Gün Kaldı`);
+            // Sıralama: Bekleyenler süresi yaklaşana göre, Gönderilenler yeni gönderilenden eskiye göre
+            filtrelenmis.sort((a,b) => {
+                if(karsitGosterimModu === "Bekleyen") return new Date(a.sonGunRaw) - new Date(b.sonGunRaw);
+                return new Date(b.gonderimTarihiRaw) - new Date(a.gonderimTarihiRaw);
+            }).forEach(k => {
+                let icerikHtml = "";
 
-                listeAlan.innerHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:${bg}; border:1px solid ${renk}; padding:8px 12px; border-radius:6px;">
-                    <div>
-                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${k.firmaAd}</div>
-                        <div style="font-size:11px; color:#7f8c8d; margin-top:2px;">Tebliğ Tarihi: ${k.tebligTarih} <span style="margin:0 5px;">|</span> Son Cevap: <b style="color:${renk};">${k.sonGun}</b></div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <div style="font-size:12px; font-weight:bold; color:${renk};"><i class="fas ${ikon}"></i> ${gunMetin}</div>
-                        <button onclick="karsitIncelemeTamamla(${index})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; box-shadow:0 2px 4px rgba(46,204,113,0.2);" title="Cevaplandı olarak işaretle"><i class="fas fa-check"></i> Tamamlandı</button>
-                    </div>
-                </div>`;
+                if(karsitGosterimModu === "Bekleyen") {
+                    let sonGunTarih = new Date(k.sonGunRaw);
+                    let kalanGun = Math.ceil((sonGunTarih - bugun) / (1000 * 60 * 60 * 24));
+                    
+                    let renk = "#27ae60"; let ikon = "fa-check-circle"; let bg = "#eafaf1";
+                    if(kalanGun <= 3) { renk = "#c0392b"; ikon = "fa-exclamation-triangle"; bg = "#fdf2f2"; }
+                    else if(kalanGun <= 7) { renk = "#e67e22"; ikon = "fa-hourglass-half"; bg = "#fef9e7"; }
+                    
+                    let gunMetin = kalanGun < 0 ? `SÜRE GEÇTİ (${Math.abs(kalanGun)} Gün)` : (kalanGun === 0 ? "BUGÜN SON!" : `${kalanGun} Gün Kaldı`);
+
+                    icerikHtml = `
+                        <div style="flex:1;">
+                            <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${k.gonderenFirma} <span style="font-size:10px; color:#8e44ad; font-weight:normal; background:#f4ecf7; padding:2px 6px; border-radius:4px; margin-left:5px;">Dönem: ${k.donem}</span></div>
+                            <div style="font-size:11px; color:#7f8c8d; margin-top:4px;"><i class="fas fa-user-tie"></i> YMM: ${k.ymmBilgisi || '-'}</div>
+                            <div style="font-size:11px; color:#7f8c8d; margin-top:4px;">Geliş: ${k.gelisTarihi} <span style="margin:0 5px;">|</span> Son Cevap: <b style="color:${renk};">${k.sonGun}</b></div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px; margin-left:10px;">
+                            <div style="font-size:12px; font-weight:bold; color:${renk}; text-align:right;"><i class="fas ${ikon}"></i><br>${gunMetin}</div>
+                            <div style="border-left:1px solid #ddd; padding-left:12px; display:flex; flex-direction:column; gap:5px;">
+                                <button onclick="karsitIncelemeTamamla('${k.id}')" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer; box-shadow:0 2px 4px rgba(46,204,113,0.2);" title="Cevaplandı Olarak İşaretle ve Arşivle"><i class="fas fa-paper-plane"></i> Gönder</button>
+                                <button onclick="karsitIncelemeSil('${k.id}')" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:3px; border-radius:4px; cursor:pointer; font-size:10px;" title="Talebi İptal Et / Sil"><i class="fas fa-trash"></i> Sil</button>
+                            </div>
+                        </div>`;
+                    
+                    listeAlan.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:${bg}; border:1px solid ${renk}; padding:10px 12px; border-radius:6px;">${icerikHtml}</div>`;
+                } else {
+                    // Gönderilenler (Arşiv) Görünümü
+                    icerikHtml = `
+                        <div style="flex:1;">
+                            <div style="font-size:13px; font-weight:bold; color:#7f8c8d; text-decoration:line-through;">${k.gonderenFirma}</div>
+                            <div style="font-size:11px; color:#95a5a6; margin-top:4px;">YMM: ${k.ymmBilgisi || '-'} | Dönem: ${k.donem}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px; margin-left:10px;">
+                            <div style="font-size:11px; font-weight:bold; color:#27ae60; text-align:right;"><i class="fas fa-check-double"></i> Gönderildi<br><span style="color:#555;">${k.gonderimTarihi}</span></div>
+                            <button onclick="karsitIncelemeSil('${k.id}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;" title="Kalıcı Sil"><i class="fas fa-trash"></i></button>
+                        </div>`;
+                    
+                    listeAlan.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#f9fbfc; border:1px solid #eee; padding:10px 12px; border-radius:6px; opacity:0.85;">${icerikHtml}</div>`;
+                }
             });
         }
 
-        function yeniKarsitInceleme() {
-            let firmaAd = prompt("Tutanağın geldiği Firma Unvanını veya Kısa Adını girin:");
-            if(!firmaAd) return;
-            
-            let tebligRaw = prompt("GİB Sistemine Düşme (Tebliğ) Tarihini girin (YYYY-AA-GG formatında):", new Date().toISOString().split('T')[0]);
-            if(!tebligRaw) return;
+        function karsitModalAc() {
+            document.getElementById("karsitGelisTarihi").valueAsDate = new Date();
+            document.getElementById("karsitDonem").value = "";
+            document.getElementById("karsitFirma").value = "";
+            document.getElementById("karsitYmm").value = "";
+            modalAc('karsitModal');
+        }
 
-            let tebligTarihObj = new Date(tebligRaw);
-            if(isNaN(tebligTarihObj)) { alert("HATA: Geçersiz tarih formatı girdiniz!"); return; }
+        function karsitKaydetBtn() {
+            let gelisRaw = document.getElementById("karsitGelisTarihi").value;
+            let donem = document.getElementById("karsitDonem").value;
+            let firma = document.getElementById("karsitFirma").value;
+            let ymm = document.getElementById("karsitYmm").value;
 
-            // Tebliğ tarihine otomatik 15 gün yasal süre ekle
-            let sonGunObj = new Date(tebligTarihObj);
+            if(!gelisRaw || !firma || !donem) { alert("Lütfen Geliş Tarihi, Dönem ve Firma Unvanını eksiksiz doldurun!"); return; }
+
+            let gelisTarihObj = new Date(gelisRaw);
+            let sonGunObj = new Date(gelisTarihObj);
             sonGunObj.setDate(sonGunObj.getDate() + 15);
 
             let formatla = (d) => `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
@@ -3544,20 +3616,49 @@
             if(!sistemAyarlari.karsitIncelemeler) sistemAyarlari.karsitIncelemeler = [];
             
             sistemAyarlari.karsitIncelemeler.push({
-                firmaAd: firmaAd.trim(),
-                tebligRaw: tebligRaw,
-                tebligTarih: formatla(tebligTarihObj),
+                id: "KRS_" + Date.now(),
+                gonderenFirma: firma.trim(),
+                ymmBilgisi: ymm.trim(),
+                donem: donem.trim(),
+                gelisRaw: gelisRaw,
+                gelisTarihi: formatla(gelisTarihObj),
                 sonGunRaw: sonGunObj.toISOString().split('T')[0],
-                sonGun: formatla(sonGunObj)
+                sonGun: formatla(sonGunObj),
+                gonderildi: false,
+                gonderimTarihi: null,
+                gonderimTarihiRaw: null
             });
 
             localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
-            karsitIncelemeCiz();
+            modalKapat('karsitModal');
+            
+            // Eğer gönderilenler sekmesindeysek bekleyenlere geri at
+            if(karsitGosterimModu === "Gönderilen") karsitGosterimToggle(); 
+            else karsitIncelemeCiz();
         }
 
-        function karsitIncelemeTamamla(index) {
-            if(confirm("Bu karşıt incelemeye cevap verildiğini onaylıyor musunuz? (Listeden kaldırılacak)")) {
-                sistemAyarlari.karsitIncelemeler.splice(index, 1);
+        function karsitIncelemeTamamla(id) {
+            let karsitListe = sistemAyarlari.karsitIncelemeler || [];
+            let item = karsitListe.find(k => k.id === id);
+            if(item) {
+                let gonderimRaw = prompt("Tutanak Gönderim/Cevaplama Tarihi (YYYY-AA-GG):", new Date().toISOString().split('T')[0]);
+                if(!gonderimRaw) return;
+                
+                let d = new Date(gonderimRaw);
+                if(isNaN(d)) { alert("Geçersiz tarih formatı!"); return; }
+
+                item.gonderildi = true;
+                item.gonderimTarihiRaw = gonderimRaw;
+                item.gonderimTarihi = `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+                
+                localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
+                karsitIncelemeCiz();
+            }
+        }
+
+        function karsitIncelemeSil(id) {
+            if(confirm("Bu tutanağı listeden tamamen silmek istediğinize emin misiniz?")) {
+                sistemAyarlari.karsitIncelemeler = sistemAyarlari.karsitIncelemeler.filter(k => k.id !== id);
                 localStorage.setItem('sistemAyarlari', JSON.stringify(sistemAyarlari));
                 karsitIncelemeCiz();
             }
@@ -3566,6 +3667,7 @@
         // Sayfa yüklendiğinde ve panolar arası geçiş yapıldığında listeyi tetikleyelim
         document.addEventListener("DOMContentLoaded", karsitIncelemeCiz);
         document.getElementById("menuMaster").addEventListener("click", karsitIncelemeCiz);
+
 
         // --- MENÜ (SAYFA) DEĞİŞTİRME YÖNETİMİ ---
         function sayfaDegistir(hedefPaneli) {
