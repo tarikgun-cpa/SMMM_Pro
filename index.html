@@ -7508,7 +7508,7 @@
                     wpTaksitMetin += `_Vadesi geçen taksitlerin yapılandırmanızı bozabileceğini hatırlatırız._\n\n- SMMM Tarık GÜN`;
                     
                     let wpLink = m.telefon ? `https://wa.me/90${m.telefon.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpTaksitMetin)}` : "#";
-                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bekleyenleri Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
+                    let wpBtnHtml = m.telefon ? `<a href="${wpLink}" target="_blank" style="background:#27ae60; color:white; padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> Bildir</a>` : `<span style="font-size:11px; color:#bdc3c7;">Tel Yok</span>`;
 
                     alan.innerHTML += `
                     <div style="background:white; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.05); padding:15px; border-top:4px solid #c0392b; display:flex; flex-direction:column;">
